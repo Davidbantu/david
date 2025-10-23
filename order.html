@@ -312,8 +312,8 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    // menu with extra categories
-    const menu = [
+    // default menu (fallback if no menu in DB)
+    const defaultMenu = [
       { category: "Starters", items:[{name:"Tomato Shorba",price:5},{name:"Paneer Tikka",price:8},{name:"Hara Bhara Kebab",price:6.5},{name:"Aloo Tikki Chaat",price:5.5},{name:"Vegetable Samosa (2 pcs)",price:3}]},
       { category: "Kebabs", items:[{name:"Chicken Reshmi Kebab",price:9},{name:"Seekh Kebab",price:9.5},{name:"Dahi ke Kebab",price:8}]},
       { category: "Curries", items:[{name:"Butter Chicken",price:16},{name:"Paneer Butter Masala",price:15},{name:"Chana Masala",price:11},{name:"Dal Makhani",price:12}]},
@@ -338,8 +338,51 @@
       { category: "Promos", items:[{name:"Lunch Special",price:9},{name:"Family Pack",price:25}]}
     ];
 
-    // state
+    // menu (will be loaded from Firebase /menu) — starts empty until loaded
+    let menu = [];
     let currentTab = 0;
+
+    // set up realtime listener for menu in Firebase so changes from editor update live
+    const menuRef = firebase.database().ref('menu');
+    menuRef.on('value', snap => {
+      let val = snap.val();
+      if(!val){
+        // store default menu in DB on first use (do not overwrite if DB later populated)
+        menu = defaultMenu.slice();
+        // do not immediately overwrite DB here to avoid unwanted writes. Only write when editor saves.
+      } else {
+        // Firebase may return array-like object; normalize to array
+        if(Array.isArray(val)) {
+          menu = val;
+        } else {
+          // convert numeric-keyed object to array in order
+          try {
+            const keys = Object.keys(val);
+            const isNumericKeys = keys.every(k => /^\d+$/.test(k));
+            if(isNumericKeys){
+              // convert keyed-object to array by numeric order
+              menu = keys.sort((a,b)=>Number(a)-Number(b)).map(k => val[k]);
+            } else if(Array.isArray(val.menu)) {
+              menu = val.menu;
+            } else {
+              // otherwise try to use as-is if it looks like array
+              menu = Array.isArray(val) ? val : (val || defaultMenu);
+            }
+          } catch(e){
+            menu = defaultMenu.slice();
+          }
+        }
+      }
+      // ensure at least one tab exists
+      if(!Array.isArray(menu) || menu.length === 0) {
+        menu = defaultMenu.slice();
+      }
+      if(currentTab >= menu.length) currentTab = 0;
+      renderMenuTabs();
+      renderMenuItems();
+    });
+
+    // state
     // order is the local representation of the current order being edited/viewed in this page
     // when editing an existing order from Firebase, 'editingOrderId' will be set and we sync with DB
     let order = []; // array of items {name, price, qty, note (string), done?}
@@ -371,18 +414,18 @@
     function renderMenuTabs(){
       const tabs = document.getElementById('menuTabs'); tabs.innerHTML='';
       menu.forEach((cat,idx)=>{
-        const b = document.createElement('button'); b.type='button'; b.className='menu-tab' + (currentTab===idx ? ' active' : ''); b.textContent = cat.category;
+        const b = document.createElement('button'); b.type='button'; b.className='menu-tab' + (currentTab===idx ? ' active' : ''); b.textContent = cat.category || ('Category '+(idx+1));
         b.onclick = ()=>{ currentTab = idx; renderMenuTabs(); renderMenuItems(); };
         tabs.appendChild(b);
       });
     }
     function renderMenuItems(){
       const container = document.getElementById('menuItems'); container.innerHTML='';
-      const items = menu[currentTab].items || [];
+      const items = (menu[currentTab] && menu[currentTab].items) ? menu[currentTab].items : [];
       items.forEach(item=>{
         const card = document.createElement('div'); card.className='menu-card'; card.tabIndex=0;
         const t = document.createElement('div'); t.className='item-title'; t.textContent = item.name;
-        const p = document.createElement('div'); p.className='item-price'; p.textContent = '€'+item.price.toFixed(2);
+        const p = document.createElement('div'); p.className='item-price'; p.textContent = '€'+(Number(item.price)||0).toFixed(2);
         card.appendChild(t); card.appendChild(p);
         card.onclick = ()=> addToOrderSeparate(item);
         card.onkeydown = (e)=> { if(e.key==='Enter') addToOrderSeparate(item); };
