@@ -394,15 +394,12 @@
 
     // Helper: determine if current order is editable (not completed/paid)
     function isOrderEditable(){
-      // if editing existing order, check its status in DB via cached orderId and a small variable; we maintain a local variable 'editingOrderStatus'
       if(editingOrderId){
-        // we'll maintain latestEditingOrder object when listening below; fallback to treat as editable if unknown
         const el = window.__editingOrderSnapshot || null;
         if(!el) return true;
         const s = (el.status || '').toString().toLowerCase();
         return !(s === 'completed' || s === 'paid');
       } else {
-        // new local order is editable until sent and status becomes paid/completed
         return true;
       }
     }
@@ -410,10 +407,8 @@
     // add item (either local or update firebase for existing order)
     function addToOrderSeparate(item){
       if(editingOrderId){
-        // editing an existing order in firebase
-        // check editable
         const snap = window.__editingOrderSnapshot || null;
-        if(snap && (snap.status || '').toString().toLowerCase() === 'completed' || snap && (snap.status || '').toString().toLowerCase() === 'paid'){
+        if(snap && ((snap.status || '').toString().toLowerCase() === 'completed' || (snap.status || '').toString().toLowerCase() === 'paid')){
           return alert('This order is completed/paid and cannot be edited.');
         }
         const ref = firebase.database().ref('orders/' + editingOrderId);
@@ -428,7 +423,6 @@
           alert('Error adding item: ' + (err.message || err));
         });
       } else {
-        // local draft order: push into order array
         order.push({ name:item.name, price:item.price, qty:1, note:'', selected:false });
         renderOrder();
       }
@@ -436,7 +430,6 @@
 
     function changeQty(idx, delta){
       if(editingOrderId){
-        // update firebase items
         const ref = firebase.database().ref('orders/' + editingOrderId);
         ref.once('value').then(snap => {
           const data = snap.val();
@@ -559,7 +552,6 @@
     document.getElementById('quickAddBtn').addEventListener('click', ()=>{ const v = document.getElementById('quickCustomInput').value.trim(); if(!v) return; if(quickOptions.includes(v)){ alert('Already exists'); document.getElementById('quickCustomInput').value=''; return; } quickOptions.push(v); quickSelected.push(v); quickMeta[v] = { showDelete:false }; document.getElementById('quickCustomInput').value=''; renderQuickGrid(); });
     document.getElementById('quickConfirmBtn').addEventListener('click', ()=>{
       orderNote = quickSelected.join(', ');
-      // if editing existing order, update DB
       if(editingOrderId){
         firebase.database().ref('orders/' + editingOrderId).update({ note: orderNote, quickNotes: quickSelected.join(', '), updatedAt: Date.now() });
       }
@@ -573,7 +565,6 @@
     function openItemQuickNotePopup(idx){
       currentItemIdx = idx;
       if(editingOrderId){
-        // get current item's note
         const snap = window.__editingOrderSnapshot || null;
         if(snap && snap.items && snap.items[idx]){
           itemSelected = (snap.items[idx].note && snap.items[idx].note.length) ? [snap.items[idx].note] : [];
@@ -609,7 +600,6 @@
       const chosen = itemSelected[0] || '';
       if(currentItemIdx === null){ closeItemQuickNotePopup(); return; }
       if(editingOrderId){
-        // update firebase for specific item note
         const ref = firebase.database().ref('orders/' + editingOrderId);
         ref.once('value').then(snap => {
           const data = snap.val() || {};
@@ -637,9 +627,7 @@
     document.getElementById('typeTA').addEventListener('click', (e)=> selectQuickType(e.currentTarget));
     document.getElementById('typeOnline').addEventListener('click', (e)=> selectQuickType(e.currentTarget));
     function selectQuickType(btn){
-      // clear selected state on type cells
       document.querySelectorAll('.type-actions .order-type-option').forEach(b => b.classList.remove('selected'));
-      // also clear selected state on table cells
       document.querySelectorAll('.table-cell').forEach(c => c.classList.remove('selected'));
       btn.classList.add('selected');
       selectedOrderType = btn.dataset.type;
@@ -654,7 +642,6 @@
       }
       document.getElementById('tableTitle').textContent = selectedOrderType;
       document.getElementById('orderTypeModal').style.display='none';
-      // if editing existing, update DB
       if(editingOrderId){
         firebase.database().ref('orders/' + editingOrderId).update({ table: selectedOrderType, updatedAt: Date.now() });
       }
@@ -663,13 +650,11 @@
 
     // Payment / Hold logic with required order type
     document.getElementById('payBtn').addEventListener('click', ()=>{
-      // check editable
       if(!isOrderEditable()){ return alert('This order is completed and cannot be changed.'); }
       if(!selectedOrderType || selectedOrderType === ''){
         openOrderTypeModal();
         return;
       }
-      // ensure there are items (local or firebase)
       if(editingOrderId){
         firebase.database().ref('orders/' + editingOrderId).once('value').then(snap=>{
           const d = snap.val() || {};
@@ -690,12 +675,10 @@
         return;
       }
       if(editingOrderId){
-        // ensure has items
         firebase.database().ref('orders/' + editingOrderId).once('value').then(snap=>{
           const d = snap.val() || {};
           const items = Array.isArray(d.items) ? d.items : [];
           if(items.length === 0) return alert('Add items to order!');
-          // update existing order status to pending (hold)
           firebase.database().ref('orders/' + editingOrderId).update({
             status: 'pending',
             paymentType: null,
@@ -705,24 +688,19 @@
             quickNotes: quickSelected.join(', '),
             updatedAt: Date.now()
           }).then(()=> {
-            // redirect to home to show it in list
             window.location.href = 'home.html';
           }).catch(err => { alert('Error saving hold: ' + (err.message||err)); });
         });
       } else {
         if(order.length === 0) return alert('Add items to order!');
-        // create new order with status pending
         sendOrderToFirebase('pending', null);
       }
     });
 
-    // Payment dialog wiring: use programmatic listeners to ensure behavior is reliable
-    function openPaymentDialog(){
-      document.getElementById('paymentDialog').style.display='flex';
-    }
+    // Payment dialog wiring
+    function openPaymentDialog(){ document.getElementById('paymentDialog').style.display='flex'; }
     function closePaymentDialog(){ document.getElementById('paymentDialog').style.display='none'; }
 
-    // attach click handlers for payment buttons
     document.getElementById('payCashBtn').addEventListener('click', ()=> onPaymentTypeSelect('cash'));
     document.getElementById('payCardBtn').addEventListener('click', ()=> onPaymentTypeSelect('card'));
     document.getElementById('payWoltBtn').addEventListener('click', ()=> onPaymentTypeSelect('wolt'));
@@ -734,9 +712,7 @@
         openOrderTypeModal();
         return;
       }
-      // if editing existing order, update its status to paid and completedAt
       if(editingOrderId){
-        // ensure items exist
         firebase.database().ref('orders/' + editingOrderId).once('value').then(snap=>{
           const d = snap.val() || {};
           const items = Array.isArray(d.items) ? d.items : [];
@@ -753,12 +729,10 @@
             quickNotes: quickSelected.join(', ')
           }).then(()=> {
             closePaymentDialog();
-            // redirect to home so user sees change
             window.location.href = 'home.html';
           }).catch(err => { alert('Error marking paid: ' + (err.message||err)); });
         });
       } else {
-        // new order flow: create record with 'paid' status
         sendOrderToFirebase('paid', type);
       }
     }
@@ -774,18 +748,19 @@
       document.getElementById('savingOverlay').style.display = 'none';
     }
 
-    // send order to Firebase (for new orders). If editingOrderId is set, we update that order instead where appropriate in other flows.
+    // send order to Firebase (for new orders)
     function sendOrderToFirebase(status, payType){
       if(order.length === 0){
         alert('Order is empty');
         return;
       }
       showSavingOverlay(status === 'paid' ? 'Processing payment...' : 'Saving order...');
-      getNextOrderId(next=>{
+      // if we already reserved an orderId earlier, use it. Otherwise get next
+      const proceedWithId = (id) => {
         const table = selectedOrderType && selectedOrderType !== '' ? selectedOrderType : getTableNumber();
         const now = new Date();
         const data = {
-          id: next,
+          id: id,
           table: table,
           items: order.map(i => ({ name: i.name, price: i.price, qty: i.qty, note: (i.note || ''), done: !!i.done })),
           total: order.reduce((a,i) => a + i.price * i.qty, 0),
@@ -799,9 +774,9 @@
           createdAt: now.getTime(),
           updatedAt: now.getTime()
         };
-        firebase.database().ref('orders/' + next).set(data)
+        // overwrite or set at orders/{id}
+        firebase.database().ref('orders/' + id).set(data)
           .then(() => {
-            // success: clear local order and redirect to home.html
             order = [];
             orderNote = "";
             quickSelected = [];
@@ -814,10 +789,22 @@
             console.error('Error saving order', err);
             alert('Error saving order: ' + (err && err.message ? err.message : 'unknown'));
           });
-      });
+      };
+
+      if(orderId){
+        // if orderId exists (we may have reserved), use it
+        proceedWithId(orderId);
+      } else {
+        getNextOrderId(next=>{
+          orderId = next;
+          proceedWithId(next);
+        });
+      }
     }
 
     function getTableNumber(){ const params = new URLSearchParams(window.location.search); const t = params.get('table'); return t ? t : 'Take Away'; }
+
+    // robust next-id calculation
     function getNextOrderId(cb){
       const year = new Date().getFullYear();
       const startId = year * 10000 + 1;
@@ -834,28 +821,63 @@
       });
     }
 
+    // Reserve next order id immediately when opening the page (if creating a new order)
+    function reserveNextOrderIdAndWriteDraft(){
+      // only reserve when NOT editing an existing order
+      if(editingOrderId) return;
+      getNextOrderId(next => {
+        const id = next;
+        const now = new Date();
+        const draft = {
+          id: id,
+          table: getTableNumber(),
+          items: [],
+          total: 0,
+          status: 'draft',
+          paymentType: null,
+          note: '',
+          scheduledTime: '',
+          quickNotes: '',
+          date: now.toISOString().slice(0,10),
+          time: now.toTimeString().slice(0,8),
+          createdAt: now.getTime(),
+          updatedAt: now.getTime(),
+          reserved: true
+        };
+        // write the draft record to reserve the id; if another client raced and wrote it first, this will overwrite only if equal id (rare).
+        firebase.database().ref('orders/' + id).set(draft)
+          .then(() => {
+            orderId = id;
+            document.getElementById('orderIdTag').textContent = 'Order ID: ' + id;
+          })
+          .catch(err => {
+            console.error('Error reserving order id', err);
+            // fallback: still display id locally even if reservation failed
+            orderId = id;
+            document.getElementById('orderIdTag').textContent = 'Order ID: ' + id;
+          });
+      });
+    }
+
     // initialize UI
     renderMenuTabs(); renderMenuItems(); renderOrder();
 
     (function init(){
       const t = getTableNumber();
       document.getElementById('tableTitle').textContent = t === 'Take Away' ? 'Take Away' : 'Table ' + t;
-      // If opened with ?order=ID then load that order from firebase in realtime and sync
+
       if(editingOrderId){
-        // show order id tag immediately
+        // show order id tag and listen realtime
         document.getElementById('orderIdTag').textContent = 'Order ID: ' + editingOrderId;
-        // Listen for changes on that order and update UI accordingly
         const ref = firebase.database().ref('orders/' + editingOrderId);
         ref.on('value', snap => {
           const d = snap.val();
-          // keep latest snapshot accessible globally for helpers
           window.__editingOrderSnapshot = d || null;
           if(!d){
-            // order not found (maybe deleted) - leave UI as blank/new draft
             console.warn('Order', editingOrderId, 'not found in firebase');
             return;
           }
-          // populate local editable state with data from firebase
+          // load items into local order array for rendering and editing
           order = Array.isArray(d.items) ? d.items.map(it => ({
             name: it.name,
             price: it.price,
@@ -875,14 +897,10 @@
             document.getElementById('scheduleField').value = '';
             document.getElementById('scheduleRow').style.display = 'none';
           }
-          // update total display (renderOrder uses order array)
           renderOrder();
-          // update orderId variable
           orderId = d.id || editingOrderId;
-          // if the status is paid/completed, disable interactions
           const s = (d.status || '').toString().toLowerCase();
           if(s === 'paid' || s === 'completed'){
-            // disable menu clicks visually
             document.querySelectorAll('.menu-card').forEach(c => c.style.pointerEvents = 'none');
             document.getElementById('payBtn').disabled = true;
             document.getElementById('holdBtn').disabled = true;
@@ -893,8 +911,8 @@
           }
         });
       } else {
-        // not editing existing order: request next id for display
-        getNextOrderId(next => { orderId = next; document.getElementById('orderIdTag').textContent = 'Order ID: ' + next; });
+        // Not editing an existing order: reserve an ID right away so each open gets unique id
+        reserveNextOrderIdAndWriteDraft();
       }
     })();
 
