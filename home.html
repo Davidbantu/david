@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Orders — Home</title>
+  <title>Kitchen Screen — Orders (Realtime)</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
   <style>
@@ -18,79 +18,155 @@
       --danger: #e53935;
       --muted: #9aa8c0;
       --glass: rgba(255,255,255,0.03);
+      --white: #ffffff;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:"Poppins",sans-serif;color:#fff;background:var(--main-bg);background-attachment:fixed;background-size:cover}
-    .wrap{max-width:1300px;margin:0 auto;padding:18px;min-height:100vh;display:flex;flex-direction:column;gap:12px}
-    .topbar{display:flex;align-items:center;gap:12px}
-    .title{font-weight:700;color:var(--accent);font-size:1.1rem}
-    .controls{margin-left:auto;display:flex;gap:8px;align-items:center}
-    .btn{background:var(--primary);color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}
-    .ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:var(--accent)}
-    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px}
-    @media (max-width:1100px){ .grid{grid-template-columns:repeat(3,1fr)} }
-    @media (max-width:820px){ .grid{grid-template-columns:repeat(2,1fr)} }
-    @media (max-width:520px){ .grid{grid-template-columns:repeat(1,1fr)} }
 
-    .order-card{background:var(--card-bg);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 6px 18px rgba(0,0,0,0.35);display:flex;flex-direction:column;gap:8px;min-height:150px}
-    .order-head{display:flex;align-items:center;gap:8px;justify-content:space-between}
-    .order-id{font-weight:800;color:var(--accent);font-size:0.95rem}
-    .status{padding:6px 8px;border-radius:8px;font-weight:700;font-size:0.85rem;color:#fff;display:inline-flex;align-items:center;gap:8px}
-    .status.paid{background:var(--success)}
-    .status.hold{background:var(--warning);color:#000}
-    .status.cancel{background:var(--danger)}
-    .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:0.9rem}
-    .meta .chip{background:var(--glass);padding:6px 8px;border-radius:8px;color:var(--accent2);font-weight:700}
+    * { box-sizing: border-box; }
+    html,body { height:100%; margin:0; font-family:"Poppins",sans-serif; color:#fff; background:var(--main-bg); background-attachment:fixed; background-size:cover; }
 
-    .items{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;max-height:160px;overflow:auto}
-    .items .row{display:flex;justify-content:space-between;gap:8px;padding:6px 4px;border-bottom:1px dashed rgba(255,255,255,0.02)}
-    .items .row:last-child{border-bottom:0}
-    .items .left{display:flex;gap:8px;flex:1;align-items:center}
-    .item-name{font-weight:700;color:var(--accent);word-break:break-word}
-    .item-note{font-size:0.85rem;color:var(--warning);font-style:italic;margin-left:8px}
-    .item-qty{min-width:36px;text-align:right;color:var(--muted)}
-    .item-price{min-width:70px;text-align:right;font-weight:800;color:var(--primary)}
+    .wrap { max-width:1400px; margin:0 auto; padding:18px; min-height:100vh; display:flex; flex-direction:column; gap:12px; }
 
-    .order-footer{display:flex;justify-content:space-between;align-items:center;gap:8px}
-    .total{font-weight:800;color:var(--primary);font-size:1rem}
-    .order-actions{display:flex;gap:8px}
-    .small{padding:6px 8px;border-radius:8px;border:0;background:var(--accent2);color:var(--accent);font-weight:700;cursor:pointer}
+    .topbar { display:flex; align-items:center; gap:12px; }
+    .title { font-weight:700; color:var(--accent); font-size:1.1rem; }
+    .controls { margin-left:auto; display:flex; gap:8px; align-items:center; }
+    .btn { background:var(--primary); color:#fff; border:0; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; }
+    .ghost { background:transparent; border:1px solid rgba(255,255,255,0.06); padding:8px 10px; border-radius:8px; color:var(--accent); }
 
-    .empty{padding:40px;text-align:center;color:var(--muted);background:rgba(255,255,255,0.02);border-radius:10px}
-    .filter-row{display:flex;gap:8px;align-items:center}
-    .select{background:var(--order-side-bg);border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:#fff}
-    .badge{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--accent);font-weight:700}
-    .small-muted{font-size:0.85rem;color:var(--muted)}
+    /* Layout with only a main area (no quick-action box) */
+    .layout { margin-top:10px; }
+
+    /* 4 columns per row (desktop), wrap to next line */
+    .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    @media (max-width:1400px){ .grid { grid-template-columns:repeat(3,1fr); } }
+    @media (max-width:1000px){ .grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:600px){ .grid { grid-template-columns:repeat(1,1fr); } }
+
+    .order-card {
+      background:var(--card-bg);
+      border-radius:10px;
+      padding:14px;
+      border:1px solid rgba(255,255,255,0.04);
+      box-shadow:0 6px 18px rgba(0,0,0,0.35);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:140px;
+      word-break:break-word;
+    }
+
+    .order-head { display:flex; align-items:center; gap:8px; justify-content:space-between; }
+    .order-left { display:flex; flex-direction:column; gap:6px; }
+    .order-id { font-size:0.85rem; color:var(--muted); font-weight:700; } /* small order id text */
+    .order-type {
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:10px;
+      background:var(--primary);
+      color:#fff;
+      font-weight:800;
+      font-size:0.9rem;
+      border:2px solid rgba(255,255,255,0.03);
+    }
+    .order-meta { display:flex; gap:8px; align-items:center; color:var(--white); font-size:0.9rem; }
+
+    .timer { font-weight:800; color:var(--white); font-size:0.95rem; }
+
+    /* Items: show everything, allow wrapping item name; note on next line */
+    .items { padding:6px; border-radius:8px; background:rgba(255,255,255,0.01); display:flex; flex-direction:column; gap:8px; }
+    .item-row { display:flex; align-items:flex-start; gap:8px; justify-content:space-between; }
+    .item-left { display:flex; gap:10px; align-items:flex-start; flex:1 1 auto; min-width:0; }
+    .item-name { font-weight:700; color:var(--accent); font-size:0.98rem; white-space:normal; word-wrap:break-word; word-break:break-word; } /* allow wrap */
+    .item-note { font-size:0.86rem; color:var(--warning); margin-top:4px; font-style:italic; }
+    .item-right { display:flex; gap:8px; align-items:center; flex:0 0 auto; }
+
+    /* quantity in a box */
+    .qty-box {
+      min-width:44px;
+      padding:6px 8px;
+      border-radius:6px;
+      background:var(--order-type, #222);
+      border:1px solid rgba(255,255,255,0.05);
+      color:#fff;
+      font-weight:800;
+      text-align:center;
+    }
+
+    .price { font-size:0.86rem; color:var(--primary); font-weight:700; min-width:60px; text-align:right; }
+
+    /* per-item done checkbox / highlight */
+    .item-done { margin-left:6px; transform:translateY(2px); }
+    .item-name.done { text-decoration:line-through; opacity:0.6; color:#9fbcdfff; }
+
+    .order-footer { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .total { font-weight:800; color:var(--primary); font-size:1rem; }
+    .order-actions { display:flex; gap:8px; align-items:center; }
+
+    /* modal */
+    .modal { display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:1200; }
+    .modal .box { background:var(--card-bg); padding:14px; border-radius:10px; border:2px solid var(--primary); width:920px; max-width:96vw; max-height:92vh; overflow:auto; }
+    .form-row { display:flex; gap:8px; align-items:center; }
+
+    .small { padding:6px 8px; border-radius:8px; border:0; background:var(--accent2); color:var(--accent); font-weight:700; cursor:pointer; }
+
+    .small-ghost { padding:6px 8px; border-radius:8px; border:0; background:transparent; color:var(--white); font-weight:700; cursor:pointer; }
+
+    .small-muted { color:var(--muted); font-size:0.9rem; }
+
+    /* visually emphasize the selected/completed order (optional) */
+    .hidden-card { display:none !important; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <div class="title"><i class="fas fa-receipt"></i> Orders</div>
+      <div class="title"><i class="fas fa-utensils"></i> Kitchen Screen</div>
       <div class="controls">
-        <div class="filter-row">
-          <label class="small-muted" for="statusFilter">Status</label>
-          <select id="statusFilter" class="select">
-            <option value="all">All</option>
-            <option value="paid">Paid</option>
-            <option value="hold">Hold</option>
-            <option value="cancel">Cancel</option>
-          </select>
-        </div>
+        <div id="todayDate" class="small-muted"></div>
         <button id="refreshBtn" class="btn"><i class="fas fa-sync"></i> Refresh</button>
-        <div id="countBadge" class="badge">0 orders</div>
+        <!-- Removed the quick-actions box as requested -->
+        <div id="counts" style="display:flex;gap:10px;align-items:center;margin-left:12px;">
+          <div class="small-muted">Pending:</div><div id="pendingCount" class="small-muted">0</div>
+          <div class="small-muted">Completed:</div><div id="completedCount" class="small-muted">0</div>
+        </div>
       </div>
     </div>
 
-    <div id="ordersGrid" class="grid"></div>
+    <div class="layout">
+      <div id="ordersGrid" class="grid" style="margin-top:12px"></div>
+      <div id="emptyState" class="small-muted" style="display:none;margin-top:12px">No orders for today.</div>
+    </div>
+  </div>
 
-    <div id="emptyState" class="empty" style="display:none;">No orders yet.</div>
+  <!-- Modal for full order view (edit/add) -->
+  <div id="orderModal" class="modal" role="dialog" aria-modal="true">
+    <div class="box">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div id="modalOrderType" class="order-type" style="display:inline-block;margin-bottom:6px"></div>
+          <div id="modalOrderId" class="order-id"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div id="modalTimer" class="timer">00:00:00</div>
+          <button id="modalMarkAllBtn" class="btn">Mark all items</button>
+          <button id="modalDoneBtn" class="btn">Done (Order)</button>
+          <button id="modalCloseBtn" class="small-ghost">Close</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;" id="modalContent">
+        <!-- items area populated dynamically -->
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+        <div id="modalTotal" class="small-muted" style="font-weight:800"></div>
+      </div>
+    </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script>
-    // Firebase initialization (same config as order.html)
+    // Firebase config (same as order.html)
     const firebaseConfig = {
       apiKey: "AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtZvI",
       authDomain: "newpos-dacb5.firebaseapp.com",
@@ -103,163 +179,457 @@
     };
     firebase.initializeApp(firebaseConfig);
 
+    // DOM refs
     const ordersGrid = document.getElementById('ordersGrid');
     const emptyState = document.getElementById('emptyState');
-    const countBadge = document.getElementById('countBadge');
-    const statusFilter = document.getElementById('statusFilter');
+    const pendingCountEl = document.getElementById('pendingCount');
+    const completedCountEl = document.getElementById('completedCount');
+    const todayDateEl = document.getElementById('todayDate');
     const refreshBtn = document.getElementById('refreshBtn');
 
-    let ordersCache = {}; // keyed by id
+    const orderModal = document.getElementById('orderModal');
+    const modalOrderType = document.getElementById('modalOrderType');
+    const modalOrderId = document.getElementById('modalOrderId');
+    const modalTimer = document.getElementById('modalTimer');
+    const modalContent = document.getElementById('modalContent');
+    const modalMarkAllBtn = document.getElementById('modalMarkAllBtn');
+    const modalDoneBtn = document.getElementById('modalDoneBtn');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modalTotal = document.getElementById('modalTotal');
 
-    function statusClass(status){
-      if(!status) return '';
-      const s = status.toLowerCase();
-      if(s === 'paid') return 'paid';
-      if(s === 'hold') return 'hold';
-      if(s === 'cancel') return 'cancel';
-      return '';
+    // state
+    let ordersCache = {};
+    let timers = {}; // per-card timers
+    let modalTimerInterval = null;
+    let activeModalOrderId = null;
+
+    // helpers
+    function todayDateStr(){ return (new Date()).toISOString().slice(0,10); }
+    function nowMs(){ return Date.now(); }
+    function secondsToHMS(sec){ sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec/3600); const m = Math.floor((sec%3600)/60); const s = sec%60; return [h,m,s].map(x=>String(x).padStart(2,'0')).join(':'); }
+    function statusIsCompleted(s){ if(!s) return false; const ss = String(s).toLowerCase(); return ss === 'completed' || ss === 'paid'; }
+
+    // build card
+    function buildOrderCard(order){
+      const card = document.createElement('div');
+      card.className = 'order-card';
+      card.dataset.id = order.id;
+
+      // header
+      const head = document.createElement('div');
+      head.className = 'order-head';
+
+      const left = document.createElement('div');
+      left.className = 'order-left';
+      const idEl = document.createElement('div'); idEl.className = 'order-id'; idEl.textContent = 'Order #' + (order.id || '');
+      const typeEl = document.createElement('div'); typeEl.className = 'order-type'; typeEl.textContent = order.table || '';
+      left.appendChild(typeEl);
+      left.appendChild(idEl);
+
+      const meta = document.createElement('div'); meta.className = 'order-meta';
+      const dateEl = document.createElement('div'); dateEl.textContent = (order.date || '') + ' ' + (order.time || '');
+      meta.appendChild(dateEl);
+
+      left.appendChild(meta);
+
+      const right = document.createElement('div');
+      right.style.display = 'flex';
+      right.style.flexDirection = 'column';
+      right.style.alignItems = 'flex-end';
+      const timerEl = document.createElement('div');
+      timerEl.className = 'timer';
+      timerEl.textContent = '00:00:00';
+      right.appendChild(timerEl);
+
+      head.appendChild(left);
+      head.appendChild(right);
+      card.appendChild(head);
+
+      // If whole-order note exists, show it on top of items
+      if(order.note && String(order.note).trim()){
+        const orderNote = document.createElement('div');
+        orderNote.className = 'item-note';
+        orderNote.style.marginTop = '6px';
+        orderNote.style.marginBottom = '6px';
+        orderNote.textContent = order.note;
+        card.appendChild(orderNote);
+      }
+
+      // items: show everything (no inner scroll), allow wrapping names, show note below item
+      const itemsWrap = document.createElement('div');
+      itemsWrap.className = 'items';
+
+      const items = Array.isArray(order.items) ? order.items : [];
+      if(items.length === 0){
+        const none = document.createElement('div'); none.className = 'small-muted'; none.textContent = 'No items';
+        itemsWrap.appendChild(none);
+      } else {
+        items.forEach((it, idx) => {
+          const row = document.createElement('div');
+          row.className = 'item-row';
+
+          const leftBlock = document.createElement('div');
+          leftBlock.className = 'item-left';
+
+          // checkbox to mark item done
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.className = 'item-done';
+          cb.checked = !!it.done;
+          cb.title = 'Mark item as completed';
+          cb.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            toggleItemDone(order.id, idx, cb.checked);
+          });
+          leftBlock.appendChild(cb);
+
+          // name + possible note (note below)
+          const nameAndNote = document.createElement('div');
+          nameAndNote.style.minWidth = '0';
+          const name = document.createElement('div');
+          name.className = 'item-name' + (it.done ? ' done' : '');
+          name.textContent = it.name || '';
+          name.style.whiteSpace = 'normal'; // allow wrap
+          nameAndNote.appendChild(name);
+
+          if(it.note && String(it.note).trim()){
+            const inote = document.createElement('div');
+            inote.className = 'item-note';
+            inote.textContent = it.note;
+            nameAndNote.appendChild(inote);
+          }
+
+          leftBlock.appendChild(nameAndNote);
+
+          // right side: qty box and price
+          const rightBlock = document.createElement('div');
+          rightBlock.className = 'item-right';
+
+          const qtyBox = document.createElement('div');
+          qtyBox.className = 'qty-box';
+          qtyBox.textContent = 'x' + (it.qty || 1);
+
+          const price = document.createElement('div');
+          price.className = 'price';
+          price.textContent = '€' + (((it.price || 0) * (it.qty || 1)).toFixed(2));
+
+          rightBlock.appendChild(qtyBox);
+          rightBlock.appendChild(price);
+
+          row.appendChild(leftBlock);
+          row.appendChild(rightBlock);
+
+          itemsWrap.appendChild(row);
+        });
+      }
+
+      card.appendChild(itemsWrap);
+
+      // footer
+      const footer = document.createElement('div');
+      footer.className = 'order-footer';
+      const totalEl = document.createElement('div'); totalEl.className = 'total'; totalEl.textContent = 'Total: €' + Number(order.total || 0).toFixed(2);
+      footer.appendChild(totalEl);
+
+      const actions = document.createElement('div'); actions.className = 'order-actions';
+
+      // Open button opens order.html with order id so user can edit on order page (order.html should be updated to accept ?order=ID)
+      const openBtn = document.createElement('button'); openBtn.className = 'small'; openBtn.textContent = 'Open';
+      openBtn.addEventListener('click', (ev) => { ev.stopPropagation(); openOrderInOrderPage(order.id); });
+      actions.appendChild(openBtn);
+
+      // If order not completed show "Mark All Items" and "Done"
+      if(!statusIsCompleted(order.status)){
+        const markAllBtn = document.createElement('button'); markAllBtn.className = 'small'; markAllBtn.textContent = 'Mark all items';
+        markAllBtn.addEventListener('click', (ev) => { ev.stopPropagation(); markAllItems(order.id); });
+        actions.appendChild(markAllBtn);
+
+        const doneBtn = document.createElement('button'); doneBtn.className = 'small'; doneBtn.textContent = 'Done';
+        doneBtn.addEventListener('click', (ev) => { ev.stopPropagation(); markOrderDone(order.id); });
+        actions.appendChild(doneBtn);
+      } else {
+        const doneLbl = document.createElement('div'); doneLbl.className = 'small-muted'; doneLbl.textContent = 'Completed';
+        actions.appendChild(doneLbl);
+      }
+
+      footer.appendChild(actions);
+      card.appendChild(footer);
+
+      // start timer for card
+      startCardTimer(order.id, order, timerEl);
+
+      // clicking the card opens the modal too
+      card.addEventListener('click', () => openOrderModal(order.id));
+
+      return card;
     }
 
+    // timers
+    function startCardTimer(id, order, el){
+      // clear existing
+      if(timers[id] && timers[id].interval) clearInterval(timers[id].interval);
+      function update(){
+        const created = order.createdAt || (order.date ? new Date(order.date + 'T' + (order.time || '00:00:00')).getTime() : nowMs());
+        if(statusIsCompleted(order.status)){
+          const completedAt = order.completedAt || order.updatedAt || nowMs();
+          el.textContent = secondsToHMS(Math.floor((completedAt - created)/1000)) + ' (done)';
+        } else {
+          el.textContent = secondsToHMS(Math.floor((nowMs() - created)/1000));
+        }
+      }
+      update();
+      const iv = setInterval(update, 1000);
+      timers[id] = { interval: iv };
+    }
+
+    function stopCardTimer(id){
+      if(timers[id] && timers[id].interval) { clearInterval(timers[id].interval); delete timers[id]; }
+    }
+
+    // toggle single item done flag in Firebase
+    function toggleItemDone(orderId, itemIdx, doneValue){
+      const itemPath = `orders/${orderId}/items/${itemIdx}/done`;
+      const updates = {};
+      updates[itemPath] = !!doneValue;
+      // also set updatedAt
+      updates[`orders/${orderId}/updatedAt`] = nowMs();
+      firebase.database().ref().update(updates)
+        .catch(err => {
+          console.error('Error toggling item done', err);
+          alert('Error toggling item done: ' + (err && err.message));
+        });
+    }
+
+    // mark all items for an order as done (set items[i].done = true)
+    function markAllItems(orderId){
+      if(!confirm('Mark all items in order #' + orderId + ' as done?')) return;
+      const ref = firebase.database().ref(`orders/${orderId}`);
+      ref.once('value').then(snap => {
+        const data = snap.val();
+        if(!data) throw new Error('Order not found');
+        const items = Array.isArray(data.items) ? data.items.slice() : [];
+        for(let i=0;i<items.length;i++){
+          items[i].done = true;
+          items[i].doneAt = nowMs();
+        }
+        return ref.update({ items: items, updatedAt: nowMs() });
+      }).catch(err => {
+        console.error('Error markAllItems', err);
+        alert('Error marking all items: ' + (err && err.message));
+      });
+    }
+
+    // mark order done (set status completed + completedAt); hide card from pending list
+    function markOrderDone(orderId){
+      if(!confirm('Mark order #' + orderId + ' as DONE (completed)?')) return;
+      const ref = firebase.database().ref(`orders/${orderId}`);
+      const now = nowMs();
+      ref.update({ status: 'completed', completedAt: now, updatedAt: now })
+        .then(() => {
+          // stop timer and hide card from pending view (render will update)
+          stopCardTimer(orderId);
+        })
+        .catch(err => {
+          console.error('Error marking order done', err);
+          alert('Error marking order done: ' + (err && err.message));
+        });
+    }
+
+    // open order in order.html with order id as query param
+    function openOrderInOrderPage(orderId){
+      // This navigates the same tab to order.html?order=ID — order.html must be extended to load an existing order by id.
+      window.location.href = 'order.html?order=' + encodeURIComponent(orderId);
+    }
+
+    // open modal with full order and item controls
+    function openOrderModal(orderId){
+      const order = ordersCache[orderId];
+      if(!order) { alert('Order not found'); return; }
+      activeModalOrderId = orderId;
+      modalOrderType.textContent = order.table || '';
+      modalOrderId.textContent = 'Order #' + order.id;
+      modalTotal.textContent = 'Total: €' + Number(order.total || 0).toFixed(2);
+
+      // content items (allow toggling)
+      modalContent.innerHTML = '';
+      const items = Array.isArray(order.items) ? order.items : [];
+      items.forEach((it, idx) => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
+        row.style.alignItems = 'flex-start';
+        row.style.marginBottom = '10px';
+
+        const left = document.createElement('div');
+        left.style.flex = '1 1 auto';
+        const name = document.createElement('div'); name.textContent = it.name || ''; name.style.fontWeight = '800'; name.style.color = 'var(--accent)'; name.style.whiteSpace = 'normal';
+        left.appendChild(name);
+        if(it.note && String(it.note).trim()){
+          const inote = document.createElement('div'); inote.className = 'item-note'; inote.textContent = it.note;
+          left.appendChild(inote);
+        }
+
+        const right = document.createElement('div');
+        right.style.display = 'flex';
+        right.style.flexDirection = 'column';
+        right.style.gap = '8px';
+        right.style.alignItems = 'flex-end';
+
+        const qtyBox = document.createElement('div'); qtyBox.className = 'qty-box'; qtyBox.textContent = 'x' + (it.qty || 1);
+        const price = document.createElement('div'); price.className = 'price'; price.textContent = '€' + (((it.price || 0) * (it.qty || 1)).toFixed(2));
+
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!it.done;
+        cb.addEventListener('click', () => toggleItemDone(orderId, idx, cb.checked));
+
+        right.appendChild(qtyBox);
+        right.appendChild(price);
+        right.appendChild(cb);
+
+        row.appendChild(left);
+        row.appendChild(right);
+        modalContent.appendChild(row);
+      });
+
+      // start modal timer
+      startModalTimer(order);
+
+      orderModal.style.display = 'flex';
+    }
+
+    function startModalTimer(order){
+      if(modalTimerInterval) clearInterval(modalTimerInterval);
+      function update(){
+        const created = order.createdAt || (order.date ? new Date(order.date + 'T' + (order.time || '00:00:00')).getTime() : nowMs());
+        if(statusIsCompleted(order.status)){
+          const completedAt = order.completedAt || order.updatedAt || nowMs();
+          modalTimer.textContent = secondsToHMS(Math.floor((completedAt - created)/1000)) + ' (done)';
+        } else {
+          modalTimer.textContent = secondsToHMS(Math.floor((nowMs() - created)/1000));
+        }
+      }
+      update();
+      modalTimerInterval = setInterval(update, 1000);
+    }
+
+    function stopModalTimer(){ if(modalTimerInterval) { clearInterval(modalTimerInterval); modalTimerInterval = null; } }
+
+    modalCloseBtn.addEventListener('click', () => {
+      orderModal.style.display = 'none';
+      stopModalTimer();
+      activeModalOrderId = null;
+    });
+
+    modalMarkAllBtn.addEventListener('click', () => {
+      if(!activeModalOrderId) return;
+      markAllItems(activeModalOrderId);
+    });
+
+    modalDoneBtn.addEventListener('click', () => {
+      if(!activeModalOrderId) return;
+      markOrderDone(activeModalOrderId);
+      orderModal.style.display = 'none';
+      stopModalTimer();
+      activeModalOrderId = null;
+    });
+
+    // Render grid of today's pending orders by default
     function renderOrdersGrid(){
-      const filter = statusFilter.value;
-      const arr = Object.keys(ordersCache).map(k => ordersCache[k]).filter(o => o && o.id).sort((a,b)=> parseInt(b.id) - parseInt(a.id));
-      const filtered = (filter === 'all') ? arr : arr.filter(o => (o.status || '').toLowerCase() === filter);
+      const today = todayDateStr();
+      const all = Object.values(ordersCache || {});
+      // only today's orders displayed on kitchen screen
+      const todays = all.filter(o => (o.date || '') === today);
+      // by default hide completed orders on kitchen screen (kitchen usually cares about pending)
+      const visible = todays.filter(o => !statusIsCompleted(o.status));
       ordersGrid.innerHTML = '';
 
-      if(filtered.length === 0){
+      if(visible.length === 0){
         emptyState.style.display = 'block';
       } else {
         emptyState.style.display = 'none';
       }
 
-      filtered.forEach(order => {
-        const card = document.createElement('div');
-        card.className = 'order-card';
+      // newest first
+      visible.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-        // header
-        const head = document.createElement('div'); head.className = 'order-head';
-        const left = document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column'; left.style.gap='4px';
-        const idRow = document.createElement('div'); idRow.style.display='flex'; idRow.style.alignItems='center'; idRow.style.gap='8px';
-        const idEl = document.createElement('div'); idEl.className='order-id'; idEl.textContent = 'Order #' + (order.id || '');
-        const statusEl = document.createElement('div'); statusEl.className = 'status ' + statusClass(order.status || ''); statusEl.textContent = (order.status || '').toUpperCase() || 'UNKNOWN';
-        idRow.appendChild(idEl); idRow.appendChild(statusEl);
-        const tableRow = document.createElement('div'); tableRow.className='meta';
-        const tableChip = document.createElement('div'); tableChip.className='chip'; tableChip.textContent = order.table || '';
-        const timeChip = document.createElement('div'); timeChip.className='chip'; timeChip.textContent = (order.date ? order.date + ' ' : '') + (order.time || '');
-        tableRow.appendChild(tableChip); tableRow.appendChild(timeChip);
-        left.appendChild(idRow); left.appendChild(tableRow);
-
-        const right = document.createElement('div'); right.style.display='flex'; right.style.flexDirection='column'; right.style.alignItems='flex-end'; right.style.gap='6px';
-        const pay = document.createElement('div'); pay.className='small-muted'; pay.textContent = (order.paymentType ? ('Payment: ' + order.paymentType) : 'Payment: —');
-        const sched = document.createElement('div'); sched.className='small-muted'; sched.textContent = (order.scheduledTime ? ('Scheduled: ' + order.scheduledTime) : '');
-        right.appendChild(pay); right.appendChild(sched);
-
-        head.appendChild(left); head.appendChild(right);
-        card.appendChild(head);
-
-        // order-level note and quick notes
-        if(order.note || order.quickNotes){
-          const notes = document.createElement('div'); notes.style.display='flex'; notes.style.flexDirection='column'; notes.style.gap='4px';
-          if(order.note){
-            const n = document.createElement('div'); n.className='small-muted'; n.innerHTML = '<strong>Note:</strong> ' + (order.note || '');
-            notes.appendChild(n);
-          }
-          if(order.quickNotes){
-            const q = document.createElement('div'); q.className='small-muted'; q.innerHTML = '<strong>Quick:</strong> ' + (order.quickNotes || '');
-            notes.appendChild(q);
-          }
-          card.appendChild(notes);
-        }
-
-        // items
-        const itemsWrap = document.createElement('div'); itemsWrap.className='items';
-        if(Array.isArray(order.items) && order.items.length){
-          order.items.forEach(it => {
-            const row = document.createElement('div'); row.className='row';
-            const left = document.createElement('div'); left.className='left';
-            const name = document.createElement('div'); name.className='item-name'; name.textContent = it.name || '';
-            left.appendChild(name);
-            if(it.note){
-              const inote = document.createElement('div'); inote.className='item-note'; inote.textContent = it.note; left.appendChild(inote);
-            }
-            const qty = document.createElement('div'); qty.className='item-qty'; qty.textContent = 'x' + (it.qty || 1);
-            const price = document.createElement('div'); price.className='item-price'; price.textContent = '€' + ((it.price || 0) * (it.qty || 1)).toFixed(2);
-            row.appendChild(left); row.appendChild(qty); row.appendChild(price);
-            itemsWrap.appendChild(row);
-          });
-        } else {
-          const empty = document.createElement('div'); empty.className='small-muted'; empty.textContent = 'No items';
-          itemsWrap.appendChild(empty);
-        }
-        card.appendChild(itemsWrap);
-
-        // footer
-        const footer = document.createElement('div'); footer.className='order-footer';
-        const tot = document.createElement('div'); tot.className='total'; tot.textContent = 'Total: €' + ((order.total || 0).toFixed ? order.total.toFixed(2) : Number(order.total || 0).toFixed(2));
-        footer.appendChild(tot);
-
-        const actions = document.createElement('div'); actions.className='order-actions';
-        const openBtn = document.createElement('button'); openBtn.className='small'; openBtn.textContent='Open'; openBtn.onclick = ()=> { window.location.href = 'order.html?table=' + encodeURIComponent(order.table || '') + '&order=' + encodeURIComponent(order.id || '') };
-        const removeBtn = document.createElement('button'); removeBtn.className='small'; removeBtn.textContent='Remove'; removeBtn.onclick = ()=> {
-          if(!confirm('Delete order #' + order.id + '? This will remove it from Firebase.')) return;
-          firebase.database().ref('orders/' + order.id).remove()
-            .catch(err => alert('Remove error: ' + err.message));
-        };
-        actions.appendChild(openBtn);
-        actions.appendChild(removeBtn);
-        footer.appendChild(actions);
-
-        card.appendChild(footer);
-
+      // build cards (4 per row is handled by css grid)
+      visible.forEach(o => {
+        const card = buildOrderCard(o);
         ordersGrid.appendChild(card);
       });
 
-      countBadge.textContent = filtered.length + ' orders';
+      // update counts
+      const pendingCount = todays.filter(o => !statusIsCompleted(o.status)).length;
+      const completedCount = todays.filter(o => statusIsCompleted(o.status)).length;
+      pendingCountEl.textContent = pendingCount;
+      completedCountEl.textContent = completedCount;
+      todayDateEl.textContent = today;
     }
 
-    // load and watch orders
+    // realtime listener: keep ordersCache in sync
     function attachOrdersListener(){
       const ref = firebase.database().ref('orders');
-      // use value to get full snapshot on changes
       ref.on('value', snap => {
         const val = snap.val() || {};
         ordersCache = {};
         Object.keys(val).forEach(k => {
           ordersCache[k] = val[k];
         });
+
+        // ensure createdAt for older entries
+        Object.keys(ordersCache).forEach(k => {
+          const o = ordersCache[k];
+          if(!o.createdAt){
+            try {
+              if(o.date && o.time){
+                const dt = new Date(o.date + 'T' + (o.time || '00:00:00'));
+                o.createdAt = dt.getTime();
+              } else {
+                o.createdAt = nowMs();
+              }
+            } catch(e){
+              o.createdAt = nowMs();
+            }
+          }
+        });
+
+        // cleanup timers for orders that no longer appear
+        const existingIds = Object.keys(ordersCache);
+        Object.keys(timers).forEach(id => {
+          if(!existingIds.includes(id)) stopCardTimer(id);
+        });
+
         renderOrdersGrid();
       }, err => {
         console.error('Firebase read error', err);
       });
     }
 
-    // manual refresh (re-read once)
-    function refreshOnce(){
+    // mark all items done and then mark order completed from outside (utility)
+    // used when you want to complete order and hide card
+    function completeOrderAndHide(orderId){
+      markAllItems(orderId);
+      // mark order done after a short delay to allow items to update
+      setTimeout(() => markOrderDone(orderId), 350);
+    }
+
+    // manual refresh
+    refreshBtn.addEventListener('click', () => {
       firebase.database().ref('orders').once('value').then(snap => {
         const val = snap.val() || {};
         ordersCache = {};
         Object.keys(val).forEach(k => ordersCache[k] = val[k]);
         renderOrdersGrid();
       }).catch(err => console.error(err));
-    }
+    });
 
-    // initial
+    // initialize
     attachOrdersListener();
 
-    // UI hooks
-    refreshBtn.addEventListener('click', refreshOnce);
-    statusFilter.addEventListener('change', renderOrdersGrid);
-
-    // convenience: auto-scroll newest into view when new orders arrive (optional)
-    let prevCount = 0;
-    setInterval(() => {
-      const cur = Object.keys(ordersCache).length;
-      if(cur > prevCount){
-        // scroll to top to show newest (since we sort desc it'll be top)
-        window.scrollTo({top:0,behavior:'smooth'});
-      }
-      prevCount = cur;
-    }, 1200);
+    // cleanup when leaving page
+    window.addEventListener('beforeunload', () => {
+      Object.keys(timers).forEach(k => { if(timers[k] && timers[k].interval) clearInterval(timers[k].interval); });
+      if(modalTimerInterval) clearInterval(modalTimerInterval);
+    });
   </script>
 </body>
 </html>
