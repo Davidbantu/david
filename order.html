@@ -787,6 +787,7 @@
           createdAt: now.getTime(),
           updatedAt: now.getTime()
         };
+        // write using the numeric next value (or string fallback key)
         firebase.database().ref('orders/' + next).set(data)
           .then(() => {
             // success: clear local order and redirect to home.html
@@ -806,23 +807,28 @@
     }
 
     function getTableNumber(){ const params = new URLSearchParams(window.location.search); const t = params.get('table'); return t ? t : 'Take Away'; }
+
+    // IMPORTANT: Use an atomic counter in Firebase to guarantee unique numeric ids even across concurrent users.
+    // This uses a transaction on /counters/nextOrderId. If transaction fails, we fallback to a push-key string.
     function getNextOrderId(cb){
-      // robust next-id calculation: if there are numeric keys use them, otherwise start with year*10000+1
-      const year = new Date().getFullYear();
-      const startId = year * 10000 + 1;
-      firebase.database().ref('orders').orderByKey().limitToLast(1).once('value', snap => {
-        let lastId = startId - 1;
-        snap.forEach(child => {
-          const k = child.key;
-          const n = parseInt(k, 10);
-          if(!isNaN(n)){
-            lastId = Math.max(lastId, n);
-          }
-        });
-        cb(lastId + 1);
-      }, err => {
-        console.error('getNextOrderId error', err);
-        cb(startId);
+      const counterRef = firebase.database().ref('counters/nextOrderId');
+      counterRef.transaction(function(current){
+        // increment (start at 1)
+        return (current || 0) + 1;
+      }, function(error, committed, snapshot){
+        if(error){
+          console.error('getNextOrderId transaction error', error);
+          // fallback: use push key so we still can save the order
+          const pushKey = firebase.database().ref('orders').push().key;
+          cb(pushKey);
+        } else if(!committed){
+          console.warn('getNextOrderId not committed, using fallback push key');
+          const pushKey = firebase.database().ref('orders').push().key;
+          cb(pushKey);
+        } else {
+          const next = snapshot.val();
+          cb(next);
+        }
       });
     }
 
