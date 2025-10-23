@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Orders — Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+  <style>
+    :root{
+      --main-bg: linear-gradient(to bottom right, #0d47a1, #000000);
+      --card-bg: #181c24;
+      --accent: #bbdefb;
+      --accent2: #263859;
+      --primary: #42a5f5;
+      --success: #43a047;
+      --warning: #ffb300;
+      --danger: #e53935;
+      --muted: #9aa8c0;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:"Poppins",sans-serif;color:#fff;background:var(--main-bg);background-attachment:fixed;background-size:cover}
+    .wrap{max-width:1300px;margin:0 auto;padding:18px;min-height:100vh;display:flex;flex-direction:column;gap:12px}
+    .topbar{display:flex;align-items:center;gap:12px}
+    .title{font-weight:700;color:var(--accent);font-size:1.1rem}
+    .controls{margin-left:auto;display:flex;gap:8px;align-items:center}
+    .btn{background:var(--primary);color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}
+    .ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:var(--accent)}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px}
+    @media (max-width:1100px){ .grid{grid-template-columns:repeat(3,1fr)} }
+    @media (max-width:820px){ .grid{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:520px){ .grid{grid-template-columns:repeat(1,1fr)} }
+
+    .order-card{background:var(--card-bg);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 6px 18px rgba(0,0,0,0.35);display:flex;flex-direction:column;gap:8px;min-height:150px}
+    .order-head{display:flex;align-items:center;gap:8px;justify-content:space-between}
+    .order-id{font-weight:800;color:var(--accent);font-size:0.95rem}
+    .status{padding:6px 8px;border-radius:8px;font-weight:700;font-size:0.85rem;color:#fff;display:inline-flex;align-items:center;gap:8px}
+    .status.paid{background:var(--success)}
+    .status.hold{background:var(--warning);color:#000}
+    .status.cancel{background:var(--danger)}
+    .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:0.9rem}
+    .meta .chip{background:var(--glass);padding:6px 8px;border-radius:8px;color:var(--accent2);font-weight:700}
+
+    .items{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;max-height:160px;overflow:auto}
+    .items .row{display:flex;justify-content:space-between;gap:8px;padding:6px 4px;border-bottom:1px dashed rgba(255,255,255,0.02)}
+    .items .row:last-child{border-bottom:0}
+    .items .left{display:flex;gap:8px;flex:1;align-items:center}
+    .item-name{font-weight:700;color:var(--accent);word-break:break-word}
+    .item-note{font-size:0.85rem;color:var(--warning);font-style:italic;margin-left:8px}
+    .item-qty{min-width:36px;text-align:right;color:var(--muted)}
+    .item-price{min-width:70px;text-align:right;font-weight:800;color:var(--primary)}
+
+    .order-footer{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .total{font-weight:800;color:var(--primary);font-size:1rem}
+    .order-actions{display:flex;gap:8px}
+    .small{padding:6px 8px;border-radius:8px;border:0;background:var(--accent2);color:var(--accent);font-weight:700;cursor:pointer}
+
+    .empty{padding:40px;text-align:center;color:var(--muted);background:rgba(255,255,255,0.02);border-radius:10px}
+    .filter-row{display:flex;gap:8px;align-items:center}
+    .select{background:var(--order-side-bg);border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:#fff}
+    .badge{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--accent);font-weight:700}
+    .small-muted{font-size:0.85rem;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title"><i class="fas fa-receipt"></i> Orders</div>
+      <div class="controls">
+        <div class="filter-row">
+          <label class="small-muted" for="statusFilter">Status</label>
+          <select id="statusFilter" class="select">
+            <option value="all">All</option>
+            <option value="paid">Paid</option>
+            <option value="hold">Hold</option>
+            <option value="cancel">Cancel</option>
+          </select>
+        </div>
+        <button id="refreshBtn" class="btn"><i class="fas fa-sync"></i> Refresh</button>
+        <div id="countBadge" class="badge">0 orders</div>
+      </div>
+    </div>
+
+    <div id="ordersGrid" class="grid"></div>
+
+    <div id="emptyState" class="empty" style="display:none;">No orders yet.</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    // Firebase initialization (same config as order.html)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtZvI",
+      authDomain: "newpos-dacb5.firebaseapp.com",
+      databaseURL: "https://newpos-dacb5-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "newpos-dacb5",
+      storageBucket: "newpos-dacb5.appspot.com",
+      messagingSenderId: "667100253940",
+      appId: "1:667100253940:web:cfd8f0b9b51b6e697818a1",
+      measurementId: "G-F5Q2JCNJ10"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const ordersGrid = document.getElementById('ordersGrid');
+    const emptyState = document.getElementById('emptyState');
+    const countBadge = document.getElementById('countBadge');
+    const statusFilter = document.getElementById('statusFilter');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    let ordersCache = {}; // keyed by id
+
+    function statusClass(status){
+      if(!status) return '';
+      const s = status.toLowerCase();
+      if(s === 'paid') return 'paid';
+      if(s === 'hold') return 'hold';
+      if(s === 'cancel') return 'cancel';
+      return '';
+    }
+
+    function renderOrdersGrid(){
+      const filter = statusFilter.value;
+      const arr = Object.keys(ordersCache).map(k => ordersCache[k]).filter(o => o && o.id).sort((a,b)=> parseInt(b.id) - parseInt(a.id));
+      const filtered = (filter === 'all') ? arr : arr.filter(o => (o.status || '').toLowerCase() === filter);
+      ordersGrid.innerHTML = '';
+
+      if(filtered.length === 0){
+        emptyState.style.display = 'block';
+      } else {
+        emptyState.style.display = 'none';
+      }
+
+      filtered.forEach(order => {
+        const card = document.createElement('div');
+        card.className = 'order-card';
+
+        // header
+        const head = document.createElement('div'); head.className = 'order-head';
+        const left = document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column'; left.style.gap='4px';
+        const idRow = document.createElement('div'); idRow.style.display='flex'; idRow.style.alignItems='center'; idRow.style.gap='8px';
+        const idEl = document.createElement('div'); idEl.className='order-id'; idEl.textContent = 'Order #' + (order.id || '');
+        const statusEl = document.createElement('div'); statusEl.className = 'status ' + statusClass(order.status || ''); statusEl.textContent = (order.status || '').toUpperCase() || 'UNKNOWN';
+        idRow.appendChild(idEl); idRow.appendChild(statusEl);
+        const tableRow = document.createElement('div'); tableRow.className='meta';
+        const tableChip = document.createElement('div'); tableChip.className='chip'; tableChip.textContent = order.table || '';
+        const timeChip = document.createElement('div'); timeChip.className='chip'; timeChip.textContent = (order.date ? order.date + ' ' : '') + (order.time || '');
+        tableRow.appendChild(tableChip); tableRow.appendChild(timeChip);
+        left.appendChild(idRow); left.appendChild(tableRow);
+
+        const right = document.createElement('div'); right.style.display='flex'; right.style.flexDirection='column'; right.style.alignItems='flex-end'; right.style.gap='6px';
+        const pay = document.createElement('div'); pay.className='small-muted'; pay.textContent = (order.paymentType ? ('Payment: ' + order.paymentType) : 'Payment: —');
+        const sched = document.createElement('div'); sched.className='small-muted'; sched.textContent = (order.scheduledTime ? ('Scheduled: ' + order.scheduledTime) : '');
+        right.appendChild(pay); right.appendChild(sched);
+
+        head.appendChild(left); head.appendChild(right);
+        card.appendChild(head);
+
+        // order-level note and quick notes
+        if(order.note || order.quickNotes){
+          const notes = document.createElement('div'); notes.style.display='flex'; notes.style.flexDirection='column'; notes.style.gap='4px';
+          if(order.note){
+            const n = document.createElement('div'); n.className='small-muted'; n.innerHTML = '<strong>Note:</strong> ' + (order.note || '');
+            notes.appendChild(n);
+          }
+          if(order.quickNotes){
+            const q = document.createElement('div'); q.className='small-muted'; q.innerHTML = '<strong>Quick:</strong> ' + (order.quickNotes || '');
+            notes.appendChild(q);
+          }
+          card.appendChild(notes);
+        }
+
+        // items
+        const itemsWrap = document.createElement('div'); itemsWrap.className='items';
+        if(Array.isArray(order.items) && order.items.length){
+          order.items.forEach(it => {
+            const row = document.createElement('div'); row.className='row';
+            const left = document.createElement('div'); left.className='left';
+            const name = document.createElement('div'); name.className='item-name'; name.textContent = it.name || '';
+            left.appendChild(name);
+            if(it.note){
+              const inote = document.createElement('div'); inote.className='item-note'; inote.textContent = it.note; left.appendChild(inote);
+            }
+            const qty = document.createElement('div'); qty.className='item-qty'; qty.textContent = 'x' + (it.qty || 1);
+            const price = document.createElement('div'); price.className='item-price'; price.textContent = '€' + ((it.price || 0) * (it.qty || 1)).toFixed(2);
+            row.appendChild(left); row.appendChild(qty); row.appendChild(price);
+            itemsWrap.appendChild(row);
+          });
+        } else {
+          const empty = document.createElement('div'); empty.className='small-muted'; empty.textContent = 'No items';
+          itemsWrap.appendChild(empty);
+        }
+        card.appendChild(itemsWrap);
+
+        // footer
+        const footer = document.createElement('div'); footer.className='order-footer';
+        const tot = document.createElement('div'); tot.className='total'; tot.textContent = 'Total: €' + ((order.total || 0).toFixed ? order.total.toFixed(2) : Number(order.total || 0).toFixed(2));
+        footer.appendChild(tot);
+
+        const actions = document.createElement('div'); actions.className='order-actions';
+        const openBtn = document.createElement('button'); openBtn.className='small'; openBtn.textContent='Open'; openBtn.onclick = ()=> { window.location.href = 'order.html?table=' + encodeURIComponent(order.table || '') + '&order=' + encodeURIComponent(order.id || '') };
+        const removeBtn = document.createElement('button'); removeBtn.className='small'; removeBtn.textContent='Remove'; removeBtn.onclick = ()=> {
+          if(!confirm('Delete order #' + order.id + '? This will remove it from Firebase.')) return;
+          firebase.database().ref('orders/' + order.id).remove()
+            .catch(err => alert('Remove error: ' + err.message));
+        };
+        actions.appendChild(openBtn);
+        actions.appendChild(removeBtn);
+        footer.appendChild(actions);
+
+        card.appendChild(footer);
+
+        ordersGrid.appendChild(card);
+      });
+
+      countBadge.textContent = filtered.length + ' orders';
+    }
+
+    // load and watch orders
+    function attachOrdersListener(){
+      const ref = firebase.database().ref('orders');
+      // use value to get full snapshot on changes
+      ref.on('value', snap => {
+        const val = snap.val() || {};
+        ordersCache = {};
+        Object.keys(val).forEach(k => {
+          ordersCache[k] = val[k];
+        });
+        renderOrdersGrid();
+      }, err => {
+        console.error('Firebase read error', err);
+      });
+    }
+
+    // manual refresh (re-read once)
+    function refreshOnce(){
+      firebase.database().ref('orders').once('value').then(snap => {
+        const val = snap.val() || {};
+        ordersCache = {};
+        Object.keys(val).forEach(k => ordersCache[k] = val[k]);
+        renderOrdersGrid();
+      }).catch(err => console.error(err));
+    }
+
+    // initial
+    attachOrdersListener();
+
+    // UI hooks
+    refreshBtn.addEventListener('click', refreshOnce);
+    statusFilter.addEventListener('change', renderOrdersGrid);
+
+    // convenience: auto-scroll newest into view when new orders arrive (optional)
+    let prevCount = 0;
+    setInterval(() => {
+      const cur = Object.keys(ordersCache).length;
+      if(cur > prevCount){
+        // scroll to top to show newest (since we sort desc it'll be top)
+        window.scrollTo({top:0,behavior:'smooth'});
+      }
+      prevCount = cur;
+    }, 1200);
+  </script>
+</body>
+</html>
