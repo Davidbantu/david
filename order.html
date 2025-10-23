@@ -345,7 +345,7 @@
     let order = []; // array of items {name, price, qty, note (string), done?}
     let orderNote = "";
     let scheduleTime = "";
-    let orderId = null; // local assigned id for new or loaded id for existing
+    let orderId = null; // assigned only when creating (on Hold/Pay)
     let selectedOrderType = "";
 
     const defaultQuickNotes = ["Spicy","No spicy","Mild","Vegan","Gluten free","Extra Cheese","No Onion","Less Oil","No Salt","Extra Sauce"];
@@ -552,6 +552,7 @@
     document.getElementById('quickAddBtn').addEventListener('click', ()=>{ const v = document.getElementById('quickCustomInput').value.trim(); if(!v) return; if(quickOptions.includes(v)){ alert('Already exists'); document.getElementById('quickCustomInput').value=''; return; } quickOptions.push(v); quickSelected.push(v); quickMeta[v] = { showDelete:false }; document.getElementById('quickCustomInput').value=''; renderQuickGrid(); });
     document.getElementById('quickConfirmBtn').addEventListener('click', ()=>{
       orderNote = quickSelected.join(', ');
+      // if editing existing order, update DB
       if(editingOrderId){
         firebase.database().ref('orders/' + editingOrderId).update({ note: orderNote, quickNotes: quickSelected.join(', '), updatedAt: Date.now() });
       }
@@ -627,7 +628,9 @@
     document.getElementById('typeTA').addEventListener('click', (e)=> selectQuickType(e.currentTarget));
     document.getElementById('typeOnline').addEventListener('click', (e)=> selectQuickType(e.currentTarget));
     function selectQuickType(btn){
+      // clear selected state on type cells
       document.querySelectorAll('.type-actions .order-type-option').forEach(b => b.classList.remove('selected'));
+      // also clear selected state on table cells
       document.querySelectorAll('.table-cell').forEach(c => c.classList.remove('selected'));
       btn.classList.add('selected');
       selectedOrderType = btn.dataset.type;
@@ -642,6 +645,7 @@
       }
       document.getElementById('tableTitle').textContent = selectedOrderType;
       document.getElementById('orderTypeModal').style.display='none';
+      // if editing existing, update DB
       if(editingOrderId){
         firebase.database().ref('orders/' + editingOrderId).update({ table: selectedOrderType, updatedAt: Date.now() });
       }
@@ -650,11 +654,13 @@
 
     // Payment / Hold logic with required order type
     document.getElementById('payBtn').addEventListener('click', ()=>{
+      // check editable
       if(!isOrderEditable()){ return alert('This order is completed and cannot be changed.'); }
       if(!selectedOrderType || selectedOrderType === ''){
         openOrderTypeModal();
         return;
       }
+      // ensure there are items (local or firebase)
       if(editingOrderId){
         firebase.database().ref('orders/' + editingOrderId).once('value').then(snap=>{
           const d = snap.val() || {};
@@ -675,10 +681,12 @@
         return;
       }
       if(editingOrderId){
+        // ensure has items
         firebase.database().ref('orders/' + editingOrderId).once('value').then(snap=>{
           const d = snap.val() || {};
           const items = Array.isArray(d.items) ? d.items : [];
           if(items.length === 0) return alert('Add items to order!');
+          // update existing order status to pending (hold)
           firebase.database().ref('orders/' + editingOrderId).update({
             status: 'pending',
             paymentType: null,
@@ -688,19 +696,24 @@
             quickNotes: quickSelected.join(', '),
             updatedAt: Date.now()
           }).then(()=> {
+            // redirect to home to show it in list
             window.location.href = 'home.html';
           }).catch(err => { alert('Error saving hold: ' + (err.message||err)); });
         });
       } else {
         if(order.length === 0) return alert('Add items to order!');
+        // create new order with status pending (id will be generated here)
         sendOrderToFirebase('pending', null);
       }
     });
 
-    // Payment dialog wiring
-    function openPaymentDialog(){ document.getElementById('paymentDialog').style.display='flex'; }
+    // Payment dialog wiring: use programmatic listeners to ensure behavior is reliable
+    function openPaymentDialog(){
+      document.getElementById('paymentDialog').style.display='flex';
+    }
     function closePaymentDialog(){ document.getElementById('paymentDialog').style.display='none'; }
 
+    // attach click handlers for payment buttons
     document.getElementById('payCashBtn').addEventListener('click', ()=> onPaymentTypeSelect('cash'));
     document.getElementById('payCardBtn').addEventListener('click', ()=> onPaymentTypeSelect('card'));
     document.getElementById('payWoltBtn').addEventListener('click', ()=> onPaymentTypeSelect('wolt'));
@@ -733,6 +746,7 @@
           }).catch(err => { alert('Error marking paid: ' + (err.message||err)); });
         });
       } else {
+        // create new order with 'paid' status (id will be generated here)
         sendOrderToFirebase('paid', type);
       }
     }
@@ -748,19 +762,18 @@
       document.getElementById('savingOverlay').style.display = 'none';
     }
 
-    // send order to Firebase (for new orders)
+    // send order to Firebase and then redirect to home.html
     function sendOrderToFirebase(status, payType){
       if(order.length === 0){
         alert('Order is empty');
         return;
       }
       showSavingOverlay(status === 'paid' ? 'Processing payment...' : 'Saving order...');
-      // if we already reserved an orderId earlier, use it. Otherwise get next
-      const proceedWithId = (id) => {
+      getNextOrderId(next=>{
         const table = selectedOrderType && selectedOrderType !== '' ? selectedOrderType : getTableNumber();
         const now = new Date();
         const data = {
-          id: id,
+          id: next,
           table: table,
           items: order.map(i => ({ name: i.name, price: i.price, qty: i.qty, note: (i.note || ''), done: !!i.done })),
           total: order.reduce((a,i) => a + i.price * i.qty, 0),
@@ -774,9 +787,9 @@
           createdAt: now.getTime(),
           updatedAt: now.getTime()
         };
-        // overwrite or set at orders/{id}
-        firebase.database().ref('orders/' + id).set(data)
+        firebase.database().ref('orders/' + next).set(data)
           .then(() => {
+            // success: clear local order and redirect to home.html
             order = [];
             orderNote = "";
             quickSelected = [];
@@ -789,30 +802,22 @@
             console.error('Error saving order', err);
             alert('Error saving order: ' + (err && err.message ? err.message : 'unknown'));
           });
-      };
-
-      if(orderId){
-        // if orderId exists (we may have reserved), use it
-        proceedWithId(orderId);
-      } else {
-        getNextOrderId(next=>{
-          orderId = next;
-          proceedWithId(next);
-        });
-      }
+      });
     }
 
     function getTableNumber(){ const params = new URLSearchParams(window.location.search); const t = params.get('table'); return t ? t : 'Take Away'; }
-
-    // robust next-id calculation
     function getNextOrderId(cb){
+      // robust next-id calculation: if there are numeric keys use them, otherwise start with year*10000+1
       const year = new Date().getFullYear();
       const startId = year * 10000 + 1;
       firebase.database().ref('orders').orderByKey().limitToLast(1).once('value', snap => {
         let lastId = startId - 1;
         snap.forEach(child => {
-          const n = parseInt(child.key, 10);
-          if(!isNaN(n)) lastId = Math.max(lastId, n);
+          const k = child.key;
+          const n = parseInt(k, 10);
+          if(!isNaN(n)){
+            lastId = Math.max(lastId, n);
+          }
         });
         cb(lastId + 1);
       }, err => {
@@ -821,63 +826,30 @@
       });
     }
 
-    // Reserve next order id immediately when opening the page (if creating a new order)
-    function reserveNextOrderIdAndWriteDraft(){
-      // only reserve when NOT editing an existing order
-      if(editingOrderId) return;
-      getNextOrderId(next => {
-        const id = next;
-        const now = new Date();
-        const draft = {
-          id: id,
-          table: getTableNumber(),
-          items: [],
-          total: 0,
-          status: 'draft',
-          paymentType: null,
-          note: '',
-          scheduledTime: '',
-          quickNotes: '',
-          date: now.toISOString().slice(0,10),
-          time: now.toTimeString().slice(0,8),
-          createdAt: now.getTime(),
-          updatedAt: now.getTime(),
-          reserved: true
-        };
-        // write the draft record to reserve the id; if another client raced and wrote it first, this will overwrite only if equal id (rare).
-        firebase.database().ref('orders/' + id).set(draft)
-          .then(() => {
-            orderId = id;
-            document.getElementById('orderIdTag').textContent = 'Order ID: ' + id;
-          })
-          .catch(err => {
-            console.error('Error reserving order id', err);
-            // fallback: still display id locally even if reservation failed
-            orderId = id;
-            document.getElementById('orderIdTag').textContent = 'Order ID: ' + id;
-          });
-      });
-    }
-
     // initialize UI
     renderMenuTabs(); renderMenuItems(); renderOrder();
-
     (function init(){
-      const t = getTableNumber();
-      document.getElementById('tableTitle').textContent = t === 'Take Away' ? 'Take Away' : 'Table ' + t;
+      // Do NOT pre-select order type and DO NOT reserve an order id on page load.
+      // Keep the "Select Order Type" placeholder until the user actively selects a type.
+      // orderIdTag remains empty for new orders until Hold/Pay creates an id.
+      document.getElementById('tableTitle').textContent = 'Select Order Type';
+      document.getElementById('orderIdTag').textContent = ''; // intentionally empty until save
 
+      // If opened with ?order=ID then load that order from firebase in realtime and sync
       if(editingOrderId){
         // show order id tag and listen realtime
         document.getElementById('orderIdTag').textContent = 'Order ID: ' + editingOrderId;
         const ref = firebase.database().ref('orders/' + editingOrderId);
         ref.on('value', snap => {
           const d = snap.val();
+          // keep latest snapshot accessible globally for helpers
           window.__editingOrderSnapshot = d || null;
           if(!d){
+            // order not found (maybe deleted) - leave UI as blank/new draft
             console.warn('Order', editingOrderId, 'not found in firebase');
             return;
           }
-          // load items into local order array for rendering and editing
+          // populate local editable state with data from firebase
           order = Array.isArray(d.items) ? d.items.map(it => ({
             name: it.name,
             price: it.price,
@@ -888,8 +860,9 @@
           })) : [];
           orderNote = d.note || "";
           scheduleTime = d.scheduledTime || "";
-          selectedOrderType = d.table || getTableNumber();
-          document.getElementById('tableTitle').textContent = selectedOrderType;
+          selectedOrderType = d.table || "";
+          // show the table/title (for editing existing order we display its type)
+          document.getElementById('tableTitle').textContent = selectedOrderType || 'Select Order Type';
           if(scheduleTime) {
             document.getElementById('scheduleField').value = scheduleTime;
             document.getElementById('scheduleRow').style.display = 'flex';
@@ -897,10 +870,14 @@
             document.getElementById('scheduleField').value = '';
             document.getElementById('scheduleRow').style.display = 'none';
           }
+          // update total display (renderOrder uses order array)
           renderOrder();
+          // update orderId variable
           orderId = d.id || editingOrderId;
+          // if the status is paid/completed, disable interactions
           const s = (d.status || '').toString().toLowerCase();
           if(s === 'paid' || s === 'completed'){
+            // disable menu clicks visually
             document.querySelectorAll('.menu-card').forEach(c => c.style.pointerEvents = 'none');
             document.getElementById('payBtn').disabled = true;
             document.getElementById('holdBtn').disabled = true;
@@ -911,8 +888,8 @@
           }
         });
       } else {
-        // Not editing an existing order: reserve an ID right away so each open gets unique id
-        reserveNextOrderIdAndWriteDraft();
+        // Not editing an existing order: do nothing special on load.
+        // No reservation / no preselected order type.
       }
     })();
 
