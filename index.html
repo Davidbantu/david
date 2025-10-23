@@ -157,8 +157,13 @@
 
     .type-actions { display:flex; gap:10px; align-items:center; justify-content:center; width:100%; }
     .type-actions .order-type-option.selected { background:var(--primary); color:#fff; }
+    .type-custom_row { display:flex; gap:10px; align-items:center; justify-content:center; width:100%; }
     .type-custom-row { display:flex; gap:10px; align-items:center; justify-content:center; width:100%; }
     .type-custom-row input { background:#0f151b; color:#fff; border:1px solid var(--border); padding:8px 10px; border-radius:8px; }
+
+    /* simple overlay while saving */
+    .saving-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1200; align-items:center; justify-content:center; color:#fff; font-weight:700; }
+    .saving-box { background:var(--card-bg); padding:14px 18px; border-radius:10px; border:2px solid var(--primary); display:flex; gap:10px; align-items:center; }
 
     @media (max-width:900px){
       .menu-items { grid-template-columns:repeat(2,1fr); }
@@ -278,12 +283,17 @@
   <div id="paymentDialog" style="display:none; position:fixed; inset:0; background:rgba(18,18,28,0.9); z-index:900; align-items:center; justify-content:center;">
     <div style="background:var(--card-bg); border-radius:12px; padding:14px; min-width:300px; border:2px solid var(--primary); display:flex; flex-direction:column; gap:8px;">
       <div style="font-weight:700; color:var(--accent); text-align:center;">Select Payment Type</div>
-      <button class="action-btn" style="width:100%;" data-pay="cash" onclick="onPaymentTypeSelect('cash')">Cash</button>
-      <button class="action-btn" style="width:100%;" data-pay="card" onclick="onPaymentTypeSelect('card')">Card</button>
-      <button class="action-btn" style="width:100%;" data-pay="wolt" onclick="onPaymentTypeSelect('wolt')">Wolt</button>
-      <button class="action-btn" style="width:100%;" data-pay="online" onclick="onPaymentTypeSelect('online')">Online Website</button>
-      <button class="small-ghost" style="width:100%;" onclick="closePaymentDialog()">Cancel</button>
+      <button class="action-btn" style="width:100%;" data-pay="cash" id="payCashBtn">Cash</button>
+      <button class="action-btn" style="width:100%;" data-pay="card" id="payCardBtn">Card</button>
+      <button class="action-btn" style="width:100%;" data-pay="wolt" id="payWoltBtn">Wolt</button>
+      <button class="action-btn" style="width:100%;" data-pay="online" id="payOnlineBtn">Online Website</button>
+      <button class="small-ghost" style="width:100%;" id="payCancelBtn">Cancel</button>
     </div>
+  </div>
+
+  <!-- Saving overlay -->
+  <div id="savingOverlay" class="saving-overlay">
+    <div class="saving-box"><i class="fas fa-spinner fa-spin"></i><div id="savingText">Saving order...</div></div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -534,18 +544,33 @@
         return;
       }
       if(order.length === 0){ return alert('Add items to order!'); }
-      document.getElementById('paymentDialog').style.display='flex';
+      // open payment dialog
+      openPaymentDialog();
     });
 
+    // Hold should mark "pending" so it appears as pending in home.html
     document.getElementById('holdBtn').addEventListener('click', ()=>{
       if(!selectedOrderType || selectedOrderType === ''){
         openOrderTypeModal();
         return;
       }
       if(order.length === 0){ return alert('Add items to order!'); }
-      // send to firebase as hold (paymentType null) and redirect to home.html
-      sendOrderToFirebase('hold', null);
+      // send to firebase as pending (user requested "show like pending")
+      sendOrderToFirebase('pending', null);
     });
+
+    // Payment dialog wiring: use programmatic listeners to ensure behavior is reliable
+    function openPaymentDialog(){
+      document.getElementById('paymentDialog').style.display='flex';
+    }
+    function closePaymentDialog(){ document.getElementById('paymentDialog').style.display='none'; }
+
+    // attach click handlers for payment buttons
+    document.getElementById('payCashBtn').addEventListener('click', ()=> onPaymentTypeSelect('cash'));
+    document.getElementById('payCardBtn').addEventListener('click', ()=> onPaymentTypeSelect('card'));
+    document.getElementById('payWoltBtn').addEventListener('click', ()=> onPaymentTypeSelect('wolt'));
+    document.getElementById('payOnlineBtn').addEventListener('click', ()=> onPaymentTypeSelect('online'));
+    document.getElementById('payCancelBtn').addEventListener('click', ()=> closePaymentDialog());
 
     function onPaymentTypeSelect(type){
       // ensure order type selected (should have been checked when opening pay)
@@ -553,12 +578,32 @@
         openOrderTypeModal();
         return;
       }
+
+      // disable payment dialog and show saving overlay, then send
+      closePaymentDialog();
       sendOrderToFirebase('paid', type);
     }
-    function closePaymentDialog(){ document.getElementById('paymentDialog').style.display='none'; }
+
+    // show/hide saving overlay
+    function showSavingOverlay(msg){
+      const ov = document.getElementById('savingOverlay');
+      const text = document.getElementById('savingText');
+      text.textContent = msg || 'Saving order...';
+      ov.style.display = 'flex';
+    }
+    function hideSavingOverlay(){
+      document.getElementById('savingOverlay').style.display = 'none';
+    }
 
     // send order to Firebase and then redirect to home.html
     function sendOrderToFirebase(status, payType){
+      // prevent sending empty orders
+      if(order.length === 0){
+        alert('Order is empty');
+        return;
+      }
+      // compute id and write
+      showSavingOverlay(status === 'paid' ? 'Processing payment...' : 'Saving order...');
       getNextOrderId(next=>{
         const table = selectedOrderType && selectedOrderType !== '' ? selectedOrderType : getTableNumber();
         const now = new Date();
@@ -573,23 +618,53 @@
           scheduledTime: scheduleTime || "",
           quickNotes: quickSelected.join(', '),
           date: now.toISOString().slice(0,10),
-          time: now.toTimeString().slice(0,8)
+          time: now.toTimeString().slice(0,8),
+          createdAt: now.getTime()
         };
-        firebase.database().ref('orders/' + next).set(data, err=>{
-          if(err){
-            alert('Error saving order!');
-          } else {
-            // clear local order and redirect to home.html
+
+        // use promise style for clearer flow
+        firebase.database().ref('orders/' + next).set(data)
+          .then(() => {
+            // success: clear local order and redirect to home.html
             order = [];
+            orderNote = "";
+            quickSelected = [];
             renderOrder();
+            hideSavingOverlay();
+            // redirect to home so user sees the orders list (option 1 requirement)
             window.location.href = 'home.html';
-          }
-        });
+          })
+          .catch(err => {
+            hideSavingOverlay();
+            console.error('Error saving order', err);
+            alert('Error saving order: ' + (err && err.message ? err.message : 'unknown'));
+          });
       });
     }
 
     function getTableNumber(){ const params = new URLSearchParams(window.location.search); const t = params.get('table'); return t ? t : 'Take Away'; }
-    function getNextOrderId(cb){ const year = new Date().getFullYear(); const startId = year * 10000 + 1; firebase.database().ref('orders').orderByKey().limitToLast(1).once('value', snap => { let lastId = startId - 1; snap.forEach(child => { lastId = Math.max(lastId, parseInt(child.key)); }); cb(lastId + 1); }); }
+    function getNextOrderId(cb){
+      // robust next-id calculation: if there are numeric keys use them, otherwise start with year*10000+1
+      const year = new Date().getFullYear();
+      const startId = year * 10000 + 1;
+      firebase.database().ref('orders').orderByKey().limitToLast(1).once('value', snap => {
+        let lastId = startId - 1;
+        snap.forEach(child => {
+          const k = child.key;
+          const n = parseInt(k, 10);
+          if(!isNaN(n)){
+            lastId = Math.max(lastId, n);
+          } else {
+            // if keys are non-numeric, we won't rely on them; keep lastId as-is
+          }
+        });
+        cb(lastId + 1);
+      }, err => {
+        console.error('getNextOrderId error', err);
+        // fallback: still provide a startId
+        cb(startId);
+      });
+    }
 
     // initialize UI
     renderMenuTabs(); renderMenuItems(); renderOrder();
@@ -606,6 +681,7 @@
         document.getElementById('itemQuickNotePopup').style.display='none';
         document.getElementById('orderTypeModal').style.display='none';
         closePaymentDialog();
+        hideSavingOverlay();
       }
     });
   </script>
