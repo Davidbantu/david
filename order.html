@@ -40,10 +40,19 @@
       background-size: cover;
       font-family: "Poppins", sans-serif;
       color:#fff;
+
+      /* Force horizontal scroll on small screens so layout never wraps.
+         This preserves the desktop layout on tablet and mobile as requested. */
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
+    /* Keep desktop layout width fixed so mobile/tablet view appears identical (no wrapping).
+       Users will be able to pan horizontally on smaller devices. */
     .container {
+      min-width:1200px;
       max-width:1200px;
+      width:1200px;
       margin:0 auto;
       padding:12px;
       min-height:100vh;
@@ -98,10 +107,12 @@
       grid-template-rows:repeat(2, auto);
       gap:10px;
       padding:8px;
+      white-space:nowrap;
     }
     .menu-tab { background:var(--accent2); color:var(--accent); border:0; padding:8px 14px; border-radius:10px; font-weight:700; font-size:1.02rem; white-space:nowrap; cursor:pointer; }
     .menu-tab.active { background:var(--primary); color:#fff; }
 
+    /* Desktop grid preserved on all screen sizes by preventing layout shrink */
     .menu-items { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
     .menu-card {
       background:var(--order-item-bg);
@@ -115,6 +126,7 @@
       transition:all .12s;
       min-height:60px;
       font-size:0.95rem;
+      white-space:normal;
     }
     .menu-card:hover { background:var(--accent2); border-color:var(--primary); box-shadow:0 6px 18px rgba(66,165,245,0.06); }
     .menu-card .item-title { font-weight:700; color:var(--accent); line-height:1.14; word-break:break-word; overflow-wrap:anywhere; }
@@ -134,7 +146,7 @@
     .order-note-badge { display:none; } /* intentionally hidden visual badge per user's request */
 
     .schedule-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-    .schedule-field { padding:6px 8px; border-radius:8px; border:1.2px solid var(--primary); background:var(--order-item-bg); color:#fff; font-size:0.9rem; }
+    .schedule-field { padding:6px 8px; border-radius:8px; border:1.2px solid var(--primary); background:var(--order-item-bg); color:#fff; font-size:0.9rem; cursor:pointer; }
     .schedule-clear { background:#e53935; color:#fff; border:0; padding:6px 8px; border-radius:6px; cursor:pointer; }
 
     .order-list { display:flex; flex-direction:column; gap:8px; margin-bottom:8px; overflow:visible; }
@@ -198,11 +210,6 @@
     /* simple overlay while saving */
     .saving-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1200; align-items:center; justify-content:center; color:#fff; font-weight:700; }
     .saving-box { background:var(--card-bg); padding:14px 18px; border-radius:10px; border:2px solid var(--primary); display:flex; gap:10px; align-items:center; }
-
-    @media (max-width:900px){
-      .menu-items { grid-template-columns:repeat(2,1fr); }
-      .type-grid { grid-template-columns:repeat(4,48px); grid-auto-rows:48px; }
-    }
   </style>
 </head>
 <body>
@@ -359,40 +366,77 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    // menu with extra categories (static array used by this page)
-    const menu = [
-      { category: "Starters", items:[{name:"Tomato Shorba",price:5},{name:"Paneer Tikka",price:8},{name:"Hara Bhara Kebab",price:6.5},{name:"Aloo Tikki Chaat",price:5.5},{name:"Vegetable Samosa (2 pcs)",price:3}]},
-      { category: "Kebabs", items:[{name:"Chicken Reshmi Kebab",price:9},{name:"Seekh Kebab",price:9.5},{name:"Dahi ke Kebab",price:8}]},
-      { category: "Curries", items:[{name:"Butter Chicken",price:16},{name:"Paneer Butter Masala",price:15},{name:"Chana Masala",price:11},{name:"Dal Makhani",price:12}]},
-      { category: "Breads", items:[{name:"Butter Naan",price:2.5},{name:"Garlic Naan",price:3},{name:"Tandoori Roti",price:2.2}]},
-      { category: "Rice", items:[{name:"Jeera Rice",price:4.5},{name:"Vegetable Biryani",price:10.5},{name:"Kashmiri Pulao",price:11}]},
-      { category: "Street Food", items:[{name:"Pav Bhaji",price:7.5},{name:"Vada Pav",price:3.5}]},
-      { category: "Desserts", items:[{name:"Gulab Jamun (3 pcs)",price:4},{name:"Ras Malai (2 pcs)",price:4.5}]},
-      { category: "Drinks", items:[{name:"Mango Lassi",price:4},{name:"Masala Chai",price:2.8}]},
-      { category: "Combos", items:[{name:"Thali Veg Combo",price:12},{name:"Thali Non-Veg Combo",price:15}]},
-      { category: "Extras", items:[{name:"Raita",price:2},{name:"Extra Gravy",price:1.5}]},
-
-      // +10 extra categories
-      { category: "Soups", items:[{name:"Sweet Corn Soup",price:4.5},{name:"Hot & Sour Soup",price:4.8}]},
-      { category: "Salads", items:[{name:"Greek Salad",price:8},{name:"Kachumber Salad",price:7.5}]},
-      { category: "Pasta", items:[{name:"Penne Arrabbiata",price:11.5},{name:"Mac 'n' Cheese",price:10.5}]},
-      { category: "Pizza", items:[{name:"Margherita",price:9.5},{name:"Paneer Tikka Pizza",price:13.5}]},
-      { category: "Sandwiches", items:[{name:"Club Sandwich",price:8.5},{name:"Veg Sandwich",price:6.5}]},
-      { category: "Burgers", items:[{name:"Veg Burger",price:7.5},{name:"Chicken Burger",price:9}]},
-      { category: "Wraps", items:[{name:"Paneer Wrap",price:7.5},{name:"Chicken Wrap",price:8.5}]},
-      { category: "Kids Menu", items:[{name:"Mini Burger",price:5},{name:"Kids Pasta",price:5.5}]},
-      { category: "Healthy", items:[{name:"Quinoa Bowl",price:9.5},{name:"Grilled Veg Platter",price:10}]},
-      { category: "Promos", items:[{name:"Lunch Special",price:9},{name:"Family Pack",price:25}]}
+    // default menu (fallback in case DB has no menu)
+    const defaultMenu = [
+      { category: "Starters", items:[{name:"Tomato Shorba",price:5},{name:"Paneer Tikka",price:8},{name:"Hara Bhara Kebab",price:6.5}]},
+      { category: "Curries", items:[{name:"Butter Chicken",price:16},{name:"Paneer Butter Masala",price:15}]}
     ];
+
+    // start with fallback; we'll replace when DB value arrives
+    let menu = defaultMenu.slice();
+
+    // listen to /menu in Firebase and update UI in realtime whenever menu-editor.html writes changes
+    const menuRef = firebase.database().ref('menu');
+    menuRef.on('value', snap => {
+      const val = snap.val();
+      if(!val){
+        menu = defaultMenu.slice();
+      } else {
+        // Normalize possible structures:
+        if(Array.isArray(val)){
+          menu = val;
+        } else {
+          const keys = Object.keys(val || {});
+          const isNumericKeys = keys.length && keys.every(k => /^\d+$/.test(k));
+          if(isNumericKeys){
+            menu = keys.sort((a,b)=>Number(a)-Number(b)).map(k => val[k]);
+          } else {
+            if(val.menu && Array.isArray(val.menu)){
+              menu = val.menu;
+            } else {
+              const converted = [];
+              keys.forEach(k => {
+                const entry = val[k];
+                if(entry && typeof entry === 'object'){
+                  if(entry.category && Array.isArray(entry.items)){
+                    converted.push(entry);
+                  } else if (entry.items && Array.isArray(entry.items) && !entry.category){
+                    converted.push(Object.assign({ category: k }, entry));
+                  } else {
+                    if(Array.isArray(entry)){
+                      converted.push({ category: k, items: entry });
+                    }
+                  }
+                }
+              });
+              if(converted.length) menu = converted;
+              else {
+                try {
+                  const items = Object.values(val).filter(v => v && typeof v === 'object' && v.name).map(v => ({ name: v.name, price: v.price || 0 }));
+                  if(items.length) menu = [{ category: "Menu", items }];
+                  else menu = defaultMenu.slice();
+                } catch(e){
+                  menu = defaultMenu.slice();
+                }
+              }
+            }
+          }
+        }
+      }
+      if(!Array.isArray(menu) || menu.length === 0) menu = defaultMenu.slice();
+      if(currentTab >= menu.length) currentTab = 0;
+      renderMenuTabs();
+      renderMenuItems();
+    }, err => {
+      console.error('Failed to subscribe to menu:', err);
+    });
 
     // state
     let currentTab = 0;
-    // order is the local representation of the current order being edited/viewed in this page
-    // when editing an existing order from Firebase, 'editingOrderId' will be set and we sync with DB
-    let order = []; // array of items {name, price, qty, note (string), done?}
+    let order = [];
     let orderNote = "";
     let scheduleTime = "";
-    let orderId = null; // assigned only when creating (on Hold/Pay)
+    let orderId = null;
     let selectedOrderType = "";
 
     const defaultQuickNotes = ["Spicy","No spicy","Mild","Vegan","Gluten free","Extra Cheese","No Onion","Less Oil","No Salt","Extra Sauce"];
@@ -400,7 +444,7 @@
     let quickSelected = [];
 
     let itemQuickOptions = defaultQuickNotes.slice();
-    let itemSelected = []; // array of selected quick notes for the currently-opened item popup
+    let itemSelected = [];
     let currentItemIdx = null;
 
     const quickMeta = {};
@@ -414,22 +458,22 @@
     const urlParams = new URLSearchParams(window.location.search);
     const editingOrderId = urlParams.get('order') || null;
 
-    // render functions
+    // render functions (unchanged except they use dynamic menu variable)
     function renderMenuTabs(){
       const tabs = document.getElementById('menuTabs'); tabs.innerHTML='';
       menu.forEach((cat,idx)=>{
-        const b = document.createElement('button'); b.type='button'; b.className='menu-tab' + (currentTab===idx ? ' active' : ''); b.textContent = cat.category;
+        const b = document.createElement('button'); b.type='button'; b.className='menu-tab' + (currentTab===idx ? ' active' : ''); b.textContent = cat.category || ('Category ' + (idx+1));
         b.onclick = ()=>{ currentTab = idx; renderMenuTabs(); renderMenuItems(); };
         tabs.appendChild(b);
       });
     }
     function renderMenuItems(){
       const container = document.getElementById('menuItems'); container.innerHTML='';
-      const items = menu[currentTab].items || [];
+      const items = (menu[currentTab] && Array.isArray(menu[currentTab].items)) ? menu[currentTab].items : [];
       items.forEach(item=>{
         const card = document.createElement('div'); card.className='menu-card'; card.tabIndex=0;
-        const t = document.createElement('div'); t.className='item-title'; t.textContent = item.name;
-        const p = document.createElement('div'); p.className='item-price'; p.textContent = '€'+item.price.toFixed(2);
+        const t = document.createElement('div'); t.className='item-title'; t.textContent = item.name || 'Unnamed';
+        const p = document.createElement('div'); p.className='item-price'; p.textContent = '€'+((Number(item.price) || 0).toFixed(2));
         card.appendChild(t); card.appendChild(p);
         card.onclick = ()=> addToOrderSeparate(item);
         card.onkeydown = (e)=> { if(e.key==='Enter') addToOrderSeparate(item); };
@@ -439,7 +483,7 @@
       for(let i=0;i<placeholders;i++){ const ph=document.createElement('div'); ph.className='menu-card'; ph.style.visibility='hidden'; ph.style.pointerEvents='none'; container.appendChild(ph); }
     }
 
-    // SEARCH: find items across categories and show clickable results
+    // SEARCH
     const searchInput = document.getElementById('menuSearchInput');
     const searchResultsArea = document.getElementById('searchResultsArea');
     const searchResultsContainer = document.getElementById('searchResults');
@@ -453,14 +497,13 @@
         return;
       }
       const matches = [];
-      menu.forEach(cat=>{
+      (menu || []).forEach(cat=>{
         (cat.items || []).forEach(item=>{
           if(item.name && item.name.toLowerCase().includes(query)){
             matches.push({ ...item, category: cat.category });
           }
         });
       });
-      // render matches
       searchResultsContainer.innerHTML = '';
       if(matches.length === 0){
         searchResultsTitle.textContent = 'No items found';
@@ -472,12 +515,9 @@
         const t = document.createElement('div'); t.className='item-title'; t.textContent = it.name;
         const catLine = document.createElement('div'); catLine.className='muted'; catLine.style.color='#8ea7bf'; catLine.style.fontSize='0.8rem'; catLine.textContent = it.category;
         const p = document.createElement('div'); p.className='item-price'; p.textContent = '€'+(Number(it.price)||0).toFixed(2);
-        card.appendChild(t);
-        card.appendChild(catLine);
-        card.appendChild(p);
+        card.appendChild(t); card.appendChild(catLine); card.appendChild(p);
         card.onclick = ()=> {
           addToOrderSeparate(it);
-          // optionally clear search and return user to current tab view
           searchInput.value = '';
           searchResultsArea.style.display = 'none';
           renderOrder();
@@ -528,7 +568,7 @@
           alert('Error adding item: ' + (err.message || err));
         });
       } else {
-        order.push({ name:item.name, price:item.price, qty:1, note:'', selected:false });
+        order.push({ name:item.name, price:(Number(item.price)||0), qty:1, note:'', selected:false });
         renderOrder();
       }
     }
@@ -657,7 +697,6 @@
     document.getElementById('quickAddBtn').addEventListener('click', ()=>{ const v = document.getElementById('quickCustomInput').value.trim(); if(!v) return; if(quickOptions.includes(v)){ alert('Already exists'); document.getElementById('quickCustomInput').value=''; return; } quickOptions.push(v); quickSelected.push(v); quickMeta[v] = { showDelete:false }; document.getElementById('quickCustomInput').value=''; renderQuickGrid(); });
     document.getElementById('quickConfirmBtn').addEventListener('click', ()=>{
       orderNote = quickSelected.join(', ');
-      // if editing existing order, update DB
       if(editingOrderId){
         firebase.database().ref('orders/' + editingOrderId).update({ note: orderNote, quickNotes: quickSelected.join(', '), updatedAt: Date.now() });
       }
@@ -670,7 +709,6 @@
     // item quicknote popup
     function openItemQuickNotePopup(idx){
       currentItemIdx = idx;
-      // load existing note(s) as array of selections (support comma-separated notes stored previously)
       if(editingOrderId){
         const snap = window.__editingOrderSnapshot || null;
         const noteStr = (snap && snap.items && snap.items[idx] && snap.items[idx].note) ? String(snap.items[idx].note) : '';
@@ -702,7 +740,6 @@
     }
     document.getElementById('itemQuickAddBtn').addEventListener('click', ()=>{ const v = document.getElementById('itemQuickCustomInput').value.trim(); if(!v) return; if(itemQuickOptions.includes(v)){ alert('Already exists'); document.getElementById('itemQuickCustomInput').value=''; return; } itemQuickOptions.push(v); itemSelected.push(v); itemQuickMeta[v] = { showDelete:false }; document.getElementById('itemQuickCustomInput').value=''; renderItemQuickGrid(); });
     document.getElementById('itemQuickConfirmBtn').addEventListener('click', ()=>{
-      // save all selected notes as comma-separated string
       const chosen = itemSelected.join(', ');
       if(currentItemIdx === null){ closeItemQuickNotePopup(); return; }
       if(editingOrderId){
@@ -733,9 +770,7 @@
     document.getElementById('typeTA').addEventListener('click', (e)=> selectQuickType(e.currentTarget));
     document.getElementById('typeOnline').addEventListener('click', (e)=> selectQuickType(e.currentTarget));
     function selectQuickType(btn){
-      // clear selected state on type cells
       document.querySelectorAll('.type-actions .order-type-option').forEach(b => b.classList.remove('selected'));
-      // also clear selected state on table cells
       document.querySelectorAll('.table-cell').forEach(c => c.classList.remove('selected'));
       btn.classList.add('selected');
       selectedOrderType = btn.dataset.type;
@@ -750,7 +785,6 @@
       }
       document.getElementById('tableTitle').textContent = selectedOrderType;
       document.getElementById('orderTypeModal').style.display='none';
-      // if editing existing, update DB
       if(editingOrderId){
         firebase.database().ref('orders/' + editingOrderId).update({ table: selectedOrderType, updatedAt: Date.now() });
       }
@@ -759,13 +793,11 @@
 
     // Payment / Hold logic with required order type
     document.getElementById('payBtn').addEventListener('click', ()=>{
-      // check editable
       if(!isOrderEditable()){ return alert('This order is completed and cannot be changed.'); }
       if(!selectedOrderType || selectedOrderType === ''){
         openOrderTypeModal();
         return;
       }
-      // ensure there are items (local or firebase)
       if(editingOrderId){
         firebase.database().ref('orders/' + editingOrderId).once('value').then(snap=>{
           const d = snap.val() || {};
@@ -786,12 +818,10 @@
         return;
       }
       if(editingOrderId){
-        // ensure has items
         firebase.database().ref('orders/' + editingOrderId).once('value').then(snap=>{
           const d = snap.val() || {};
           const items = Array.isArray(d.items) ? d.items : [];
           if(items.length === 0) return alert('Add items to order!');
-          // update existing order status to pending (hold)
           firebase.database().ref('orders/' + editingOrderId).update({
             status: 'pending',
             paymentType: null,
@@ -801,24 +831,21 @@
             quickNotes: quickSelected.join(', '),
             updatedAt: Date.now()
           }).then(()=> {
-            // redirect to home to show it in list
             window.location.href = 'home.html';
           }).catch(err => { alert('Error saving hold: ' + (err.message||err)); });
         });
       } else {
         if(order.length === 0) return alert('Add items to order!');
-        // create new order with status pending (id will be generated here)
         sendOrderToFirebase('pending', null);
       }
     });
 
-    // Payment dialog wiring: use programmatic listeners to ensure behavior is reliable
+    // Payment dialog wiring
     function openPaymentDialog(){
       document.getElementById('paymentDialog').style.display='flex';
     }
     function closePaymentDialog(){ document.getElementById('paymentDialog').style.display='none'; }
 
-    // attach click handlers for payment buttons
     document.getElementById('payCashBtn').addEventListener('click', ()=> onPaymentTypeSelect('cash'));
     document.getElementById('payCardBtn').addEventListener('click', ()=> onPaymentTypeSelect('card'));
     document.getElementById('payWoltBtn').addEventListener('click', ()=> onPaymentTypeSelect('wolt'));
@@ -851,7 +878,6 @@
           }).catch(err => { alert('Error marking paid: ' + (err.message||err)); });
         });
       } else {
-        // create new order with 'paid' status (id will be generated here)
         sendOrderToFirebase('paid', type);
       }
     }
@@ -892,10 +918,8 @@
           createdAt: now.getTime(),
           updatedAt: now.getTime()
         };
-        // write using the numeric next value (or string fallback key)
         firebase.database().ref('orders/' + next).set(data)
           .then(() => {
-            // success: clear local order and redirect to home.html
             order = [];
             orderNote = "";
             quickSelected = [];
@@ -913,21 +937,16 @@
 
     function getTableNumber(){ const params = new URLSearchParams(window.location.search); const t = params.get('table'); return t ? t : 'Take Away'; }
 
-    // IMPORTANT: Use an atomic counter in Firebase to guarantee unique numeric ids even across concurrent users.
-    // This uses a transaction on /counters/nextOrderId. If transaction fails, we fallback to a push-key string.
     function getNextOrderId(cb){
       const counterRef = firebase.database().ref('counters/nextOrderId');
       counterRef.transaction(function(current){
-        // increment (start at 1)
         return (current || 0) + 1;
       }, function(error, committed, snapshot){
         if(error){
           console.error('getNextOrderId transaction error', error);
-          // fallback: use push key so we still can save the order
           const pushKey = firebase.database().ref('orders').push().key;
           cb(pushKey);
         } else if(!committed){
-          console.warn('getNextOrderId not committed, using fallback push key');
           const pushKey = firebase.database().ref('orders').push().key;
           cb(pushKey);
         } else {
@@ -940,27 +959,19 @@
     // initialize UI
     renderMenuTabs(); renderMenuItems(); renderOrder();
     (function init(){
-      // Do NOT pre-select order type and DO NOT reserve an order id on page load.
-      // Keep the "Select Order Type" placeholder until the user actively selects a type.
-      // orderIdTag remains empty for new orders until Hold/Pay creates an id.
       document.getElementById('tableTitle').textContent = 'Select Order Type';
-      document.getElementById('orderIdTag').textContent = ''; // intentionally empty until save
+      document.getElementById('orderIdTag').textContent = '';
 
-      // If opened with ?order=ID then load that order from firebase in realtime and sync
       if(editingOrderId){
-        // show order id tag and listen realtime
         document.getElementById('orderIdTag').textContent = 'Order ID: ' + editingOrderId;
         const ref = firebase.database().ref('orders/' + editingOrderId);
         ref.on('value', snap => {
           const d = snap.val();
-          // keep latest snapshot accessible globally for helpers
           window.__editingOrderSnapshot = d || null;
           if(!d){
-            // order not found (maybe deleted) - leave UI as blank/new draft
             console.warn('Order', editingOrderId, 'not found in firebase');
             return;
           }
-          // populate local editable state with data from firebase
           order = Array.isArray(d.items) ? d.items.map(it => ({
             name: it.name,
             price: it.price,
@@ -972,7 +983,6 @@
           orderNote = d.note || "";
           scheduleTime = d.scheduledTime || "";
           selectedOrderType = d.table || "";
-          // show the table/title (for editing existing order we display its type)
           document.getElementById('tableTitle').textContent = selectedOrderType || 'Select Order Type';
           if(scheduleTime) {
             document.getElementById('scheduleField').value = scheduleTime;
@@ -981,14 +991,10 @@
             document.getElementById('scheduleField').value = '';
             document.getElementById('scheduleRow').style.display = 'none';
           }
-          // update total display (renderOrder uses order array)
           renderOrder();
-          // update orderId variable
           orderId = d.id || editingOrderId;
-          // if the status is paid/completed, disable interactions
           const s = (d.status || '').toString().toLowerCase();
           if(s === 'paid' || s === 'completed'){
-            // disable menu clicks visually
             document.querySelectorAll('.menu-card').forEach(c => c.style.pointerEvents = 'none');
             document.getElementById('payBtn').disabled = true;
             document.getElementById('holdBtn').disabled = true;
@@ -998,9 +1004,6 @@
             document.getElementById('holdBtn').disabled = false;
           }
         });
-      } else {
-        // Not editing an existing order: do nothing special on load.
-        // No reservation / no preselected order type.
       }
     })();
 
