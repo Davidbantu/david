@@ -39,7 +39,7 @@
     /* Layout */
     .layout { margin-top:10px; }
 
-    /* grid */
+    /* 4 columns per row (desktop), wrap to next line */
     .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
     @media (max-width:1400px){ .grid { grid-template-columns:repeat(3,1fr); } }
     @media (max-width:1000px){ .grid { grid-template-columns:repeat(2,1fr); } }
@@ -63,7 +63,7 @@
 
     .order-head { display:flex; align-items:center; gap:8px; justify-content:space-between; }
     .order-left { display:flex; flex-direction:column; gap:6px; }
-    .order-id { font-size:0.85rem; color:var(--muted); font-weight:700; }
+    .order-id { font-size:0.85rem; color:var(--muted); font-weight:700; } /* small order id text */
     .order-type-row { display:flex; align-items:center; gap:8px; }
     .order-type {
       display:inline-block;
@@ -89,7 +89,7 @@
     .items { padding:6px; border-radius:8px; background:rgba(255,255,255,0.01); display:flex; flex-direction:column; gap:8px; }
     .item-row { display:flex; align-items:flex-start; gap:8px; justify-content:space-between; }
     .item-left { display:flex; gap:10px; align-items:flex-start; flex:1 1 auto; min-width:0; }
-    .item-name { font-weight:700; color:var(--accent); font-size:0.98rem; white-space:normal; word-wrap:break-word; word-break:break-word; cursor:pointer; }
+    .item-name { font-weight:700; color:var(--accent); font-size:0.98rem; white-space:normal; word-wrap:break-word; word-break:break-word; cursor:pointer; } /* allow wrap */
     .item-note { font-size:0.86rem; color:var(--warning); margin-top:4px; font-style:italic; }
     .item-right { display:flex; gap:8px; align-items:center; flex:0 0 auto; }
 
@@ -153,7 +153,7 @@
   <script>
     // Firebase config
     const firebaseConfig = {
-      apiKey: "AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtI",
+      apiKey: "AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtZvI",
       authDomain: "newpos-dacb5.firebaseapp.com",
       databaseURL: "https://newpos-dacb5-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "newpos-dacb5",
@@ -188,7 +188,8 @@
     function nowMs(){ return Date.now(); }
     function secondsToHMS(sec){ sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec/3600); const m = Math.floor((sec%3600)/60); const s = sec%60; return [h,m,s].map(x=>String(x).padStart(2,'0')).join(':'); }
     function minutesToHM(mins){ mins = Math.max(0, Math.floor(mins)); const h = Math.floor(mins/60); const m = mins%60; return [h,m].map(x=>String(x).padStart(2,'0')).join(':'); }
-    function statusIsCompleted(s){ if(!s) return false; const ss = String(s).toLowerCase(); return ss === 'completed' || ss === 'paid'; }
+    // statusIsCompleted now treats only 'completed' as completed. 'paid' is NOT considered completed.
+    function statusIsCompleted(s){ if(!s) return false; const ss = String(s).toLowerCase(); return ss === 'completed'; }
     function saveCollapsedMap(){ try { localStorage.setItem('kitchen_collapsed_v1', JSON.stringify(collapsedMap)); } catch(e){} }
 
     function playAlertSound(){
@@ -233,7 +234,7 @@
       arrow.innerHTML = collapsedMap[String(order.id)] ? '&#9654;' : '&#9660;'; // ▶ or ▼
       typeEl.appendChild(arrow);
 
-      // Clicking order type toggles the item list collapse
+      // Clicking order type toggles the item list
       typeEl.addEventListener('click', (ev) => {
         ev.stopPropagation();
         const id = String(order.id);
@@ -261,7 +262,7 @@
       const paymentBadge = document.createElement('div');
       paymentBadge.className = 'payment-badge';
       const statusLower = (order.status || '').toString().toLowerCase();
-      paymentBadge.textContent = (statusLower === 'paid') ? 'Paid' : 'Payment Pending';
+      paymentBadge.textContent = (statusLower === 'paid') ? 'Paid' : ((statusLower === 'completed') ? 'Completed' : 'Payment Pending');
       meta.appendChild(paymentBadge);
       left.appendChild(meta);
 
@@ -285,7 +286,7 @@
       statusRow.appendChild(statusToggle); statusRow.appendChild(timerEl);
       right.appendChild(statusRow);
 
-      // only show scheduled label when the order has scheduledTime
+      // only show scheduled label when order has scheduledTime
       if(order.scheduledTime && String(order.scheduledTime).trim()){
         const scheduleText = document.createElement('div');
         scheduleText.className = 'schedule-text';
@@ -350,7 +351,7 @@
 
       const actions = document.createElement('div'); actions.className = 'order-actions';
 
-      // Mark all items (popup confirm)
+      // Mark all items (confirmation popup)
       if(!statusIsCompleted(order.status)){
         const markAllBtn = document.createElement('button'); markAllBtn.className = 'btn'; markAllBtn.textContent = 'Mark all items';
         markAllBtn.addEventListener('click', (ev)=>{
@@ -361,13 +362,13 @@
         });
         actions.appendChild(markAllBtn);
 
-        // Done button should show confirmation popup and upon OK hide the order (set completed)
+        // Done button: show confirmation popup and then mark completed and hide
         const doneBtn = document.createElement('button'); doneBtn.className = 'btn'; doneBtn.textContent = 'Done';
         doneBtn.addEventListener('click', (ev)=>{
           ev.stopPropagation();
           if(window.confirm('Mark order #' + order.id + ' as DONE (completed)?')) {
             markOrderDone(order.id);
-            // hide will occur because render excludes completed orders
+            // render will remove it from view
           }
         });
         actions.appendChild(doneBtn);
@@ -390,7 +391,7 @@
       // start timer
       startCardTimer(order.id, order, timerEl);
 
-      // hold-to-open popup: open a quick alert listing items (quick view)
+      // hold-to-open quick popup view
       let holdTimer = null;
       const HOLD_DELAY = 600;
       function pointerDown(){ holdTimer = setTimeout(()=>{ openOrderPopupView(order.id); holdTimer = null; }, HOLD_DELAY); }
@@ -405,7 +406,7 @@
       return card;
     }
 
-    // timer logic (scheduled or elapsed). When scheduled shows minutes left and red if <30m.
+    // timer logic
     function startCardTimer(id, order, displayEl){
       if(timers[id] && timers[id].interval) clearInterval(timers[id].interval);
 
@@ -454,7 +455,7 @@
       if(timers[id] && timers[id].interval){ clearInterval(timers[id].interval); delete timers[id]; }
     }
 
-    // mark single item done (firebase)
+    // toggle item done
     function toggleItemDone(orderId, itemIdx, doneValue){
       const updates = {};
       updates[`orders/${orderId}/items/${itemIdx}/done`] = !!doneValue;
@@ -478,19 +479,18 @@
       }).catch(err => { console.error('Error markAllItems', err); alert('Error marking all items: ' + (err && err.message)); });
     }
 
-    // mark order done: set status completed and hide from page (render excludes completed)
+    // mark order done: set status completed
     function markOrderDone(orderId){
       const ref = firebase.database().ref(`orders/${orderId}`);
       const now = nowMs();
       ref.update({ status: 'completed', completedAt: now, updatedAt: now }).then(()=> {
         stopCardTimer(orderId);
-        // render will exclude completed orders
+        // render will remove completed orders from the page
       }).catch(err=>console.error('Error marking order done', err));
     }
 
     function openOrderInOrderPage(orderId){ window.location.href = 'order.html?order=' + encodeURIComponent(orderId); }
 
-    // quick popup view for hold-to-open: simple alert showing details (keeps UI minimal)
     function openOrderPopupView(orderId){
       const order = ordersCache[orderId];
       if(!order) return;
@@ -499,13 +499,12 @@
       alert(`Order #${order.id}\nTable: ${order.table || ''}\n\nItems:\n` + (lines.length ? lines.join('\n') : 'No items'));
     }
 
-    // Render today's orders but exclude completed ones so Done hides them
+    // Render: show all orders for today except those with status 'completed' (so paid orders remain visible)
     function renderOrdersGrid(){
       const today = todayDateStr();
       const all = Object.values(ordersCache || {});
       const todays = all.filter(o => (o.date || '') === today);
-      // exclude completed orders so they are hidden from this page after Done
-      const visible = todays.filter(o => !statusIsCompleted(o.status));
+      const visible = todays.filter(o => !statusIsCompleted(o.status)); // only exclude 'completed' now
       ordersGrid.innerHTML = '';
       if(visible.length === 0){ emptyState.style.display = 'block'; } else { emptyState.style.display = 'none'; }
       visible.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -517,7 +516,7 @@
       todayDateEl.textContent = today;
     }
 
-    // Realtime listener with first-snapshot sound suppression
+    // Realtime listener
     function attachOrdersListener(){
       const ref = firebase.database().ref('orders');
       ref.on('value', snap => {
@@ -568,9 +567,10 @@
       }).catch(err => console.error(err));
     });
 
-    // init
+    // initialize
     attachOrdersListener();
 
+    // cleanup timers on unload
     window.addEventListener('beforeunload', () => {
       Object.keys(timers).forEach(k => { if(timers[k] && timers[k].interval) clearInterval(timers[k].interval); });
     });
