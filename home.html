@@ -19,6 +19,10 @@
       --muted: #9aa8c0;
       --glass: rgba(255,255,255,0.03);
       --white: #ffffff;
+
+      --status-off: rgba(255,255,255,0.06);
+      --status-ready: #43a047;
+      --status-delayed: #e53935;
     }
 
     * { box-sizing: border-box; }
@@ -32,10 +36,10 @@
     .btn { background:var(--primary); color:#fff; border:0; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; }
     .ghost { background:transparent; border:1px solid rgba(255,255,255,0.06); padding:8px 10px; border-radius:8px; color:var(--accent); }
 
-    /* Layout with only a main area (no quick-action box) */
+    /* Layout */
     .layout { margin-top:10px; }
 
-    /* 4 columns per row (desktop), wrap to next line */
+    /* grid */
     .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
     @media (max-width:1400px){ .grid { grid-template-columns:repeat(3,1fr); } }
     @media (max-width:1000px){ .grid { grid-template-columns:repeat(2,1fr); } }
@@ -50,13 +54,17 @@
       display:flex;
       flex-direction:column;
       gap:10px;
-      min-height:140px;
+      min-height:90px;
       word-break:break-word;
+      transition:all .12s ease;
+      position:relative;
+      user-select:none;
     }
 
     .order-head { display:flex; align-items:center; gap:8px; justify-content:space-between; }
     .order-left { display:flex; flex-direction:column; gap:6px; }
-    .order-id { font-size:0.85rem; color:var(--muted); font-weight:700; } /* small order id text */
+    .order-id { font-size:0.85rem; color:var(--muted); font-weight:700; }
+    .order-type-row { display:flex; align-items:center; gap:8px; }
     .order-type {
       display:inline-block;
       padding:6px 10px;
@@ -66,34 +74,28 @@
       font-weight:800;
       font-size:0.9rem;
       border:2px solid rgba(255,255,255,0.03);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:8px;
     }
     .order-meta { display:flex; gap:8px; align-items:center; color:var(--white); font-size:0.9rem; }
 
+    .timer-slot { display:flex; flex-direction:column; align-items:flex-end; gap:6px; min-width:120px; }
     .timer { font-weight:800; color:var(--white); font-size:0.95rem; }
+    .schedule-text { font-size:0.82rem; color:var(--muted); }
 
-    /* Items: show everything, allow wrapping item name; note on next line */
+    /* Items */
     .items { padding:6px; border-radius:8px; background:rgba(255,255,255,0.01); display:flex; flex-direction:column; gap:8px; }
     .item-row { display:flex; align-items:flex-start; gap:8px; justify-content:space-between; }
     .item-left { display:flex; gap:10px; align-items:flex-start; flex:1 1 auto; min-width:0; }
-    .item-name { font-weight:700; color:var(--accent); font-size:0.98rem; white-space:normal; word-wrap:break-word; word-break:break-word; } /* allow wrap */
+    .item-name { font-weight:700; color:var(--accent); font-size:0.98rem; white-space:normal; word-wrap:break-word; word-break:break-word; cursor:pointer; }
     .item-note { font-size:0.86rem; color:var(--warning); margin-top:4px; font-style:italic; }
     .item-right { display:flex; gap:8px; align-items:center; flex:0 0 auto; }
 
-    /* quantity in a box */
-    .qty-box {
-      min-width:44px;
-      padding:6px 8px;
-      border-radius:6px;
-      background:var(--order-type, #222);
-      border:1px solid rgba(255,255,255,0.05);
-      color:#fff;
-      font-weight:800;
-      text-align:center;
-    }
-
+    .qty-box { min-width:44px; padding:6px 8px; border-radius:6px; background:var(--order-type, #222); border:1px solid rgba(255,255,255,0.05); color:#fff; font-weight:800; text-align:center; }
     .price { font-size:0.86rem; color:var(--primary); font-weight:700; min-width:60px; text-align:right; }
 
-    /* per-item done checkbox / highlight */
     .item-done { margin-left:6px; transform:translateY(2px); }
     .item-name.done { text-decoration:line-through; opacity:0.6; color:#9fbcdfff; }
 
@@ -101,18 +103,28 @@
     .total { font-weight:800; color:var(--primary); font-size:1rem; }
     .order-actions { display:flex; gap:8px; align-items:center; }
 
-    /* modal */
-    .modal { display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:1200; }
-    .modal .box { background:var(--card-bg); padding:14px; border-radius:10px; border:2px solid var(--primary); width:920px; max-width:96vw; max-height:92vh; overflow:auto; }
-    .form-row { display:flex; gap:8px; align-items:center; }
+    /* status toggle */
+    .status-toggle {
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      background:var(--status-off);
+      border:2px solid rgba(255,255,255,0.06);
+      box-shadow:0 0 6px rgba(0,0,0,0.5);
+      cursor:pointer;
+    }
+    .status-toggle.ready { background:var(--status-ready); box-shadow:0 0 8px rgba(67,160,71,0.35); }
+    .status-toggle.delayed { background:var(--status-delayed); box-shadow:0 0 8px rgba(229,57,53,0.35); }
 
-    .small { padding:6px 8px; border-radius:8px; border:0; background:var(--accent2); color:var(--accent); font-weight:700; cursor:pointer; }
+    .arrow { transition:transform .12s ease; font-size:0.95rem; color:var(--accent); margin-left:6px; }
 
-    .small-ghost { padding:6px 8px; border-radius:8px; border:0; background:transparent; color:var(--white); font-weight:700; cursor:pointer; }
+    .collapsed .items { display:none; }
+    .collapsed { min-height:60px; }
 
-    .small-muted { color:var(--muted); font-size:0.9rem; }
+    .payment-badge { background: rgba(255,255,255,0.03); color: var(--muted); padding:4px 8px; border-radius:8px; font-weight:700; font-size:0.82rem; border:1px solid rgba(255,255,255,0.03); }
 
-    /* visually emphasize the selected/completed order (optional) */
+    .scheduled-label { background: rgba(255,165,0,0.09); color: var(--warning); padding:4px 8px; border-radius:8px; font-weight:700; font-size:0.82rem; border:1px solid rgba(255,165,0,0.06); }
+
     .hidden-card { display:none !important; }
   </style>
 </head>
@@ -123,7 +135,6 @@
       <div class="controls">
         <div id="todayDate" class="small-muted"></div>
         <button id="refreshBtn" class="btn"><i class="fas fa-sync"></i> Refresh</button>
-        <!-- Removed the quick-actions box as requested -->
         <div id="counts" style="display:flex;gap:10px;align-items:center;margin-left:12px;">
           <div class="small-muted">Pending:</div><div id="pendingCount" class="small-muted">0</div>
           <div class="small-muted">Completed:</div><div id="completedCount" class="small-muted">0</div>
@@ -133,42 +144,16 @@
 
     <div class="layout">
       <div id="ordersGrid" class="grid" style="margin-top:12px"></div>
-      <div id="emptyState" class="small-muted" style="display:none;margin-top:12px">No orders for today.</div>
-    </div>
-  </div>
-
-  <!-- Modal for full order view (edit/add) -->
-  <div id="orderModal" class="modal" role="dialog" aria-modal="true">
-    <div class="box">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <div id="modalOrderType" class="order-type" style="display:inline-block;margin-bottom:6px"></div>
-          <div id="modalOrderId" class="order-id"></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div id="modalTimer" class="timer">00:00:00</div>
-          <button id="modalMarkAllBtn" class="btn">Mark all items</button>
-          <button id="modalDoneBtn" class="btn">Done (Order)</button>
-          <button id="modalCloseBtn" class="small-ghost">Close</button>
-        </div>
-      </div>
-
-      <div style="margin-top:12px;" id="modalContent">
-        <!-- items area populated dynamically -->
-      </div>
-
-      <div style="display:flex;justify-content:flex-end;margin-top:12px;">
-        <div id="modalTotal" class="small-muted" style="font-weight:800"></div>
-      </div>
+      <div id="emptyState" class="small-muted" style="display:none;margin-top:12px">No pending orders for today.</div>
     </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script>
-    // Firebase config (same as order.html)
+    // Firebase config
     const firebaseConfig = {
-      apiKey: "AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtZvI",
+      apiKey: "AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtI",
       authDomain: "newpos-dacb5.firebaseapp.com",
       databaseURL: "https://newpos-dacb5-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "newpos-dacb5",
@@ -187,65 +172,131 @@
     const todayDateEl = document.getElementById('todayDate');
     const refreshBtn = document.getElementById('refreshBtn');
 
-    const orderModal = document.getElementById('orderModal');
-    const modalOrderType = document.getElementById('modalOrderType');
-    const modalOrderId = document.getElementById('modalOrderId');
-    const modalTimer = document.getElementById('modalTimer');
-    const modalContent = document.getElementById('modalContent');
-    const modalMarkAllBtn = document.getElementById('modalMarkAllBtn');
-    const modalDoneBtn = document.getElementById('modalDoneBtn');
-    const modalCloseBtn = document.getElementById('modalCloseBtn');
-    const modalTotal = document.getElementById('modalTotal');
-
     // state
     let ordersCache = {};
-    let timers = {}; // per-card timers
-    let modalTimerInterval = null;
-    let activeModalOrderId = null;
+    let timers = {};
+    let collapsedMap = {};
+    let firstSnapshotHandled = false;
+    let knownOrderIds = new Set();
 
-    // helpers
+    try {
+      const saved = localStorage.getItem('kitchen_collapsed_v1');
+      if(saved) collapsedMap = JSON.parse(saved) || {};
+    } catch(e){ collapsedMap = {}; }
+
     function todayDateStr(){ return (new Date()).toISOString().slice(0,10); }
     function nowMs(){ return Date.now(); }
     function secondsToHMS(sec){ sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec/3600); const m = Math.floor((sec%3600)/60); const s = sec%60; return [h,m,s].map(x=>String(x).padStart(2,'0')).join(':'); }
+    function minutesToHM(mins){ mins = Math.max(0, Math.floor(mins)); const h = Math.floor(mins/60); const m = mins%60; return [h,m].map(x=>String(x).padStart(2,'0')).join(':'); }
     function statusIsCompleted(s){ if(!s) return false; const ss = String(s).toLowerCase(); return ss === 'completed' || ss === 'paid'; }
+    function saveCollapsedMap(){ try { localStorage.setItem('kitchen_collapsed_v1', JSON.stringify(collapsedMap)); } catch(e){} }
 
-    // build card
+    function playAlertSound(){
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.value = 880;
+        g.gain.value = 0.0001;
+        o.connect(g);
+        g.connect(ctx.destination);
+        const now = ctx.currentTime;
+        g.gain.linearRampToValueAtTime(0.15, now + 0.01);
+        o.start(now);
+        g.gain.linearRampToValueAtTime(0.0001, now + 0.35);
+        o.stop(now + 0.36);
+      } catch(e){}
+    }
+
+    // Build a single order card
     function buildOrderCard(order){
       const card = document.createElement('div');
       card.className = 'order-card';
       card.dataset.id = order.id;
 
-      // header
       const head = document.createElement('div');
       head.className = 'order-head';
 
       const left = document.createElement('div');
       left.className = 'order-left';
       const idEl = document.createElement('div'); idEl.className = 'order-id'; idEl.textContent = 'Order #' + (order.id || '');
-      const typeEl = document.createElement('div'); typeEl.className = 'order-type'; typeEl.textContent = order.table || '';
-      left.appendChild(typeEl);
+
+      const typeRow = document.createElement('div');
+      typeRow.className = 'order-type-row';
+      const typeEl = document.createElement('div');
+      typeEl.className = 'order-type';
+      typeEl.textContent = order.table || '';
+
+      const arrow = document.createElement('span');
+      arrow.className = 'arrow';
+      arrow.innerHTML = collapsedMap[String(order.id)] ? '&#9654;' : '&#9660;'; // ▶ or ▼
+      typeEl.appendChild(arrow);
+
+      // Clicking order type toggles the item list collapse
+      typeEl.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const id = String(order.id);
+        const isCollapsed = !!collapsedMap[id];
+        if(isCollapsed){
+          delete collapsedMap[id];
+          arrow.innerHTML = '&#9660;';
+          card.classList.remove('collapsed');
+        } else {
+          collapsedMap[id] = true;
+          arrow.innerHTML = '&#9654;';
+          card.classList.add('collapsed');
+        }
+        saveCollapsedMap();
+      });
+
+      typeRow.appendChild(typeEl);
+      left.appendChild(typeRow);
       left.appendChild(idEl);
 
       const meta = document.createElement('div'); meta.className = 'order-meta';
       const dateEl = document.createElement('div'); dateEl.textContent = (order.date || '') + ' ' + (order.time || '');
       meta.appendChild(dateEl);
 
+      const paymentBadge = document.createElement('div');
+      paymentBadge.className = 'payment-badge';
+      const statusLower = (order.status || '').toString().toLowerCase();
+      paymentBadge.textContent = (statusLower === 'paid') ? 'Paid' : 'Payment Pending';
+      meta.appendChild(paymentBadge);
       left.appendChild(meta);
 
-      const right = document.createElement('div');
-      right.style.display = 'flex';
-      right.style.flexDirection = 'column';
-      right.style.alignItems = 'flex-end';
-      const timerEl = document.createElement('div');
-      timerEl.className = 'timer';
-      timerEl.textContent = '00:00:00';
-      right.appendChild(timerEl);
+      // right: timer and status toggle
+      const right = document.createElement('div'); right.className = 'timer-slot';
+      const statusRow = document.createElement('div'); statusRow.style.display = 'flex'; statusRow.style.alignItems = 'center'; statusRow.style.gap = '8px';
 
-      head.appendChild(left);
-      head.appendChild(right);
+      const statusToggle = document.createElement('div'); statusToggle.className = 'status-toggle';
+      const initialReady = (order.readyState || 'off');
+      if(initialReady === 'ready') statusToggle.classList.add('ready');
+      if(initialReady === 'delayed') statusToggle.classList.add('delayed');
+
+      statusToggle.addEventListener('click', (ev)=> {
+        ev.stopPropagation();
+        const cur = (order.readyState || 'off');
+        const next = cur === 'off' ? 'ready' : (cur === 'ready' ? 'delayed' : 'off');
+        setReadyState(order.id, next);
+      });
+
+      const timerEl = document.createElement('div'); timerEl.className = 'timer'; timerEl.textContent = '00:00:00';
+      statusRow.appendChild(statusToggle); statusRow.appendChild(timerEl);
+      right.appendChild(statusRow);
+
+      // only show scheduled label when the order has scheduledTime
+      if(order.scheduledTime && String(order.scheduledTime).trim()){
+        const scheduleText = document.createElement('div');
+        scheduleText.className = 'schedule-text';
+        scheduleText.textContent = 'Scheduled • ' + order.scheduledTime;
+        right.appendChild(scheduleText);
+      }
+
+      head.appendChild(left); head.appendChild(right);
       card.appendChild(head);
 
-      // If whole-order note exists, show it on top of items
+      // order note
       if(order.note && String(order.note).trim()){
         const orderNote = document.createElement('div');
         orderNote.className = 'item-note';
@@ -255,309 +306,210 @@
         card.appendChild(orderNote);
       }
 
-      // items: show everything (no inner scroll), allow wrapping names, show note below item
-      const itemsWrap = document.createElement('div');
-      itemsWrap.className = 'items';
-
+      // items list
+      const itemsWrap = document.createElement('div'); itemsWrap.className = 'items';
       const items = Array.isArray(order.items) ? order.items : [];
       if(items.length === 0){
         const none = document.createElement('div'); none.className = 'small-muted'; none.textContent = 'No items';
         itemsWrap.appendChild(none);
       } else {
         items.forEach((it, idx) => {
-          const row = document.createElement('div');
-          row.className = 'item-row';
+          const row = document.createElement('div'); row.className = 'item-row';
+          const leftBlock = document.createElement('div'); leftBlock.className = 'item-left';
 
-          const leftBlock = document.createElement('div');
-          leftBlock.className = 'item-left';
-
-          // checkbox to mark item done
-          const cb = document.createElement('input');
-          cb.type = 'checkbox';
-          cb.className = 'item-done';
-          cb.checked = !!it.done;
-          cb.title = 'Mark item as completed';
-          cb.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            toggleItemDone(order.id, idx, cb.checked);
-          });
+          // checkbox
+          const cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'item-done'; cb.checked = !!it.done;
+          cb.title = 'Mark item done';
+          cb.addEventListener('click', (ev)=> { ev.stopPropagation(); toggleItemDone(order.id, idx, cb.checked); });
           leftBlock.appendChild(cb);
 
-          // name + possible note (note below)
-          const nameAndNote = document.createElement('div');
-          nameAndNote.style.minWidth = '0';
-          const name = document.createElement('div');
-          name.className = 'item-name' + (it.done ? ' done' : '');
-          name.textContent = it.name || '';
-          name.style.whiteSpace = 'normal'; // allow wrap
+          const nameAndNote = document.createElement('div'); nameAndNote.style.minWidth = '0';
+          const name = document.createElement('div'); name.className = 'item-name' + (it.done ? ' done' : ''); name.textContent = it.name || '';
+          name.addEventListener('click', (ev)=> { ev.stopPropagation(); const newVal = !Boolean(it.done); toggleItemDone(order.id, idx, newVal); });
           nameAndNote.appendChild(name);
-
           if(it.note && String(it.note).trim()){
-            const inote = document.createElement('div');
-            inote.className = 'item-note';
-            inote.textContent = it.note;
-            nameAndNote.appendChild(inote);
+            const inote = document.createElement('div'); inote.className = 'item-note'; inote.textContent = it.note; nameAndNote.appendChild(inote);
           }
-
           leftBlock.appendChild(nameAndNote);
 
-          // right side: qty box and price
-          const rightBlock = document.createElement('div');
-          rightBlock.className = 'item-right';
+          const rightBlock = document.createElement('div'); rightBlock.className = 'item-right';
+          const qtyBox = document.createElement('div'); qtyBox.className = 'qty-box'; qtyBox.textContent = 'x' + (it.qty || 1);
+          const price = document.createElement('div'); price.className = 'price'; price.textContent = '€' + (((it.price || 0) * (it.qty || 1)).toFixed(2));
+          rightBlock.appendChild(qtyBox); rightBlock.appendChild(price);
 
-          const qtyBox = document.createElement('div');
-          qtyBox.className = 'qty-box';
-          qtyBox.textContent = 'x' + (it.qty || 1);
-
-          const price = document.createElement('div');
-          price.className = 'price';
-          price.textContent = '€' + (((it.price || 0) * (it.qty || 1)).toFixed(2));
-
-          rightBlock.appendChild(qtyBox);
-          rightBlock.appendChild(price);
-
-          row.appendChild(leftBlock);
-          row.appendChild(rightBlock);
-
+          row.appendChild(leftBlock); row.appendChild(rightBlock);
           itemsWrap.appendChild(row);
         });
       }
-
       card.appendChild(itemsWrap);
 
-      // footer
-      const footer = document.createElement('div');
-      footer.className = 'order-footer';
+      // footer with styled buttons
+      const footer = document.createElement('div'); footer.className = 'order-footer';
       const totalEl = document.createElement('div'); totalEl.className = 'total'; totalEl.textContent = 'Total: €' + Number(order.total || 0).toFixed(2);
       footer.appendChild(totalEl);
 
       const actions = document.createElement('div'); actions.className = 'order-actions';
 
-      // Open button opens order.html with order id so user can edit on order page (order.html should be updated to accept ?order=ID)
-      const openBtn = document.createElement('button'); openBtn.className = 'small'; openBtn.textContent = 'Open';
-      openBtn.addEventListener('click', (ev) => { ev.stopPropagation(); openOrderInOrderPage(order.id); });
-      actions.appendChild(openBtn);
-
-      // If order not completed show "Mark All Items" and "Done"
+      // Mark all items (popup confirm)
       if(!statusIsCompleted(order.status)){
-        const markAllBtn = document.createElement('button'); markAllBtn.className = 'small'; markAllBtn.textContent = 'Mark all items';
-        markAllBtn.addEventListener('click', (ev) => { ev.stopPropagation(); markAllItems(order.id); });
+        const markAllBtn = document.createElement('button'); markAllBtn.className = 'btn'; markAllBtn.textContent = 'Mark all items';
+        markAllBtn.addEventListener('click', (ev)=>{
+          ev.stopPropagation();
+          if(window.confirm('Mark all items in order #' + order.id + ' as done?')) {
+            markAllItems(order.id);
+          }
+        });
         actions.appendChild(markAllBtn);
 
-        const doneBtn = document.createElement('button'); doneBtn.className = 'small'; doneBtn.textContent = 'Done';
-        doneBtn.addEventListener('click', (ev) => { ev.stopPropagation(); markOrderDone(order.id); });
+        // Done button should show confirmation popup and upon OK hide the order (set completed)
+        const doneBtn = document.createElement('button'); doneBtn.className = 'btn'; doneBtn.textContent = 'Done';
+        doneBtn.addEventListener('click', (ev)=>{
+          ev.stopPropagation();
+          if(window.confirm('Mark order #' + order.id + ' as DONE (completed)?')) {
+            markOrderDone(order.id);
+            // hide will occur because render excludes completed orders
+          }
+        });
         actions.appendChild(doneBtn);
       } else {
         const doneLbl = document.createElement('div'); doneLbl.className = 'small-muted'; doneLbl.textContent = 'Completed';
         actions.appendChild(doneLbl);
       }
 
+      // Open (button)
+      const openBtn = document.createElement('button'); openBtn.className = 'btn'; openBtn.textContent = 'Open';
+      openBtn.addEventListener('click', (ev)=> { ev.stopPropagation(); openOrderInOrderPage(order.id); });
+      actions.appendChild(openBtn);
+
       footer.appendChild(actions);
       card.appendChild(footer);
 
-      // start timer for card
+      // apply collapse stored state
+      if(collapsedMap[String(order.id)]) card.classList.add('collapsed');
+
+      // start timer
       startCardTimer(order.id, order, timerEl);
 
-      // clicking the card opens the modal too
-      card.addEventListener('click', () => openOrderModal(order.id));
+      // hold-to-open popup: open a quick alert listing items (quick view)
+      let holdTimer = null;
+      const HOLD_DELAY = 600;
+      function pointerDown(){ holdTimer = setTimeout(()=>{ openOrderPopupView(order.id); holdTimer = null; }, HOLD_DELAY); }
+      function cancelHold(){ if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; } }
+
+      card.addEventListener('mousedown', pointerDown);
+      card.addEventListener('touchstart', pointerDown, {passive:true});
+      card.addEventListener('mouseup', (ev)=> { cancelHold(); });
+      card.addEventListener('mouseleave', cancelHold);
+      card.addEventListener('touchend', cancelHold);
 
       return card;
     }
 
-    // timers
-    function startCardTimer(id, order, el){
-      // clear existing
+    // timer logic (scheduled or elapsed). When scheduled shows minutes left and red if <30m.
+    function startCardTimer(id, order, displayEl){
       if(timers[id] && timers[id].interval) clearInterval(timers[id].interval);
+
       function update(){
-        const created = order.createdAt || (order.date ? new Date(order.date + 'T' + (order.time || '00:00:00')).getTime() : nowMs());
-        if(statusIsCompleted(order.status)){
-          const completedAt = order.completedAt || order.updatedAt || nowMs();
-          el.textContent = secondsToHMS(Math.floor((completedAt - created)/1000)) + ' (done)';
+        const now = nowMs();
+        const scheduledTime = order.scheduledTime || order.scheduled || null;
+        let scheduledMs = null;
+        let showScheduledCountdown = false;
+        if(scheduledTime){
+          try {
+            const datePart = order.scheduledDate || order.date || todayDateStr();
+            const timePart = scheduledTime.length <= 5 ? scheduledTime + ':00' : scheduledTime;
+            const dt = new Date(datePart + 'T' + timePart);
+            if(!isNaN(dt.getTime())){
+              scheduledMs = dt.getTime();
+              if(scheduledMs > now) showScheduledCountdown = true;
+            }
+          } catch(e){ showScheduledCountdown = false; scheduledMs = null; }
+        }
+
+        if(showScheduledCountdown && scheduledMs){
+          const remainingSec = Math.floor((scheduledMs - now) / 1000);
+          const lessThan30Min = remainingSec <= (30 * 60);
+          const minsLeft = Math.ceil(remainingSec / 60);
+          displayEl.textContent = minutesToHM(minsLeft) + ' left';
+          displayEl.style.color = lessThan30Min ? 'var(--danger)' : 'var(--white)';
         } else {
-          el.textContent = secondsToHMS(Math.floor((nowMs() - created)/1000));
+          const created = order.createdAt || (order.date ? new Date(order.date + 'T' + (order.time || '00:00:00')).getTime() : now);
+          if(statusIsCompleted(order.status)){
+            const completedAt = order.completedAt || order.updatedAt || now;
+            displayEl.textContent = secondsToHMS(Math.floor((completedAt - created)/1000)) + ' (done)';
+            displayEl.style.color = 'var(--muted)';
+          } else {
+            displayEl.textContent = secondsToHMS(Math.floor((now - created)/1000));
+            displayEl.style.color = 'var(--white)';
+          }
         }
       }
+
       update();
       const iv = setInterval(update, 1000);
       timers[id] = { interval: iv };
     }
 
     function stopCardTimer(id){
-      if(timers[id] && timers[id].interval) { clearInterval(timers[id].interval); delete timers[id]; }
+      if(timers[id] && timers[id].interval){ clearInterval(timers[id].interval); delete timers[id]; }
     }
 
-    // toggle single item done flag in Firebase
+    // mark single item done (firebase)
     function toggleItemDone(orderId, itemIdx, doneValue){
-      const itemPath = `orders/${orderId}/items/${itemIdx}/done`;
       const updates = {};
-      updates[itemPath] = !!doneValue;
-      // also set updatedAt
+      updates[`orders/${orderId}/items/${itemIdx}/done`] = !!doneValue;
       updates[`orders/${orderId}/updatedAt`] = nowMs();
-      firebase.database().ref().update(updates)
-        .catch(err => {
-          console.error('Error toggling item done', err);
-          alert('Error toggling item done: ' + (err && err.message));
-        });
+      firebase.database().ref().update(updates).catch(err=>console.error('Error toggling item done',err));
     }
 
-    // mark all items for an order as done (set items[i].done = true)
+    function setReadyState(orderId, state){
+      firebase.database().ref(`orders/${orderId}`).update({ readyState: state, updatedAt: nowMs() }).catch(err=>console.error('Error setting ready state', err));
+    }
+
+    // mark all items
     function markAllItems(orderId){
-      if(!confirm('Mark all items in order #' + orderId + ' as done?')) return;
       const ref = firebase.database().ref(`orders/${orderId}`);
       ref.once('value').then(snap => {
         const data = snap.val();
         if(!data) throw new Error('Order not found');
         const items = Array.isArray(data.items) ? data.items.slice() : [];
-        for(let i=0;i<items.length;i++){
-          items[i].done = true;
-          items[i].doneAt = nowMs();
-        }
+        for(let i=0;i<items.length;i++){ items[i].done = true; items[i].doneAt = nowMs(); }
         return ref.update({ items: items, updatedAt: nowMs() });
-      }).catch(err => {
-        console.error('Error markAllItems', err);
-        alert('Error marking all items: ' + (err && err.message));
-      });
+      }).catch(err => { console.error('Error markAllItems', err); alert('Error marking all items: ' + (err && err.message)); });
     }
 
-    // mark order done (set status completed + completedAt); hide card from pending list
+    // mark order done: set status completed and hide from page (render excludes completed)
     function markOrderDone(orderId){
-      if(!confirm('Mark order #' + orderId + ' as DONE (completed)?')) return;
       const ref = firebase.database().ref(`orders/${orderId}`);
       const now = nowMs();
-      ref.update({ status: 'completed', completedAt: now, updatedAt: now })
-        .then(() => {
-          // stop timer and hide card from pending view (render will update)
-          stopCardTimer(orderId);
-        })
-        .catch(err => {
-          console.error('Error marking order done', err);
-          alert('Error marking order done: ' + (err && err.message));
-        });
+      ref.update({ status: 'completed', completedAt: now, updatedAt: now }).then(()=> {
+        stopCardTimer(orderId);
+        // render will exclude completed orders
+      }).catch(err=>console.error('Error marking order done', err));
     }
 
-    // open order in order.html with order id as query param
-    function openOrderInOrderPage(orderId){
-      // This navigates the same tab to order.html?order=ID — order.html must be extended to load an existing order by id.
-      window.location.href = 'order.html?order=' + encodeURIComponent(orderId);
-    }
+    function openOrderInOrderPage(orderId){ window.location.href = 'order.html?order=' + encodeURIComponent(orderId); }
 
-    // open modal with full order and item controls
-    function openOrderModal(orderId){
+    // quick popup view for hold-to-open: simple alert showing details (keeps UI minimal)
+    function openOrderPopupView(orderId){
       const order = ordersCache[orderId];
-      if(!order) { alert('Order not found'); return; }
-      activeModalOrderId = orderId;
-      modalOrderType.textContent = order.table || '';
-      modalOrderId.textContent = 'Order #' + order.id;
-      modalTotal.textContent = 'Total: €' + Number(order.total || 0).toFixed(2);
-
-      // content items (allow toggling)
-      modalContent.innerHTML = '';
+      if(!order) return;
       const items = Array.isArray(order.items) ? order.items : [];
-      items.forEach((it, idx) => {
-        const row = document.createElement('div');
-        row.style.display = 'flex';
-        row.style.justifyContent = 'space-between';
-        row.style.alignItems = 'flex-start';
-        row.style.marginBottom = '10px';
-
-        const left = document.createElement('div');
-        left.style.flex = '1 1 auto';
-        const name = document.createElement('div'); name.textContent = it.name || ''; name.style.fontWeight = '800'; name.style.color = 'var(--accent)'; name.style.whiteSpace = 'normal';
-        left.appendChild(name);
-        if(it.note && String(it.note).trim()){
-          const inote = document.createElement('div'); inote.className = 'item-note'; inote.textContent = it.note;
-          left.appendChild(inote);
-        }
-
-        const right = document.createElement('div');
-        right.style.display = 'flex';
-        right.style.flexDirection = 'column';
-        right.style.gap = '8px';
-        right.style.alignItems = 'flex-end';
-
-        const qtyBox = document.createElement('div'); qtyBox.className = 'qty-box'; qtyBox.textContent = 'x' + (it.qty || 1);
-        const price = document.createElement('div'); price.className = 'price'; price.textContent = '€' + (((it.price || 0) * (it.qty || 1)).toFixed(2));
-
-        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!it.done;
-        cb.addEventListener('click', () => toggleItemDone(orderId, idx, cb.checked));
-
-        right.appendChild(qtyBox);
-        right.appendChild(price);
-        right.appendChild(cb);
-
-        row.appendChild(left);
-        row.appendChild(right);
-        modalContent.appendChild(row);
-      });
-
-      // start modal timer
-      startModalTimer(order);
-
-      orderModal.style.display = 'flex';
+      const lines = items.map(it => `${it.qty || 1} x ${it.name}${it.note ? ' — ' + it.note : ''}`);
+      alert(`Order #${order.id}\nTable: ${order.table || ''}\n\nItems:\n` + (lines.length ? lines.join('\n') : 'No items'));
     }
 
-    function startModalTimer(order){
-      if(modalTimerInterval) clearInterval(modalTimerInterval);
-      function update(){
-        const created = order.createdAt || (order.date ? new Date(order.date + 'T' + (order.time || '00:00:00')).getTime() : nowMs());
-        if(statusIsCompleted(order.status)){
-          const completedAt = order.completedAt || order.updatedAt || nowMs();
-          modalTimer.textContent = secondsToHMS(Math.floor((completedAt - created)/1000)) + ' (done)';
-        } else {
-          modalTimer.textContent = secondsToHMS(Math.floor((nowMs() - created)/1000));
-        }
-      }
-      update();
-      modalTimerInterval = setInterval(update, 1000);
-    }
-
-    function stopModalTimer(){ if(modalTimerInterval) { clearInterval(modalTimerInterval); modalTimerInterval = null; } }
-
-    modalCloseBtn.addEventListener('click', () => {
-      orderModal.style.display = 'none';
-      stopModalTimer();
-      activeModalOrderId = null;
-    });
-
-    modalMarkAllBtn.addEventListener('click', () => {
-      if(!activeModalOrderId) return;
-      markAllItems(activeModalOrderId);
-    });
-
-    modalDoneBtn.addEventListener('click', () => {
-      if(!activeModalOrderId) return;
-      markOrderDone(activeModalOrderId);
-      orderModal.style.display = 'none';
-      stopModalTimer();
-      activeModalOrderId = null;
-    });
-
-    // Render grid of today's pending orders by default
+    // Render today's orders but exclude completed ones so Done hides them
     function renderOrdersGrid(){
       const today = todayDateStr();
       const all = Object.values(ordersCache || {});
-      // only today's orders displayed on kitchen screen
       const todays = all.filter(o => (o.date || '') === today);
-      // by default hide completed orders on kitchen screen (kitchen usually cares about pending)
+      // exclude completed orders so they are hidden from this page after Done
       const visible = todays.filter(o => !statusIsCompleted(o.status));
       ordersGrid.innerHTML = '';
-
-      if(visible.length === 0){
-        emptyState.style.display = 'block';
-      } else {
-        emptyState.style.display = 'none';
-      }
-
-      // newest first
+      if(visible.length === 0){ emptyState.style.display = 'block'; } else { emptyState.style.display = 'none'; }
       visible.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-      // build cards (4 per row is handled by css grid)
-      visible.forEach(o => {
-        const card = buildOrderCard(o);
-        ordersGrid.appendChild(card);
-      });
-
-      // update counts
+      visible.forEach(o => { const card = buildOrderCard(o); ordersGrid.appendChild(card); });
       const pendingCount = todays.filter(o => !statusIsCompleted(o.status)).length;
       const completedCount = todays.filter(o => statusIsCompleted(o.status)).length;
       pendingCountEl.textContent = pendingCount;
@@ -565,70 +517,62 @@
       todayDateEl.textContent = today;
     }
 
-    // realtime listener: keep ordersCache in sync
+    // Realtime listener with first-snapshot sound suppression
     function attachOrdersListener(){
       const ref = firebase.database().ref('orders');
       ref.on('value', snap => {
         const val = snap.val() || {};
-        ordersCache = {};
-        Object.keys(val).forEach(k => {
-          ordersCache[k] = val[k];
-        });
+        const incomingKeys = Object.keys(val || {});
+        if(!firstSnapshotHandled){
+          knownOrderIds = new Set(incomingKeys);
+          ordersCache = {};
+          incomingKeys.forEach(k => ordersCache[k] = val[k]);
+          Object.keys(ordersCache).forEach(k => {
+            const o = ordersCache[k];
+            if(!o.createdAt){
+              try { if(o.date && o.time){ const dt = new Date(o.date + 'T' + (o.time || '00:00:00')); o.createdAt = dt.getTime(); } else o.createdAt = nowMs(); } catch(e){ o.createdAt = nowMs(); }
+            }
+          });
+          renderOrdersGrid();
+          firstSnapshotHandled = true;
+          return;
+        }
 
-        // ensure createdAt for older entries
+        const newIds = [];
+        for(const k of incomingKeys){ if(!knownOrderIds.has(k)) newIds.push(k); }
+        knownOrderIds = new Set(incomingKeys);
+
+        ordersCache = {};
+        incomingKeys.forEach(k => ordersCache[k] = val[k]);
         Object.keys(ordersCache).forEach(k => {
           const o = ordersCache[k];
           if(!o.createdAt){
-            try {
-              if(o.date && o.time){
-                const dt = new Date(o.date + 'T' + (o.time || '00:00:00'));
-                o.createdAt = dt.getTime();
-              } else {
-                o.createdAt = nowMs();
-              }
-            } catch(e){
-              o.createdAt = nowMs();
-            }
+            try { if(o.date && o.time){ const dt = new Date(o.date + 'T' + (o.time || '00:00:00')); o.createdAt = dt.getTime(); } else o.createdAt = nowMs(); } catch(e){ o.createdAt = nowMs(); }
           }
         });
 
-        // cleanup timers for orders that no longer appear
+        if(newIds.length > 0) playAlertSound();
+
         const existingIds = Object.keys(ordersCache);
-        Object.keys(timers).forEach(id => {
-          if(!existingIds.includes(id)) stopCardTimer(id);
-        });
+        Object.keys(timers).forEach(id => { if(!existingIds.includes(id)) stopCardTimer(id); });
 
         renderOrdersGrid();
-      }, err => {
-        console.error('Firebase read error', err);
-      });
+      }, err => { console.error('Firebase read error', err); });
     }
 
-    // mark all items done and then mark order completed from outside (utility)
-    // used when you want to complete order and hide card
-    function completeOrderAndHide(orderId){
-      markAllItems(orderId);
-      // mark order done after a short delay to allow items to update
-      setTimeout(() => markOrderDone(orderId), 350);
-    }
-
-    // manual refresh
-    refreshBtn.addEventListener('click', () => {
+    refreshBtn.addEventListener('click', ()=> {
       firebase.database().ref('orders').once('value').then(snap => {
         const val = snap.val() || {};
-        ordersCache = {};
-        Object.keys(val).forEach(k => ordersCache[k] = val[k]);
+        ordersCache = {}; Object.keys(val).forEach(k => ordersCache[k] = val[k]);
         renderOrdersGrid();
       }).catch(err => console.error(err));
     });
 
-    // initialize
+    // init
     attachOrdersListener();
 
-    // cleanup when leaving page
     window.addEventListener('beforeunload', () => {
       Object.keys(timers).forEach(k => { if(timers[k] && timers[k].interval) clearInterval(timers[k].interval); });
-      if(modalTimerInterval) clearInterval(modalTimerInterval);
     });
   </script>
 </body>
