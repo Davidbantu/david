@@ -217,9 +217,20 @@
 
     function todayDateStr(){ return (new Date()).toISOString().slice(0,10); }
     function nowMs(){ return Date.now(); }
-    function secondsToHMS(sec){ sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec/3600); const m = Math.floor((sec%3600)/60); const s = sec%60; return [h,m,s].map(x=>String(x).padStart(2,'0')).join(':'); }
-    function minutesToHM(mins){ mins = Math.max(0, Math.floor(mins)); const h = Math.floor(mins/60); const m = mins%60; return [h,m].map(x=>String(x).padStart(2,'0')).join(':'); }
-    // statusIsCompleted now treats only 'completed' as completed. 'paid' is NOT considered completed.
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function secondsToHMS(sec){
+      sec = Math.max(0, Math.floor(sec));
+      const h = Math.floor(sec/3600);
+      const m = Math.floor((sec%3600)/60);
+      const s = sec%60;
+      return [h,m,s].map(x=>pad(x)).join(':');
+    }
+    function minutesToHM(mins){
+      mins = Math.max(0, Math.floor(mins));
+      const h = Math.floor(mins/60);
+      const m = mins%60;
+      return [h,m].map(x=>pad(x)).join(':');
+    }
     function statusIsCompleted(s){ if(!s) return false; const ss = String(s).toLowerCase(); return ss === 'completed'; }
     function saveCollapsedMap(){ try { localStorage.setItem('kitchen_collapsed_v1', JSON.stringify(collapsedMap)); } catch(e){} }
 
@@ -239,6 +250,36 @@
         g.gain.linearRampToValueAtTime(0.0001, now + 0.35);
         o.stop(now + 0.36);
       } catch(e){}
+    }
+
+    // parse scheduled time into milliseconds (robust)
+    function parseScheduledMs(order){
+      const st = order.scheduledTime;
+      if(!st) return null;
+      // if numeric (ms)
+      if(typeof st === 'number'){
+        return st;
+      }
+      // if string containing ISO date/time
+      try {
+        const s = String(st).trim();
+        // ISO full datetime
+        if(/\d{4}-\d{2}-\d{2}T/.test(s) || /\d{4}[-/]\d{2}[-/]\d{2}/.test(s) && s.includes('T')){
+          const d = new Date(s);
+          if(!isNaN(d.getTime())) return d.getTime();
+        }
+        // if only time "HH:MM" or "HH:MM:SS", combine with order.scheduledDate or order.date or today
+        if(/^\d{1,2}:\d{2}(:\d{2})?$/.test(s)){
+          const datePart = order.scheduledDate || order.date || todayDateStr();
+          const timePart = s.length <= 5 ? s + ':00' : s;
+          const d = new Date(datePart + 'T' + timePart);
+          if(!isNaN(d.getTime())) return d.getTime();
+        }
+        // fallback: try Date.parse
+        const dp = Date.parse(s);
+        if(!isNaN(dp)) return dp;
+      } catch(e){}
+      return null;
     }
 
     // Build a single order card
@@ -437,35 +478,23 @@
       return card;
     }
 
-    // timer logic
+    // timer logic (robust scheduled countdown -> elapsed timer behavior)
     function startCardTimer(id, order, displayEl){
       if(timers[id] && timers[id].interval) clearInterval(timers[id].interval);
 
       function update(){
         const now = nowMs();
-        const scheduledTime = order.scheduledTime || order.scheduled || null;
-        let scheduledMs = null;
-        let showScheduledCountdown = false;
-        if(scheduledTime){
-          try {
-            const datePart = order.scheduledDate || order.date || todayDateStr();
-            const timePart = scheduledTime.length <= 5 ? scheduledTime + ':00' : scheduledTime;
-            const dt = new Date(datePart + 'T' + timePart);
-            if(!isNaN(dt.getTime())){
-              scheduledMs = dt.getTime();
-              if(scheduledMs > now) showScheduledCountdown = true;
-            }
-          } catch(e){ showScheduledCountdown = false; scheduledMs = null; }
-        }
+        const scheduledMs = parseScheduledMs(order); // robust parsing
+        const created = order.createdAt || (order.date ? new Date(order.date + 'T' + (order.time || '00:00:00')).getTime() : now);
 
-        if(showScheduledCountdown && scheduledMs){
-          const remainingSec = Math.floor((scheduledMs - now) / 1000);
+        if(scheduledMs && scheduledMs > now){
+          // scheduled time in future: show reverse countdown HH:MM:SS left
+          const remainingSec = Math.ceil((scheduledMs - now) / 1000);
           const lessThan30Min = remainingSec <= (30 * 60);
-          const minsLeft = Math.ceil(remainingSec / 60);
-          displayEl.textContent = minutesToHM(minsLeft) + ' left';
+          displayEl.textContent = secondsToHMS(remainingSec) + ' left';
           displayEl.style.color = lessThan30Min ? 'var(--danger)' : 'var(--white)';
         } else {
-          const created = order.createdAt || (order.date ? new Date(order.date + 'T' + (order.time || '00:00:00')).getTime() : now);
+          // scheduled time has passed or not present: show normal elapsed timer since createdAt
           if(statusIsCompleted(order.status)){
             const completedAt = order.completedAt || order.updatedAt || now;
             displayEl.textContent = secondsToHMS(Math.floor((completedAt - created)/1000)) + ' (done)';
@@ -531,6 +560,7 @@
     }
 
     // Render: show all orders for today except those with status 'completed' (so paid orders remain visible)
+    // IMPORTANT: sort ascending so new orders appear last (to the right)
     function renderOrdersGrid(){
       const today = todayDateStr();
       const all = Object.values(ordersCache || {});
@@ -538,7 +568,8 @@
       const visible = todays.filter(o => !statusIsCompleted(o.status)); // only exclude 'completed' now
       ordersGrid.innerHTML = '';
       if(visible.length === 0){ emptyState.style.display = 'block'; } else { emptyState.style.display = 'none'; }
-      visible.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+      // sort ascending by createdAt so oldest -> left, newest -> right
+      visible.sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0));
       visible.forEach(o => { const card = buildOrderCard(o); ordersGrid.appendChild(card); });
       const pendingCount = todays.filter(o => !statusIsCompleted(o.status)).length;
       const completedCount = todays.filter(o => statusIsCompleted(o.status)).length;
