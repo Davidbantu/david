@@ -23,6 +23,13 @@
     .actions-row { display:flex; gap:8px; margin-bottom:10px; align-items:center; flex-wrap:wrap; }
     .footer-note { margin-top:12px; color:#9fb7cf; font-size:0.92rem; }
     a.inline-link { color:#bbdefb; text-decoration:none; background:transparent; padding:6px 8px; border-radius:6px; border:1px solid transparent; }
+
+    /* Drag visuals */
+    .dragging { opacity: 0.45; }
+    .drag-over { outline: 2px dashed #42a5f5; border-radius:6px; }
+    .item.drag-over { outline: 2px dashed #42a5f5; }
+
+    .hint { margin-top:8px; color:#9fb7cf; font-size:0.9rem; }
   </style>
 </head>
 <body>
@@ -30,7 +37,7 @@
     <div class="panel" id="editorPanel">
       <div class="header">
         <h2>Menu Editor</h2>
-        <div class="muted">Edit categories and items — changes are saved to Firebase /menu</div>
+        <div class="muted">Drag categories or items to reorder; items can be moved between categories. Changes save to Firebase /menu</div>
       </div>
 
       <div class="actions-row">
@@ -45,9 +52,10 @@
       <div id="categoriesList"></div>
 
       <div class="footer-note">
-        Tip: open order.html in another tab to use the menu. If you don't want order.html to pick up edits until a refresh, keep order.html configured to load the menu once.
+        Tip: open order.html in another tab to see live updates. Drag a category to reorder categories. Drag an item to reorder within its category or drop into another category to move it there.
         <div style="margin-top:8px;"><a class="inline-link" href="order.html" target="_blank">Open Order page</a></div>
       </div>
+      <div class="hint">When dragging items, dropping on an item inserts before/after depending where you release; dropping on category appends at end.</div>
     </div>
   </div>
 
@@ -67,33 +75,12 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    // fallback default menu (same as order.html)
     const defaultMenu = [
-      { category: "Starters", items:[{name:"Tomato Shorba",price:5},{name:"Paneer Tikka",price:8},{name:"Hara Bhara Kebab",price:6.5},{name:"Aloo Tikki Chaat",price:5.5},{name:"Vegetable Samosa (2 pcs)",price:3}]},
-      { category: "Kebabs", items:[{name:"Chicken Reshmi Kebab",price:9},{name:"Seekh Kebab",price:9.5},{name:"Dahi ke Kebab",price:8}]},
-      { category: "Curries", items:[{name:"Butter Chicken",price:16},{name:"Paneer Butter Masala",price:15},{name:"Chana Masala",price:11},{name:"Dal Makhani",price:12}]},
-      { category: "Breads", items:[{name:"Butter Naan",price:2.5},{name:"Garlic Naan",price:3},{name:"Tandoori Roti",price:2.2}]},
-      { category: "Rice", items:[{name:"Jeera Rice",price:4.5},{name:"Vegetable Biryani",price:10.5},{name:"Kashmiri Pulao",price:11}]},
-      { category: "Street Food", items:[{name:"Pav Bhaji",price:7.5},{name:"Vada Pav",price:3.5}]},
-      { category: "Desserts", items:[{name:"Gulab Jamun (3 pcs)",price:4},{name:"Ras Malai (2 pcs)",price:4.5}]},
-      { category: "Drinks", items:[{name:"Mango Lassi",price:4},{name:"Masala Chai",price:2.8}]},
-      { category: "Combos", items:[{name:"Thali Veg Combo",price:12},{name:"Thali Non-Veg Combo",price:15}]},
-      { category: "Extras", items:[{name:"Raita",price:2},{name:"Extra Gravy",price:1.5}]},
-
-      { category: "Soups", items:[{name:"Sweet Corn Soup",price:4.5},{name:"Hot & Sour Soup",price:4.8}]},
-      { category: "Salads", items:[{name:"Greek Salad",price:8},{name:"Kachumber Salad",price:7.5}]},
-      { category: "Pasta", items:[{name:"Penne Arrabbiata",price:11.5},{name:"Mac 'n' Cheese",price:10.5}]},
-      { category: "Pizza", items:[{name:"Margherita",price:9.5},{name:"Paneer Tikka Pizza",price:13.5}]},
-      { category: "Sandwiches", items:[{name:"Club Sandwich",price:8.5},{name:"Veg Sandwich",price:6.5}]},
-      { category: "Burgers", items:[{name:"Veg Burger",price:7.5},{name:"Chicken Burger",price:9}]},
-      { category: "Wraps", items:[{name:"Paneer Wrap",price:7.5},{name:"Chicken Wrap",price:8.5}]},
-      { category: "Kids Menu", items:[{name:"Mini Burger",price:5},{name:"Kids Pasta",price:5.5}]},
-      { category: "Healthy", items:[{name:"Quinoa Bowl",price:9.5},{name:"Grilled Veg Platter",price:10}]},
-      { category: "Promos", items:[{name:"Lunch Special",price:9},{name:"Family Pack",price:25}]}
+      { category: "Starters", items:[{name:"Tomato Shorba",price:5},{name:"Paneer Tikka",price:8}]},
+      { category: "Curries", items:[{name:"Butter Chicken",price:16},{name:"Paneer Butter Masala",price:15}]}
     ];
 
     const menuRef = firebase.database().ref('menu');
-
     let menu = [];
 
     // UI refs
@@ -105,42 +92,97 @@
     const importBtn = document.getElementById('importBtn');
     const importArea = document.getElementById('importArea');
 
-    // helper: write full menu to firebase
+    // Drag state (keeps track of source)
+    let dragState = { type: null, fromCat: null, fromIndex: null, fromCategoryDragIndex: null };
+
     function writeMenuToFirebase(){
-      if(!Array.isArray(menu)) return alert('Menu is invalid.');
-      menuRef.set(menu).catch(err => {
-        alert('Error saving menu: ' + (err.message || err));
-      });
+      if(!Array.isArray(menu)) return alert('Menu invalid');
+      menuRef.set(menu).catch(err => alert('Error saving menu: ' + (err.message || err)));
     }
 
-    // realtime listener: editor will show current DB state (keeps editor in sync so edits based on latest data don't conflict)
-    // Note: this listener does NOT force order.html to live-update unless order.html itself listens live.
+    // Load realtime
     menuRef.on('value', snap => {
       const val = snap.val();
-      if(!val){
-        // no menu in DB yet -> keep default
-        menu = defaultMenu.slice();
-      } else {
+      if(!val){ menu = defaultMenu.slice(); }
+      else {
         if(Array.isArray(val)) menu = val;
         else {
           const keys = Object.keys(val || {});
           const isNumericKeys = keys.length && keys.every(k => /^\d+$/.test(k));
-          if(isNumericKeys){
-            menu = keys.sort((a,b)=>Number(a)-Number(b)).map(k => val[k]);
-          } else if(val.menu && Array.isArray(val.menu)) {
-            menu = val.menu;
-          } else {
-            try { menu = Array.isArray(val) ? val : Object.values(val); } catch(e) { menu = defaultMenu.slice(); }
-          }
+          if(isNumericKeys) menu = keys.sort((a,b)=>Number(a)-Number(b)).map(k=>val[k]);
+          else if(val.menu && Array.isArray(val.menu)) menu = val.menu;
+          else menu = Array.isArray(val) ? val : Object.values(val);
         }
       }
       renderCategories();
     });
 
+    // Rendering + drag handlers
     function renderCategories(){
       categoriesList.innerHTML = '';
       menu.forEach((cat, cIdx) => {
-        const catEl = document.createElement('div'); catEl.className = 'category';
+        const catEl = document.createElement('div');
+        catEl.className = 'category';
+        catEl.dataset.catIndex = cIdx;
+        catEl.setAttribute('draggable','true');
+
+        // Category dragstart/dragend
+        catEl.addEventListener('dragstart', e => {
+          dragState = { type:'category', fromCategoryDragIndex: cIdx };
+          e.dataTransfer.setData('text/plain', JSON.stringify({ type:'category', index:cIdx }));
+          e.dataTransfer.effectAllowed = 'move';
+          catEl.classList.add('dragging');
+        });
+        catEl.addEventListener('dragend', ()=> {
+          dragState = { type: null, fromCat: null, fromIndex: null, fromCategoryDragIndex: null };
+          document.querySelectorAll('.dragging').forEach(el=>el.classList.remove('dragging'));
+          document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+        });
+
+        // Allow dropping onto category (reorder categories or append item)
+        catEl.addEventListener('dragover', e => {
+          const data = e.dataTransfer.getData('text/plain');
+          if(!data) { e.preventDefault(); return; }
+          try {
+            const parsed = JSON.parse(data);
+            if(parsed.type === 'category' || parsed.type === 'item'){ e.preventDefault(); catEl.classList.add('drag-over'); e.dataTransfer.dropEffect='move'; }
+          } catch(_) {}
+        });
+        catEl.addEventListener('dragleave', ()=> catEl.classList.remove('drag-over'));
+        catEl.addEventListener('drop', e => {
+          e.preventDefault();
+          catEl.classList.remove('drag-over');
+          const data = e.dataTransfer.getData('text/plain');
+          if(!data) return;
+          let parsed;
+          try { parsed = JSON.parse(data); } catch(_) { return; }
+
+          if(parsed.type === 'category'){
+            const from = parsed.index;
+            const to = cIdx;
+            if(from === to) return;
+            const moved = menu.splice(from,1)[0];
+            // compute insert index after removal
+            const insertIndex = from < to ? to : to;
+            menu.splice(insertIndex,0,moved);
+            writeMenuToFirebase();
+            return;
+          }
+
+          if(parsed.type === 'item'){
+            const fromCat = parsed.fromCat;
+            const fromIndex = parsed.fromIndex;
+            if(fromCat == null || fromIndex == null) return;
+            const itemObj = menu[fromCat].items.splice(fromIndex,1)[0];
+            if(!itemObj) return;
+            menu[cIdx].items = menu[cIdx].items || [];
+            menu[cIdx].items.push(itemObj);
+            writeMenuToFirebase();
+            return;
+          }
+        });
+
+        // category content
         const left = document.createElement('div'); left.className='cat-left';
         const titleRow = document.createElement('div'); titleRow.style.display='flex'; titleRow.style.justifyContent='space-between'; titleRow.style.alignItems='center';
         const title = document.createElement('div'); title.innerHTML = '<strong>' + (cat.category || ('Category '+(cIdx+1))) + '</strong>';
@@ -156,7 +198,7 @@
           writeMenuToFirebase();
         };
         delCatBtn.onclick = ()=> {
-          if(!confirm('Delete category "' + (cat.category||'') + '" and all its items?')) return;
+          if(!confirm('Delete category "' + (cat.category||'') + '"?')) return;
           menu.splice(cIdx,1);
           writeMenuToFirebase();
         };
@@ -164,13 +206,104 @@
         actions.appendChild(delCatBtn);
         titleRow.appendChild(title);
         titleRow.appendChild(actions);
-
         left.appendChild(titleRow);
 
-        // items
-        const itemsWrap = document.createElement('div'); itemsWrap.style.marginTop='8px';
+        // items container (accept drops)
+        const itemsWrap = document.createElement('div'); itemsWrap.style.marginTop='8px'; itemsWrap.dataset.catIndex = cIdx;
+        itemsWrap.addEventListener('dragover', e => {
+          const data = e.dataTransfer.getData('text/plain');
+          if(!data) return;
+          try {
+            const parsed = JSON.parse(data);
+            if(parsed.type === 'item'){ e.preventDefault(); itemsWrap.classList.add('drag-over'); e.dataTransfer.dropEffect = 'move'; }
+          } catch(_) {}
+        });
+        itemsWrap.addEventListener('dragleave', ()=> itemsWrap.classList.remove('drag-over'));
+        itemsWrap.addEventListener('drop', e => {
+          e.preventDefault();
+          itemsWrap.classList.remove('drag-over');
+          const data = e.dataTransfer.getData('text/plain');
+          if(!data) return;
+          try {
+            const parsed = JSON.parse(data);
+            if(parsed.type === 'item'){
+              const fromCat = parsed.fromCat;
+              const fromIndex = parsed.fromIndex;
+              const toCat = parseInt(itemsWrap.dataset.catIndex,10);
+              if(fromCat == null || fromIndex == null || isNaN(toCat)) return;
+              const itemObj = menu[fromCat].items.splice(fromIndex,1)[0];
+              if(!itemObj) return;
+              menu[toCat].items = menu[toCat].items || [];
+              menu[toCat].items.push(itemObj);
+              writeMenuToFirebase();
+            }
+          } catch(_) {}
+        });
+
+        // items (draggable)
         (cat.items || []).forEach((it, iIdx) => {
           const itemEl = document.createElement('div'); itemEl.className='item';
+          itemEl.dataset.catIndex = cIdx; itemEl.dataset.itemIndex = iIdx;
+          itemEl.setAttribute('draggable','true');
+
+          itemEl.addEventListener('dragstart', e => {
+            dragState = { type:'item', fromCat:cIdx, fromIndex:iIdx };
+            e.dataTransfer.setData('text/plain', JSON.stringify({ type:'item', fromCat:cIdx, fromIndex:iIdx }));
+            e.dataTransfer.effectAllowed = 'move';
+            itemEl.classList.add('dragging');
+          });
+          itemEl.addEventListener('dragend', () => {
+            dragState = { type:null, fromCat:null, fromIndex:null, fromCategoryDragIndex:null };
+            document.querySelectorAll('.dragging').forEach(el=>el.classList.remove('dragging'));
+            document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+          });
+
+          // when dragging over an item, allow inserting before/after based on pointer location
+          itemEl.addEventListener('dragover', e => {
+            const data = e.dataTransfer.getData('text/plain');
+            if(!data) return;
+            try {
+              const parsed = JSON.parse(data);
+              if(parsed.type === 'item'){ e.preventDefault(); itemEl.classList.add('drag-over'); e.dataTransfer.dropEffect='move'; }
+            } catch(_) {}
+          });
+          itemEl.addEventListener('dragleave', ()=> itemEl.classList.remove('drag-over'));
+
+          itemEl.addEventListener('drop', e => {
+            e.preventDefault();
+            itemEl.classList.remove('drag-over');
+            const data = e.dataTransfer.getData('text/plain');
+            if(!data) return;
+            try {
+              const parsed = JSON.parse(data);
+              if(parsed.type !== 'item') return;
+              const fromCat = parsed.fromCat;
+              const fromIndex = parsed.fromIndex;
+              const toCat = cIdx;
+              let toIndex = iIdx;
+              const rect = itemEl.getBoundingClientRect();
+              const insertAfter = (e.clientY - rect.top) > (rect.height / 2);
+              if(insertAfter) toIndex = iIdx + 1;
+
+              // moving within same category: adjust indices when removing earlier item
+              if(fromCat === toCat){
+                if(fromIndex < toIndex){
+                  const itemObj = menu[fromCat].items.splice(fromIndex,1)[0];
+                  toIndex = toIndex - 1;
+                  menu[toCat].items.splice(toIndex,0,itemObj);
+                } else {
+                  const itemObj = menu[fromCat].items.splice(fromIndex,1)[0];
+                  menu[toCat].items.splice(toIndex,0,itemObj);
+                }
+              } else {
+                const itemObj = menu[fromCat].items.splice(fromIndex,1)[0];
+                menu[toCat].items = menu[toCat].items || [];
+                menu[toCat].items.splice(toIndex,0,itemObj);
+              }
+              writeMenuToFirebase();
+            } catch(_) {}
+          });
+
           const itemLeft = document.createElement('div'); itemLeft.textContent = it.name + ' ';
           const priceSpan = document.createElement('span'); priceSpan.className='muted'; priceSpan.textContent = '€' + (Number(it.price)||0).toFixed(2);
           itemLeft.appendChild(priceSpan);
@@ -178,6 +311,7 @@
           const itemActions = document.createElement('div');
           const editItBtn = document.createElement('button'); editItBtn.className='ghost small'; editItBtn.textContent='Edit';
           const delItBtn = document.createElement('button'); delItBtn.className='btn small'; delItBtn.textContent='Delete';
+
           editItBtn.onclick = ()=> {
             const newName = prompt('Item name:', it.name);
             if(newName === null) return;
@@ -191,11 +325,13 @@
             menu[cIdx].items[iIdx].price = np;
             writeMenuToFirebase();
           };
+
           delItBtn.onclick = ()=> {
             if(!confirm('Delete item "' + it.name + '"?')) return;
             menu[cIdx].items.splice(iIdx,1);
             writeMenuToFirebase();
           };
+
           itemActions.appendChild(editItBtn);
           itemActions.appendChild(delItBtn);
 
@@ -204,7 +340,7 @@
           itemsWrap.appendChild(itemEl);
         });
 
-        // add item row
+        // add item inputs
         const addRow = document.createElement('div'); addRow.style.display='flex'; addRow.style.gap='8px'; addRow.style.marginTop='8px';
         const itName = document.createElement('input'); itName.type='text'; itName.placeholder='Item name';
         const itPrice = document.createElement('input'); itPrice.type='number'; itPrice.step='0.01'; itPrice.placeholder='Price';
@@ -244,11 +380,8 @@
     refreshBtn.addEventListener('click', ()=> {
       menuRef.once('value').then(snap => {
         const val = snap.val();
-        if(!val) {
-          menu = defaultMenu.slice();
-        } else {
-          menu = Array.isArray(val) ? val : (val.menu || Object.values(val));
-        }
+        if(!val) menu = defaultMenu.slice();
+        else menu = Array.isArray(val) ? val : (val.menu || Object.values(val));
         renderCategories();
       });
     });
@@ -275,11 +408,8 @@
         try {
           const data = JSON.parse(ev.target.result);
           if(!Array.isArray(data)) {
-            if(Array.isArray(data.menu)) {
-              menu = data.menu;
-            } else {
-              return alert('Imported JSON must be an array of categories');
-            }
+            if(Array.isArray(data.menu)) menu = data.menu;
+            else return alert('Imported JSON must be an array of categories');
           } else {
             menu = data;
           }
@@ -292,12 +422,15 @@
       importArea.value = '';
     });
 
-    // initial load: if menu path is empty, seed with default menu once
+    // seed default if empty
     menuRef.once('value').then(snap => {
       if(!snap.exists()){
         menuRef.set(defaultMenu).catch(err => console.warn('Could not seed default menu:', err));
       }
     }).catch(err => console.warn('Error checking menu path:', err));
+
+    // initial fallback render
+    renderCategories();
   </script>
 </body>
 </html>
