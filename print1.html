@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Kitchen Screen — Orders (Realtime)</title>
+  <!-- Wolt's POS receipts use large sans-serif, bold for items, big quantity, and all caps for item names and order notes, using font similar to Montserrat+Arial. -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
   <style>
@@ -120,8 +121,6 @@
       .order-type { padding:6px 8px; font-size:0.85rem; }
       .order-footer { gap:6px; }
     }
-
-    /* PRINT STYLES for 80mm receipt */
     @media print {
       body * { visibility: hidden !important; }
       #printArea, #printArea * {
@@ -136,65 +135,92 @@
         width: 72mm;
         max-width: 80mm;
         min-width: 56mm;
-        font-family: 'Montserrat', 'monospace', 'Courier New', Courier, monospace;
-        font-size: 12px;
-        line-height: 1.33;
+        font-family: 'Montserrat', Arial, 'Poppins', 'monospace', sans-serif;
+        font-size: 13px;
+        line-height: 1.36;
         padding: 10px 7px 12px 8px;
         margin: 0 !important;
       }
       #printArea .center { text-align:center; }
       #printArea .rest-name {
-        font-family: 'Montserrat', 'monospace', 'Courier New', monospace;
-        font-size: 16px;
+        font-family: 'Montserrat', Arial, sans-serif;
+        font-size: 18px;
         font-weight: 900;
         text-align: center;
+        letter-spacing: 1.7px;
         margin-bottom: 4px;
       }
-      #printArea .bold { font-weight: 700; }
+      #printArea .bold { font-weight: 900; }
       #printArea .tbl-highlight {
-        font-size: 16px;
-        font-weight: bold;
+        font-size: 18px;
+        font-weight: 900;
         display: block;
         border: 2px solid #000;
         background: #fff;
-        padding: 4px 0;
-        margin: 6px 0 3px 0;
-        letter-spacing: 1px;
+        padding: 6px 0 5px 0;
+        margin: 7px 0 4px 0;
+        letter-spacing:1.5px;
         text-align: center;
+        font-family: 'Montserrat', Arial, sans-serif;
       }
       #printArea .order-info-row { font-size: 12px; margin-bottom: 2px; }
-      #printArea .order-note { font-style:italic; margin-bottom: 3px; font-size: 12px; }
+      #printArea .order-note {
+        font-size: 16px;
+        font-family: 'Montserrat', Arial, sans-serif;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin: 9px 0 2px 0;
+        letter-spacing: 0.7px;
+        background:none;
+      }
       #printArea .order-items-table {
         width: 100%;
         border-collapse: collapse;
-        margin: 8px 0 6px 0;
-        font-family: 'Montserrat', 'monospace', 'Courier New', monospace;
-        font-size:13px;
+        margin: 10px 0 7px 0;
+        font-family: 'Montserrat', Arial, sans-serif;
+        font-size:14px;
       }
       #printArea .order-items-table th,
       #printArea .order-items-table td {
-        border: 1px solid #333;
-        padding: 6px 5px 6px 5px;
-        font-size: 13px;
+        border: 1.5px solid #333;
+        padding: 9px 5px 9px 5px;
+        font-size: 14px;
         text-align: left;
+        background:#fff;
       }
       #printArea .order-items-table th {
-        font-weight: 900;
-        background: #fff;
-        letter-spacing: 1px;
+        font-weight: 700;
         font-size: 12px;
-        padding: 6px 5px 6px 5px;
+        padding: 7px 5px 7px 5px;
+        text-align: left;
+        letter-spacing: 1.2px;
+        background:#fff;
+      }
+      #printArea .big-qty {
+        font-family:'Montserrat', Arial, sans-serif;
+        font-size: 22px;
+        font-weight: 900;
+        text-align:center;
+        vertical-align:middle;
+        background: #fff;
+        letter-spacing:2px;
       }
       #printArea .item-row-name {
         font-weight: 900;
         font-size: 17px;
-        font-family: 'Montserrat', 'monospace', 'Courier New', monospace;
+        font-family: 'Montserrat', Arial, sans-serif;
         background: #fff;
+        text-transform: uppercase;
+        letter-spacing:1px;
       }
       #printArea .order-note-item {
-        font-style:italic; 
-        font-size:12px; 
+        font-style:italic;
+        font-size:13px;
+        font-weight:700;
+        font-family: 'Montserrat', Arial, sans-serif;
         margin-top:2px;
+        text-transform:uppercase;
+        background:none;
       }
       #printArea .total-row {
         font-weight: 600;
@@ -233,6 +259,8 @@
     </div>
   </div>
   <div id="printArea" style="display:none"></div>
+  <!-- QZ Tray JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qz-tray/2.1.0/qz-tray.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script>
@@ -363,7 +391,6 @@
       meta.appendChild(paymentBadge);
       left.appendChild(meta);
 
-      // right: timer and status toggle
       const right = document.createElement('div'); right.className = 'timer-slot';
       const statusRow = document.createElement('div'); statusRow.style.display = 'flex'; statusRow.style.alignItems = 'center'; statusRow.style.gap = '8px';
 
@@ -440,7 +467,6 @@
 
       const actions = document.createElement('div'); actions.className = 'order-actions';
 
-      // Print receipt button 
       const printBtn = document.createElement('button');
       printBtn.className = 'btn';
       printBtn.title = 'Print kitchen receipt';
@@ -629,28 +655,67 @@
       Object.keys(timers).forEach(k => { if(timers[k] && timers[k].interval) clearInterval(timers[k].interval); });
     });
 
-    // PRINT RECEIPT LOGIC
+    // QZ Tray Setup (for direct printing)
+    let qzReady = false;
+    let qzPrinter = null;
+
+    function qzConnect() {
+      if (qz.api.isActive()) return Promise.resolve();
+      return qz.api.connect();
+    }
+
+    function findDefaultPrinter() {
+      return qz.printers.getDefault().then(function(printer) {
+        qzPrinter = printer;
+        return printer;
+      });
+    }
+
+    function setupQZTray() {
+      return qzConnect().then(findDefaultPrinter).then(() => {
+        qzReady = true;
+      }).catch(function (err) {
+        alert("QZ Tray error: " + err);
+        qzReady = false;
+      });
+    }
+
+    function getPrintAreaHTML() {
+      const area = document.getElementById('printArea');
+      return area.innerHTML;
+    }
+
+    function printReceipt(html) {
+      if (!qzReady || !qzPrinter) {
+        alert("QZ Tray is not connected. Please click 'Enable Printing' then try print again.");
+        return;
+      }
+      var config = qz.configs.create(qzPrinter, { encoding: 'utf-8' });
+      qz.print(config, [{ type: 'html', format: 'plain', data: html }]).catch(function(e){
+        alert("Print error: " + e);
+      });
+    }
+
     function printOrderReceipt(order) {
       const area = document.getElementById('printArea');
       area.innerHTML = '';
 
       let html = '';
       html += `<div class="rest-name">TANDOORI VILLA</div>`;
-      html += `<div class="tbl-highlight">Table: ${order.table || ''}</div>`;
+      html += `<div class="tbl-highlight">Table: ${order.table ? String(order.table).toUpperCase() : ''}</div>`;
       html += `<div class="order-info-row"><span class="bold">Order #:</span> <span>${order.id || ''}</span></div>`;
       html += `<div class="order-info-row"><span class="bold">Date:</span> <span>${order.date || ''} ${(order.time || '')}</span></div>`;
 
       if(order.note && String(order.note).trim()){
-        html += `<div class="order-note bold">Order Note: <span class="order-note">${order.note}</span></div>`;
+        html += `<div class="order-note">${String(order.note).toUpperCase()}</div>`;
       }
 
-      // Only show NOT done items
       const items = Array.isArray(order.items) ? order.items.filter(it => !it.done) : [];
       html += `<table class="order-items-table"><thead>
         <tr>
-          <th style="width:12%;">Qty</th>
-          <th style="width:60%;">Item</th>
-          <th style="width:28%;">Total</th>
+          <th style="width:12%;">QTY</th>
+          <th style="width:60%;">ITEM</th>
+          <th style="width:28%;">TOTAL</th>
         </tr>
       </thead><tbody>`;
 
@@ -659,10 +724,10 @@
       } else {
         items.forEach(it => {
           html += `<tr>
-            <td class="bold" style="text-align:center;">${it.qty || 1}</td>
+            <td class="big-qty">${String(it.qty || 1).toUpperCase()}</td>
             <td>
-              <div class="item-row-name">${it.name || ''}</div>
-              ${it.note && String(it.note).trim() ? `<div class="order-note-item">${it.note}</div>` : ''}
+              <div class="item-row-name">${String(it.name || '').toUpperCase()}</div>
+              ${it.note && String(it.note).trim() ? `<div class="order-note-item">${String(it.note).toUpperCase()}</div>` : ''}
             </td>
             <td style="text-align:right;" class="bold">€${((it.price || 0) * (it.qty || 1)).toFixed(2)}</td>
           </tr>`;
@@ -681,11 +746,28 @@
 
       area.innerHTML = html;
       area.style.display = 'block';
-      setTimeout(() => {
-        window.print();
-        setTimeout(() => { area.style.display='none'; area.innerHTML=''; }, 260);
-      }, 10);
+
+      printReceipt(html);
+
+      setTimeout(() => { area.style.display='none'; area.innerHTML=''; }, 260);
     }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      if(!document.getElementById('enablePrintBtn')) {
+        let btn = document.createElement('button');
+        btn.id = 'enablePrintBtn';
+        btn.className = 'btn';
+        btn.innerHTML = '<i class="fas fa-plug"></i> Enable Printing';
+        btn.style.background = '#28a745';
+        btn.style.marginLeft = '12px';
+        btn.addEventListener('click', function() {
+          setupQZTray();
+        });
+        const controlsDiv = document.querySelector('.controls');
+        if(controlsDiv) controlsDiv.appendChild(btn);
+      }
+    });
+
   </script>
 </body>
 </html>
