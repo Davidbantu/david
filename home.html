@@ -7,7 +7,7 @@
   <!-- Wolt's POS receipts use large sans-serif, bold for items, big quantity, and all caps for item names and order notes, using font similar to Montserrat+Arial. -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
- <style>
+  <style>
     :root{
       --main-bg: linear-gradient(to bottom right, #0d47a1, #000000);
       --card-bg: #181c24;
@@ -133,13 +133,13 @@
       #printArea {
         position: absolute;
         left: 0; top: 0;
-        width: 80mm;
+        width: 72mm;
         max-width: 80mm;
-        min-width: 80mm; /* ENSURE NO SIDE MARGIN, FULL WIDTH */
+        min-width: 56mm;
         font-family: 'Montserrat', Arial, 'Poppins', 'monospace', sans-serif;
         font-size: 13px;
         line-height: 1.36;
-        padding: 0;         /* REMOVE LEFT/RIGHT PADDING */
+        padding: 10px 7px 12px 8px;
         margin: 0 !important;
       }
       #printArea .center { text-align:center; }
@@ -225,13 +225,12 @@
         background:none;
       }
       #printArea .total-row {
-        font-weight: 900;
-        font-size: 20px;        /* INCREASED SIZE FOR TOTAL PRICE */
-        padding-top: 7px;
-        margin-top: 12px;
-        border-top: 2px solid #111;
+        font-weight: 600;
+        font-size: 10px;
+        padding-top: 5px;
+        margin-top: 6px;
+        border-top: 1.3px solid #111;
         text-align:right;
-        letter-spacing: 1.5px;
       }
       #printArea .footer {
         text-align: center;
