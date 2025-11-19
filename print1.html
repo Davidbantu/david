@@ -4,9 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Kitchen Screen — Orders (Realtime)</title>
-  <!-- Wolt's POS receipts use large sans-serif, bold for items, big quantity, and all caps for item names and order notes, using font similar to Montserrat+Arial. -->
+
+  <!-- Fonts & icons -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+
   <style>
     :root{
       --main-bg: linear-gradient(to bottom right, #0d47a1, #000000);
@@ -121,6 +123,7 @@
       .order-type { padding:6px 8px; font-size:0.85rem; }
       .order-footer { gap:6px; }
     }
+    /* PRINT STYLES for 80mm receipt (Wolt-like, all caps, big qty, item, order note) */
     @media print {
       body * { visibility: hidden !important; }
       #printArea, #printArea * {
@@ -196,6 +199,7 @@
         letter-spacing: 1.2px;
         background:#fff;
       }
+      /* BIG QTY number and ALL CAPS for item name and QTY, .big-qty must be for quantity */
       #printArea .big-qty {
         font-family:'Montserrat', Arial, sans-serif;
         font-size: 22px;
@@ -238,6 +242,25 @@
         padding-top: 4px;
       }
     }
+
+    /* Printing overlay (used while WebPRNT sends job) */
+    #printOverlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      gap: 12px;
+    }
+    #printOverlay .box {
+      background: rgba(255,255,255,0.06);
+      padding: 18px 22px;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
@@ -258,13 +281,23 @@
       <div id="emptyState" class="small-muted" style="display:none;margin-top:12px">No pending orders for today.</div>
     </div>
   </div>
+
+  <!-- Hidden area for printable HTML (kept for compatibility but WebPRNT used) -->
   <div id="printArea" style="display:none"></div>
-  <!-- QZ Tray JS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qz-tray/2.1.0/qz-tray.js"></script>
+
+  <!-- Overlay shown while printing via WebPRNT -->
+  <div id="printOverlay"><div class="box">Printing… <span id="printOverlayMsg"></span></div></div>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- Star WebPRNT JS files you will upload into assets/js/ -->
+  <script src="assets/js/StarWebPrintBuilder.js"></script>
+  <script src="assets/js/StarWebPrintTrader.js"></script>
+
   <script>
-    // Firebase config
+    // Firebase config (unchanged)
     const firebaseConfig = {
       apiKey: "AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtZvI",
       authDomain: "newpos-dacb5.firebaseapp.com",
@@ -277,12 +310,18 @@
     };
     firebase.initializeApp(firebaseConfig);
 
+    // UI elements
     const ordersGrid = document.getElementById('ordersGrid');
     const emptyState = document.getElementById('emptyState');
     const pendingCountEl = document.getElementById('pendingCount');
     const completedCountEl = document.getElementById('completedCount');
     const todayDateEl = document.getElementById('todayDate');
     const refreshBtn = document.getElementById('refreshBtn');
+    const printArea = document.getElementById('printArea');
+    const printOverlay = document.getElementById('printOverlay');
+    const printOverlayMsg = document.getElementById('printOverlayMsg');
+
+    // State
     let ordersCache = {};
     let timers = {};
     let collapsedMap = {};
@@ -323,6 +362,7 @@
         o.stop(now + 0.36);
       } catch(e){}
     }
+
     function parseScheduledMs(order){
       const st = order.scheduledTime;
       if(!st) return null;
@@ -344,6 +384,7 @@
       } catch(e){}
       return null;
     }
+
     function buildOrderCard(order){
       const card = document.createElement('div');
       card.className = 'order-card';
@@ -391,6 +432,7 @@
       meta.appendChild(paymentBadge);
       left.appendChild(meta);
 
+      // right: timer and status toggle
       const right = document.createElement('div'); right.className = 'timer-slot';
       const statusRow = document.createElement('div'); statusRow.style.display = 'flex'; statusRow.style.alignItems = 'center'; statusRow.style.gap = '8px';
 
@@ -467,6 +509,7 @@
 
       const actions = document.createElement('div'); actions.className = 'order-actions';
 
+      // Print receipt button 
       const printBtn = document.createElement('button');
       printBtn.className = 'btn';
       printBtn.title = 'Print kitchen receipt';
@@ -476,7 +519,8 @@
       printBtn.style.padding = "8px 10px";
       printBtn.innerHTML = '<i class="fas fa-print"></i>';
       printBtn.addEventListener('click', (ev)=>{
-        ev.stopPropagation(); printOrderReceipt(order);
+        ev.stopPropagation();
+        printOrderReceiptWebPRNT(order);
       });
       actions.appendChild(printBtn);
 
@@ -655,119 +699,136 @@
       Object.keys(timers).forEach(k => { if(timers[k] && timers[k].interval) clearInterval(timers[k].interval); });
     });
 
-    // QZ Tray Setup (for direct printing)
-    let qzReady = false;
-    let qzPrinter = null;
+    // =======================
+    // WebPRNT Printing Logic
+    // =======================
+    // Uses StarWebPrintBuilder.js and StarWebPrintTrader.js that you will host at assets/js/
 
-    function qzConnect() {
-      if (qz.api.isActive()) return Promise.resolve();
-      return qz.api.connect();
+    // Helper to show overlay during printing
+    function showPrintOverlay(msg){
+      printOverlayMsg.textContent = msg || '';
+      printOverlay.style.display = 'flex';
+    }
+    function hidePrintOverlay(){
+      printOverlay.style.display = 'none';
+      printOverlayMsg.textContent = '';
     }
 
-    function findDefaultPrinter() {
-      return qz.printers.getDefault().then(function(printer) {
-        qzPrinter = printer;
-        return printer;
-      });
-    }
+    // Main print function that uses WebPRNT
+    function printOrderReceiptWebPRNT(order){
+      // Show printing overlay and disable further presses
+      try {
+        showPrintOverlay('Sending to printer…');
+      } catch(e){}
 
-    function setupQZTray() {
-      return qzConnect().then(findDefaultPrinter).then(() => {
-        qzReady = true;
-      }).catch(function (err) {
-        alert("QZ Tray error: " + err);
-        qzReady = false;
-      });
-    }
+      // Build a simple textual receipt optimized for thermal printing.
+      // You can change formatting here if needed (e.g., add bold or size with WebPRNT commands).
+      try {
+        const lines = [];
+        // Header
+        lines.push('TANDOORI VILLA');
+        lines.push('------------------------------');
+        lines.push('Table: ' + (order.table ? String(order.table).toUpperCase() : ''));
+        lines.push('Order #: ' + (order.id || ''));
+        lines.push('Date: ' + (order.date || '') + ' ' + (order.time || ''));
+        if(order.note && String(order.note).trim()){
+          lines.push('');
+          lines.push('NOTE: ' + String(order.note).toUpperCase());
+        }
+        lines.push('');
 
-    function getPrintAreaHTML() {
-      const area = document.getElementById('printArea');
-      return area.innerHTML;
-    }
+        // Items (only not-done items)
+        const items = Array.isArray(order.items) ? order.items.filter(it => !it.done) : [];
+        if(items.length === 0){
+          lines.push('No items');
+        } else {
+          items.forEach(it => {
+            const qty = String(it.qty || 1);
+            const name = String(it.name || '').toUpperCase();
+            const totalPrice = '€' + (((it.price || 0) * (it.qty || 1)).toFixed(2));
+            // Format: QTY x NAME ...... PRICE
+            // We'll create a single-line per item; WebPRNT will print monospaced text.
+            lines.push(`${qty} x ${name}  ${totalPrice}`);
+            if(it.note && String(it.note).trim()){
+              lines.push('  * ' + String(it.note).toUpperCase());
+            }
+          });
+        }
 
-    function printReceipt(html) {
-      if (!qzReady || !qzPrinter) {
-        alert("QZ Tray is not connected. Please click 'Enable Printing' then try print again.");
-        return;
-      }
-      var config = qz.configs.create(qzPrinter, { encoding: 'utf-8' });
-      qz.print(config, [{ type: 'html', format: 'plain', data: html }]).catch(function(e){
-        alert("Print error: " + e);
-      });
-    }
+        lines.push('');
+        lines.push('TOTAL: €' + Number(order.total || 0).toFixed(2));
+        if(order.status) lines.push('Status: ' + order.status);
+        if(order.scheduledTime) lines.push('Scheduled: ' + order.scheduledTime);
+        lines.push('');
+        lines.push('--- END OF ORDER ---');
+        lines.push('\n\n');
 
-    function printOrderReceipt(order) {
-      const area = document.getElementById('printArea');
-      area.innerHTML = '';
+        // Build WebPRNT commands using builder
+        const builder = new StarWebPrintBuilder();
 
-      let html = '';
-      html += `<div class="rest-name">TANDOORI VILLA</div>`;
-      html += `<div class="tbl-highlight">Table: ${order.table ? String(order.table).toUpperCase() : ''}</div>`;
-      html += `<div class="order-info-row"><span class="bold">Order #:</span> <span>${order.id || ''}</span></div>`;
-      html += `<div class="order-info-row"><span class="bold">Date:</span> <span>${order.date || ''} ${(order.time || '')}</span></div>`;
+        // Initialization: reset and set basic settings
+        builder.createInitializationElement({ reset: true, print: false });
 
-      if(order.note && String(order.note).trim()){
-        html += `<div class="order-note">${String(order.note).toUpperCase()}</div>`;
-      }
-
-      const items = Array.isArray(order.items) ? order.items.filter(it => !it.done) : [];
-      html += `<table class="order-items-table"><thead>
-        <tr>
-          <th style="width:12%;">QTY</th>
-          <th style="width:60%;">ITEM</th>
-          <th style="width:28%;">TOTAL</th>
-        </tr>
-      </thead><tbody>`;
-
-      if(items.length === 0) {
-        html += `<tr><td colspan="3" style="text-align:center">No items</td></tr>`;
-      } else {
-        items.forEach(it => {
-          html += `<tr>
-            <td class="big-qty">${String(it.qty || 1).toUpperCase()}</td>
-            <td>
-              <div class="item-row-name">${String(it.name || '').toUpperCase()}</div>
-              ${it.note && String(it.note).trim() ? `<div class="order-note-item">${String(it.note).toUpperCase()}</div>` : ''}
-            </td>
-            <td style="text-align:right;" class="bold">€${((it.price || 0) * (it.qty || 1)).toFixed(2)}</td>
-          </tr>`;
+        // Put the header bigger: WebPRNT supports text element options.
+        // Create a center-aligned bold header
+        builder.createTextElement({
+          data: 'TANDOORI VILLA\n',
+          style: {
+            font: 'A', // font selection depends on printer; many Star printers accept this
+            alignment: 'center',
+            size: { width: 2, height: 2 },
+            weight: 'bold'
+          }
         });
-      }
 
-      html += `</tbody></table>`;
-      html += `<div class="total-row">Total: €${Number(order.total || 0).toFixed(2)}</div>`;
-      if(order.status) {
-        html += `<div>Status: ${order.status}</div>`;
-      }
-      if(order.scheduledTime) {
-        html += `<div>Scheduled: ${order.scheduledTime}</div>`;
-      }
-      html += `<div class="footer">--- END OF ORDER ---</div>`;
+        // Divider
+        builder.createTextElement({ data: '------------------------------\n', style: { alignment: 'center' } });
 
-      area.innerHTML = html;
-      area.style.display = 'block';
-
-      printReceipt(html);
-
-      setTimeout(() => { area.style.display='none'; area.innerHTML=''; }, 260);
-    }
-
-    window.addEventListener('DOMContentLoaded', function() {
-      if(!document.getElementById('enablePrintBtn')) {
-        let btn = document.createElement('button');
-        btn.id = 'enablePrintBtn';
-        btn.className = 'btn';
-        btn.innerHTML = '<i class="fas fa-plug"></i> Enable Printing';
-        btn.style.background = '#28a745';
-        btn.style.marginLeft = '12px';
-        btn.addEventListener('click', function() {
-          setupQZTray();
+        // Print the rest using single-column normal size
+        const bodyText = lines.join('\n') + '\n';
+        builder.createTextElement({
+          data: bodyText,
+          style: {
+            font: 'A',
+            alignment: 'left',
+            size: { width: 1, height: 1 },
+            weight: 'normal'
+          }
         });
-        const controlsDiv = document.querySelector('.controls');
-        if(controlsDiv) controlsDiv.appendChild(btn);
-      }
-    });
 
+        // Feed a few lines (so cut doesn't chop off text)
+        builder.createFeedElement({ feed: 4 });
+
+        // Cut paper if supported
+        builder.createCutPaperElement({ cutType: 'full' });
+
+        // Build request and send
+        const request = builder.build();
+
+        const trader = new StarWebPrintTrader();
+
+        trader.sendMessage(request, function(response){
+          // success
+          try {
+            hidePrintOverlay();
+            // Optionally mark printed in DB or play sound
+            playAlertSound();
+            console.log('WebPRNT print success', response);
+          } catch(e){}
+        }, function(error){
+          try {
+            hidePrintOverlay();
+          } catch(e){}
+          console.error('WebPRNT print error', error);
+          alert('Printing failed: ' + (error && error.message ? error.message : JSON.stringify(error)));
+        });
+
+      } catch(err){
+        try { hidePrintOverlay(); } catch(e){}
+        console.error('Exception in printOrderReceiptWebPRNT', err);
+        alert('Print error: ' + (err && err.message ? err.message : err));
+      }
+    }
   </script>
 </body>
 </html>
