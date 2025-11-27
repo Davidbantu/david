@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Kitchen Screen — Orders (Realtime)</title>
-  <!-- Wolt's POS receipts use large sans-serif, bold for items, big quantity, and all caps for item names and order notes, using font similar to Montserrat+Arial. -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
   <style>
@@ -121,7 +120,6 @@
       .order-type { padding:6px 8px; font-size:0.85rem; }
       .order-footer { gap:6px; }
     }
-    /* PRINT STYLES for 80mm receipt (Wolt-like, all caps, big qty, item, order note) */
     @media print {
       body * { visibility: hidden !important; }
       #printArea, #printArea * {
@@ -197,7 +195,6 @@
         letter-spacing: 1.2px;
         background:#fff;
       }
-      /* BIG QTY number and ALL CAPS for item name and QTY, .big-qty must be for quantity */
       #printArea .big-qty {
         font-family:'Montserrat', Arial, sans-serif;
         font-size: 22px;
@@ -215,6 +212,14 @@
         text-transform: uppercase;
         letter-spacing:1px;
       }
+      #printArea .item-price {
+        font-weight: 900;
+        font-size: 16px;
+        font-family: 'Montserrat', Arial, sans-serif;
+        margin-top:1px;
+        text-align:left;
+        display:block;
+      }
       #printArea .order-note-item {
         font-style:italic;
         font-size:13px;
@@ -224,9 +229,13 @@
         text-transform:uppercase;
         background:none;
       }
+      #printArea .item-total {
+        font-size: 15px;
+        text-align: right;
+      }
       #printArea .total-row {
-        font-weight: 600;
-        font-size: 10px;
+        font-weight: 900;
+        font-size: 23px;
         padding-top: 5px;
         margin-top: 6px;
         border-top: 1.3px solid #111;
@@ -264,7 +273,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script>
-    // Firebase config
+    // Firebase config (no change)
     const firebaseConfig = {
       apiKey: "AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtZvI",
       authDomain: "newpos-dacb5.firebaseapp.com",
@@ -447,6 +456,11 @@
           const name = document.createElement('div'); name.className = 'item-name' + (it.done ? ' done' : ''); name.textContent = it.name || '';
           name.addEventListener('click', (ev)=> { ev.stopPropagation(); const newVal = !Boolean(it.done); toggleItemDone(order.id, idx, newVal); });
           nameAndNote.appendChild(name);
+          // Add item price below item name
+          const priceEach = document.createElement('div'); priceEach.style.fontSize = '0.92rem'; priceEach.style.color = 'var(--muted)';
+          priceEach.style.fontWeight = '700'; priceEach.textContent = '€' + Number(it.price || 0).toFixed(2) + ' each';
+          priceEach.style.marginTop = '2px';
+          nameAndNote.appendChild(priceEach);
           if(it.note && String(it.note).trim()){
             const inote = document.createElement('div'); inote.className = 'item-note'; inote.textContent = it.note; nameAndNote.appendChild(inote);
           }
@@ -514,18 +528,6 @@
 
       if(collapsedMap[String(order.id)]) card.classList.add('collapsed');
       startCardTimer(order.id, order, timerEl);
-
-      let holdTimer = null;
-      const HOLD_DELAY = 600;
-      function pointerDown(){ holdTimer = setTimeout(()=>{ openOrderPopupView(order.id); holdTimer = null; }, HOLD_DELAY); }
-      function cancelHold(){ if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; } }
-
-      card.addEventListener('mousedown', pointerDown);
-      card.addEventListener('touchstart', pointerDown, {passive:true});
-      card.addEventListener('mouseup', (ev)=> { cancelHold(); });
-      card.addEventListener('mouseleave', cancelHold);
-      card.addEventListener('touchend', cancelHold);
-
       return card;
     }
 
@@ -586,13 +588,6 @@
       }).catch(err=>console.error('Error marking order done', err));
     }
     function openOrderInOrderPage(orderId){ window.location.href = 'order.html?order=' + encodeURIComponent(orderId); }
-    function openOrderPopupView(orderId){
-      const order = ordersCache[orderId];
-      if(!order) return;
-      const items = Array.isArray(order.items) ? order.items : [];
-      const lines = items.map(it => `${it.qty || 1} x ${it.name}${it.note ? ' — ' + it.note : ''}`);
-      alert(`Order #${order.id}\nTable: ${order.table || ''}\n\nItems:\n` + (lines.length ? lines.join('\n') : 'No items'));
-    }
     function renderOrdersGrid(){
       const today = todayDateStr();
       const all = Object.values(ordersCache || {});
@@ -677,22 +672,25 @@
       html += `<table class="order-items-table"><thead>
         <tr>
           <th style="width:12%;">QTY</th>
-          <th style="width:60%;">ITEM</th>
-          <th style="width:28%;">TOTAL</th>
+          <th style="width:56%;">ITEM</th>
+          <th style="width:19%;"> </th>
+          <th style="width:13%;">TOTAL</th>
         </tr>
       </thead><tbody>`;
 
       if(items.length === 0) {
-        html += `<tr><td colspan="3" style="text-align:center">No items</td></tr>`;
+        html += `<tr><td colspan="4" style="text-align:center">No items</td></tr>`;
       } else {
         items.forEach(it => {
           html += `<tr>
-            <td class="big-qty">${String(it.qty || 1).toUpperCase()}</td>
-            <td>
+            <td class="big-qty" style="vertical-align:top;">${String(it.qty || 1).toUpperCase()}</td>
+            <td style="vertical-align:top;">
               <div class="item-row-name">${String(it.name || '').toUpperCase()}</div>
+              <div class="item-price">€${Number(it.price || 0).toFixed(2)} each</div>
               ${it.note && String(it.note).trim() ? `<div class="order-note-item">${String(it.note).toUpperCase()}</div>` : ''}
             </td>
-            <td style="text-align:right;" class="bold">€${((it.price || 0) * (it.qty || 1)).toFixed(2)}</td>
+            <td style="vertical-align:top;"></td>
+            <td class="item-total bold" style="vertical-align:top;">€${((it.price || 0) * (it.qty || 1)).toFixed(2)}</td>
           </tr>`;
         });
       }
