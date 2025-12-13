@@ -9,8 +9,9 @@
   <style>
     :root{
       --main-bg: linear-gradient(135deg, #0d47a1 0%, #000000 100%);
-      --card-bg: #000000; /* changed to solid black per request */
-      --card-border: rgba(255,255,255,0.04);
+      --card-bg: #000000; /* solid black card background */
+      --card-border: rgba(255,255,255,0.06);
+      --card-edge: rgba(66,165,245,0.06);
       --accent: #bbdefb;
       --primary: #42a5f5;
       --accent2: #263859;
@@ -24,26 +25,24 @@
     * { box-sizing: border-box; }
     html,body { height:100%; margin:0; font-family:"Poppins",sans-serif; color:#fff; background:var(--main-bg); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
 
-    .wrap { max-width:1200px; width:100%; margin:0 auto; padding:22px; min-height:100vh; display:flex; flex-direction:column; gap:18px; }
+    .wrap { max-width:1200px; width:100%; margin:0 auto; padding:28px 20px; min-height:100vh; display:flex; flex-direction:column; gap:20px; }
 
     .topbar { display:flex; align-items:center; gap:12px; }
-    .title { font-weight:700; color:var(--accent); font-size:1.3rem; display:flex; align-items:center; gap:10px; }
+    .title { font-weight:700; color:var(--accent); font-size:1.28rem; display:flex; align-items:center; gap:10px; }
     .controls { margin-left:auto; display:flex; gap:12px; align-items:center; }
 
-    .btn { background:var(--primary); color:#fff; border:0; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:700; box-shadow:0 4px 14px rgba(66,165,245,0.12); }
+    .btn { background:var(--primary); color:#fff; border:0; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:700; box-shadow:0 6px 18px rgba(66,165,245,0.12); }
     .ghost { background:transparent; border:1px solid rgba(255,255,255,0.06); padding:8px 10px; border-radius:8px; color:var(--accent); }
 
-    /* Open count with pulsing glow */
     .open-count {
       display:flex;
       align-items:center;
-      gap:8px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      gap:10px;
       padding:8px 12px;
       border-radius:12px;
       border:1px solid rgba(255,255,255,0.04);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.45);
-      position:relative;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+      box-shadow: 0 8px 26px rgba(2,6,23,0.6);
     }
     .open-count .badge {
       background:var(--primary);
@@ -52,26 +51,21 @@
       border-radius:999px;
       font-weight:900;
       font-size:0.95rem;
-      box-shadow: 0 6px 18px rgba(66,165,245,0.18);
-      position:relative;
-      z-index:2;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
+      box-shadow: 0 8px 28px rgba(66,165,245,0.14);
     }
     .open-count .badge.pulse {
       animation: pulseGlow 1600ms infinite ease-in-out;
     }
     @keyframes pulseGlow {
-      0% { box-shadow: 0 0 0 0 rgba(66,165,245,0.28); }
-      50% { box-shadow: 0 0 18px 6px rgba(66,165,245,0.10); transform: translateY(-1px); }
+      0% { box-shadow: 0 0 0 0 rgba(66,165,245,0.28); transform: translateY(0); }
+      50% { box-shadow: 0 0 22px 8px rgba(66,165,245,0.08); transform: translateY(-2px); }
       100% { box-shadow: 0 0 0 0 rgba(66,165,245,0.00); transform: translateY(0); }
     }
 
-    /* Grid responsive: 5..1 columns */
+    /* Responsive grid */
     .grid {
       display:grid;
-      gap:14px;
+      gap:16px;
       grid-auto-rows: minmax(120px, auto);
     }
     @media (min-width:1400px){ .grid { grid-template-columns: repeat(5, 1fr); } }
@@ -80,12 +74,12 @@
     @media (min-width:480px) and (max-width:799px){ .grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width:479px){ .grid { grid-template-columns: repeat(1, 1fr); } }
 
-    /* Glass morphism card (background changed to black) */
+    /* Card */
     .table-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 14px;
-      padding: 14px;
+      padding: 16px;
       display:flex;
       flex-direction:column;
       gap:10px;
@@ -96,53 +90,73 @@
       transition: transform .18s cubic-bezier(.2,.9,.3,1), box-shadow .18s ease, border-color .18s ease;
       cursor: pointer;
       opacity: 0;
-      transform: translateY(18px) scale(0.995);
+      transform: translateY(22px) scale(0.995);
     }
 
-    /* animated entrance (we will stagger via inline delay) */
-    .table-card.enter {
-      animation: fadeInUp .42s forwards cubic-bezier(.2,.9,.3,1);
-    }
-    @keyframes fadeInUp {
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
+    .table-card.enter { animation: fadeInUp .48s forwards cubic-bezier(.2,.9,.3,1); }
+    @keyframes fadeInUp { to { opacity:1; transform: translateY(0) scale(1); } }
 
-    /* subtle hover + glow */
     .table-card:hover {
-      transform: translateY(-6px) scale(1.01);
-      border-color: rgba(66,165,245,0.12);
-      box-shadow: 0 18px 50px rgba(2,6,23,0.6), 0 6px 18px rgba(66,165,245,0.06);
+      transform: translateY(-8px) scale(1.007);
+      border-color: var(--card-edge);
+      box-shadow: 0 24px 60px rgba(2,6,23,0.7), 0 8px 28px rgba(66,165,245,0.04);
     }
-    .table-card:active { transform: translateY(-3px) scale(1.008); }
+    .table-card:active { transform: translateY(-4px) scale(1.005); }
 
-    /* Sheen */
     .table-card::after {
-      content: "";
-      position: absolute;
-      left: -40%;
-      top: -20%;
-      width: 60%;
-      height: 140%;
-      background: linear-gradient(120deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      content:"";
+      position:absolute;
+      left:-30%;
+      top:-20%;
+      width:60%;
+      height:140%;
+      background: linear-gradient(120deg, rgba(255,255,255,0.01), rgba(255,255,255,0.03), rgba(255,255,255,0.01));
       transform: rotate(-18deg);
       pointer-events:none;
-      transition: left .45s ease;
-      opacity:0.45;
+      transition:left .45s ease;
+      opacity:0.42;
       mix-blend-mode: overlay;
-      backdrop-filter: blur(0px);
     }
-    .table-card:hover::after { left: 120%; opacity:0.9; }
+    .table-card:hover::after { left:120%; opacity:0.85; }
 
-    /* content layout */
+    /* Layout inside card */
+    .table-top {
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      width:100%;
+    }
+
+    .left-col {
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width:0;
+    }
+
     .table-number {
       font-family: "Montserrat", "Poppins", sans-serif;
       font-weight: 900;
-      font-size: 2.2rem; /* big as requested */
+      font-size: 2.4rem;
       color: var(--accent);
       line-height: 1;
       margin: 0;
       word-break: normal;
-      white-space: normal; /* allow wrap to next lines for remaining info below */
+      white-space: normal;
+    }
+
+    /* Timer directly under table name */
+    .timer {
+      font-weight:900;
+      color:var(--primary);
+      background: rgba(66,165,245,0.04);
+      padding:6px 10px;
+      border-radius:10px;
+      display:inline-block;
+      margin-top:2px;
+      font-size:0.98rem;
+      width:fit-content;
     }
 
     .table-sub {
@@ -160,44 +174,55 @@
       flex-wrap:wrap;
     }
 
-    /* smaller text for order number and items */
     .meta-item {
       background: rgba(255,255,255,0.02);
       color:var(--muted);
       padding:6px 8px;
       border-radius:8px;
       font-weight:700;
-      font-size:0.78rem; /* made small */
+      font-size:0.78rem;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
 
-    .status-paid { color:var(--success); background: rgba(67,160,71,0.08); border:1px solid rgba(67,160,71,0.06); }
-    .status-pending { color:var(--warning); background: rgba(255,165,0,0.06); border:1px solid rgba(255,165,0,0.06); }
-    .status-completed { color:var(--muted); background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.03); }
+    .final-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-top:6px;
+    }
 
-    .timer {
+    .status-badge {
+      padding:8px 12px;
+      border-radius:999px;
       font-weight:800;
-      color:var(--primary);
-      background: rgba(66,165,245,0.04);
-      padding:6px 8px;
-      border-radius:8px;
-      min-width:92px;
-      text-align:center;
-      font-size:0.95rem;
+      font-size:0.9rem;
+      white-space:nowrap;
+    }
+    .status-paid { background: rgba(67,160,71,0.09); color:var(--success); border:1px solid rgba(67,160,71,0.06); }
+    .status-pending { background: rgba(255,165,0,0.07); color:var(--warning); border:1px solid rgba(255,165,0,0.06); }
+    .status-completed { background: rgba(255,255,255,0.03); color:var(--muted); border:1px solid rgba(255,255,255,0.03); }
+
+    .total-badge {
+      background: rgba(255,255,255,0.02);
+      color:var(--accent);
+      padding:8px 12px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:0.98rem;
+      border:1px solid rgba(255,255,255,0.04);
     }
 
     .small-muted { color:var(--muted); font-size:0.9rem; }
 
-    /* keep long text from overflowing card, allow wrap in metadata lines */
-    .meta-item, .table-sub { overflow-wrap: anywhere; word-break: break-word; }
-
-    /* compact on very small screens */
-    @media (max-width:380px){
+    @media (max-width:480px){
       .table-number { font-size:1.6rem; }
-      .timer { min-width:76px; font-size:0.86rem; }
+      .timer { font-size:0.9rem; padding:6px 8px; }
       .meta-item { font-size:0.72rem; padding:5px 6px; }
+      .status-badge { padding:6px 10px; font-size:0.82rem; }
+      .total-badge { padding:6px 8px; font-size:0.86rem; }
     }
   </style>
 </head>
@@ -220,13 +245,13 @@
 
     <div id="empty" class="small-muted" style="display:none;margin-top:8px;text-align:center;font-weight:700;">No open tables now.</div>
 
-    <div style="margin-top:6px;color:var(--muted);">Click a table to open the Kitchen screen (home.html). The view will be filtered to that table/order.</div>
+    <div style="margin-top:10px;color:var(--muted);">Click a table to open the Kitchen screen (home.html). The view will be filtered to that table/order.</div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script>
-    // Firebase config (same as home)
+    // Firebase config (same as your home)
     const firebaseConfig = {
       apiKey: "AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtZvI",
       authDomain: "newpos-dacb5.firebaseapp.com",
@@ -248,16 +273,11 @@
     function todayDateStr(){ return (new Date()).toISOString().slice(0,10); }
     todayDateEl.textContent = todayDateStr();
 
-    // State
-    let tablesMap = {}; // table -> [orders]
-    let tableTimers = {}; // table -> intervalId
+    let tablesMap = {};     // table -> [orders]
+    let tableTimers = {};   // table -> interval
 
     function statusIsCompleted(s){ if(!s) return false; return String(s).toLowerCase() === 'completed'; }
-
-    function normalizeTable(t){
-      if(t === null || typeof t === 'undefined') return null;
-      return String(t).trim();
-    }
+    function normalizeTable(t){ if(t === null || typeof t === 'undefined') return null; return String(t).trim(); }
 
     function parseOrderCreatedAt(o){
       if(!o) return Date.now();
@@ -269,12 +289,11 @@
       return Date.now();
     }
 
-    // create or update card timers for each table: show elapsed since earliest pending order
     function startTableTimer(table, el, earliestCreatedAt){
       stopTableTimer(table);
       function update(){
         const now = Date.now();
-        const secs = Math.floor((now - earliestCreatedAt)/1000);
+        const secs = Math.max(0, Math.floor((now - earliestCreatedAt)/1000));
         const hh = String(Math.floor(secs/3600)).padStart(2,'0');
         const mm = String(Math.floor((secs%3600)/60)).padStart(2,'0');
         const ss = String(secs%60).padStart(2,'0');
@@ -297,73 +316,87 @@
       return total;
     }
 
+    function sumTotals(orders){
+      return orders.reduce((acc,o) => acc + (Number(o.total) || 0), 0);
+    }
+
     function buildCardForTable(table, orders, index){
-      // orders are expected sorted by earliest createdAt first
       const first = orders[0];
       const card = document.createElement('div');
       card.className = 'table-card enter';
-      // staggered entrance
-      card.style.animationDelay = (index * 65) + 'ms';
+      card.style.animationDelay = (index * 55) + 'ms';
       card.tabIndex = 0;
       card.setAttribute('role','button');
 
-      // table number (big)
+      // top: table number + spacer
+      const topWrap = document.createElement('div');
+      topWrap.className = 'table-top';
+
+      const leftCol = document.createElement('div');
+      leftCol.className = 'left-col';
+
       const tnum = document.createElement('div');
       tnum.className = 'table-number';
       tnum.textContent = String(table).toUpperCase();
-      card.appendChild(tnum);
+      leftCol.appendChild(tnum);
 
-      // sub info: small order number + small items, timer in next row, payment status at last line
+      // timer directly under table number
+      const timerEl = document.createElement('div');
+      timerEl.className = 'timer';
+      timerEl.textContent = '00:00:00';
+      leftCol.appendChild(timerEl);
+
+      topWrap.appendChild(leftCol);
+      card.appendChild(topWrap);
+
+      // small middle row: order number and number of items (small)
       const sub = document.createElement('div');
       sub.className = 'table-sub';
 
-      // first meta row (order # and items) - small text
-      const row1 = document.createElement('div');
-      row1.className = 'meta-row';
+      const rowSmall = document.createElement('div');
+      rowSmall.className = 'meta-row';
+
       const orderNum = document.createElement('div');
       orderNum.className = 'meta-item';
       orderNum.textContent = 'Order #' + (first.id || first.key || '');
-      row1.appendChild(orderNum);
+      rowSmall.appendChild(orderNum);
 
       const itemsEl = document.createElement('div');
       itemsEl.className = 'meta-item';
       itemsEl.textContent = (countItems(first) || 0) + ' items';
-      row1.appendChild(itemsEl);
+      rowSmall.appendChild(itemsEl);
 
-      sub.appendChild(row1);
+      sub.appendChild(rowSmall);
 
-      // second row: timer only (no time)
-      const row2 = document.createElement('div');
-      row2.className = 'meta-row';
-      const timerEl = document.createElement('div');
-      timerEl.className = 'timer';
-      timerEl.textContent = '00:00:00';
-      // push timer to the left while leaving space for wrapping below
-      row2.appendChild(timerEl);
-      sub.appendChild(row2);
+      // payment status (left) + total price (right) on final row
+      const final = document.createElement('div');
+      final.className = 'final-row';
 
-      // third row: payment status on last line
-      const row3 = document.createElement('div');
-      row3.className = 'meta-row';
       const status = (first.status || '').toString().toLowerCase();
-      const statusEl = document.createElement('div');
-      statusEl.className = 'meta-item';
-      if(status === 'paid') {
-        statusEl.classList.add('status-paid');
-        statusEl.textContent = 'Paid';
-      } else if(status === 'completed') {
-        statusEl.classList.add('status-completed');
-        statusEl.textContent = 'Completed';
+      const statusBadge = document.createElement('div');
+      statusBadge.className = 'status-badge';
+      if(status === 'paid'){
+        statusBadge.classList.add('status-paid');
+        statusBadge.textContent = 'Paid';
+      } else if(status === 'completed'){
+        statusBadge.classList.add('status-completed');
+        statusBadge.textContent = 'Completed';
       } else {
-        statusEl.classList.add('status-pending');
-        statusEl.textContent = first.paymentStatus ? String(first.paymentStatus) : 'Payment Pending';
+        statusBadge.classList.add('status-pending');
+        statusBadge.textContent = first.paymentStatus ? String(first.paymentStatus) : 'Payment Pending';
       }
-      row3.appendChild(statusEl);
-      sub.appendChild(row3);
+      final.appendChild(statusBadge);
 
+      const totalPrice = sumTotals(orders);
+      const totalBadge = document.createElement('div');
+      totalBadge.className = 'total-badge';
+      totalBadge.textContent = '€' + (Number(totalPrice) || 0).toFixed(2);
+      final.appendChild(totalBadge);
+
+      sub.appendChild(final);
       card.appendChild(sub);
 
-      // scheduled note if present
+      // scheduled note (optional)
       if(first.scheduledTime){
         const scheduled = document.createElement('div');
         scheduled.className = 'small-muted';
@@ -372,12 +405,12 @@
         card.appendChild(scheduled);
       }
 
-      // click -> open home.html and set localStorage hint
+      // click -> open home.html with params and store localStorage hints
       card.addEventListener('click', ()=> openHomeForTable(table, orders));
       card.addEventListener('keypress', (e)=> { if(e.key === 'Enter' || e.key === ' ') openHomeForTable(table, orders); });
 
-      // start/refresh table timer using earliest order createdAt
-      const earliestCreated = parseOrderCreatedAt(first);
+      // start timer based on earliest order createdAt
+      const earliestCreated = Math.min(...orders.map(o => parseOrderCreatedAt(o)));
       startTableTimer(table, timerEl, earliestCreated);
 
       return card;
@@ -393,14 +426,9 @@
       window.location.href = url;
     }
 
-    // render grid
     function renderGrid(){
       const currentTables = Object.keys(tablesMap);
-
-      // stop timers for tables removed
-      Object.keys(tableTimers).forEach(t => {
-        if(!currentTables.includes(t)) stopTableTimer(t);
-      });
+      Object.keys(tableTimers).forEach(t => { if(!currentTables.includes(t)) stopTableTimer(t); });
 
       grid.innerHTML = '';
       const entries = Object.keys(tablesMap).sort((a,b)=>{
@@ -409,11 +437,8 @@
         return String(a).localeCompare(String(b));
       });
 
-      if(entries.length === 0){
-        empty.style.display = 'block';
-      } else {
-        empty.style.display = 'none';
-      }
+      if(entries.length === 0) empty.style.display = 'block';
+      else empty.style.display = 'none';
 
       entries.forEach((t, i) => {
         const card = buildCardForTable(t, tablesMap[t], i);
@@ -425,7 +450,6 @@
       else openCountBadge.classList.remove('pulse');
     }
 
-    // helper: group pending orders (not completed) per table for today
     function updateTablesFromOrders(ordersObj){
       const map = {};
       const today = todayDateStr();
@@ -437,15 +461,11 @@
         if(statusIsCompleted(status)) return; // skip completed
         const table = normalizeTable(o.table);
         if(!table) return;
-        // enforce today's orders (like home.html)
         if(o.date && o.date !== today) return;
         const entry = Object.assign({}, o);
         entry.key = k;
         entry.id = o.id || k;
-        // ensure createdAt
-        if(!entry.createdAt){
-          entry.createdAt = entry.createdAt || (entry.date ? parseOrderCreatedAt(entry) : Date.now());
-        }
+        if(!entry.createdAt) entry.createdAt = parseOrderCreatedAt(entry);
         if(!map[table]) map[table] = [];
         map[table].push(entry);
       });
@@ -455,14 +475,14 @@
         map[t].sort((a,b)=> (Number(a.createdAt)||0) - (Number(b.createdAt)||0));
       });
 
-      // stop timers on tables that will be removed
+      // stop timers for removed tables
       Object.keys(tableTimers).forEach(t => { if(!map[t]) stopTableTimer(t); });
 
       tablesMap = map;
       renderGrid();
     }
 
-    // realtime listener
+    // Realtime listener
     const ref = firebase.database().ref('orders');
     ref.on('value', snap => {
       const val = snap.val() || {};
@@ -471,15 +491,11 @@
 
     // manual refresh
     refreshBtn.addEventListener('click', ()=> {
-      firebase.database().ref('orders').once('value').then(snap => {
-        updateTablesFromOrders(snap.val() || {});
-      }).catch(err => console.error(err));
+      firebase.database().ref('orders').once('value').then(snap => updateTablesFromOrders(snap.val() || {})).catch(err => console.error(err));
     });
 
-    // initial load (in case on->value hasn't fired)
-    firebase.database().ref('orders').once('value').then(snap => {
-      updateTablesFromOrders(snap.val() || {});
-    }).catch(err => console.error(err));
+    // initial load
+    firebase.database().ref('orders').once('value').then(snap => updateTablesFromOrders(snap.val() || {})).catch(err => console.error(err));
 
     // cleanup timers when leaving
     window.addEventListener('beforeunload', () => {
