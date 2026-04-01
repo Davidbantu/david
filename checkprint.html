@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POS System</title>
+  <style>
+    /* ── Your original styles — untouched ── */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f4f4f4;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    #receipt {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 16px;
+      max-width: 320px;
+      margin: 20px auto;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    #receipt h2 {
+      text-align: center;
+      margin: 0 0 8px;
+    }
+
+    #receipt .divider {
+      border-top: 1px dashed #000;
+      margin: 8px 0;
+    }
+
+    #receipt .row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #receipt .total {
+      font-weight: bold;
+    }
+
+    button#printBtn {
+      display: block;
+      margin: 0 auto;
+      padding: 12px 32px;
+      font-size: 16px;
+      background: #007aff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button#printBtn:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>My POS System</h1>
+
+  <!-- ── Receipt div – printReceipt() reads content from here ── -->
+  <div id="receipt">
+    <h2>STORE NAME</h2>
+    <p style="text-align:center;">123 Main St | Tel: 555-0100</p>
+
+    <div class="divider"></div>
+
+    <div class="row"><span>Burger x1</span>      <span>$8.99</span></div>
+    <div class="row"><span>Fries x2</span>        <span>$4.50</span></div>
+    <div class="row"><span>Soda x1</span>         <span>$2.00</span></div>
+
+    <div class="divider"></div>
+
+    <div class="row"><span>Subtotal</span>        <span>$15.49</span></div>
+    <div class="row"><span>Tax (8%)</span>         <span>$1.24</span></div>
+
+    <div class="divider"></div>
+
+    <div class="row total"><span>TOTAL</span>     <span>$16.73</span></div>
+
+    <div class="divider"></div>
+
+    <p style="text-align:center;">Thank you for your visit!</p>
+  </div>
+
+  <!--
+    CHANGED: removed onclick="window.print()"
+    ADDED:   onclick="printReceipt()"
+  -->
+  <button id="printBtn" onclick="printReceipt()">Print Receipt</button>
+
+
+  <script>
+    // ════════════════════════════════════════════════════════════════
+    //  printReceipt()
+    //  Reads the #receipt div, converts it to plain text, wraps it
+    //  in Star WebPRNT XML, and POSTs it to the Star WebPRNT Browser
+    //  running at localhost:8080.  No AirPrint, no window.print().
+    // ════════════════════════════════════════════════════════════════
+    async function printReceipt() {
+
+      // ── 1. Grab the receipt element ──────────────────────────────
+      const receiptEl = document.getElementById('receipt');
+      if (!receiptEl) {
+        alert('Receipt element not found.');
+        return;
+      }
+
+      // ── 2. Convert the receipt HTML to plain printable text ───────
+      //       We walk the DOM so the printed output mirrors what the
+      //       customer sees on screen without any HTML tags.
+      const receiptText = domToReceiptText(receiptEl);
+
+      // ── 3. Build the Star WebPRNT XML payload ────────────────────
+      //       Full tag reference:
+      //       https://www.starmicronics.com/partnerportal/resources/
+      //                support/webprnt/commandhelp/XMLStarWebPRNT.html
+      const xml = buildStarWebPRNTXml(receiptText);
+
+      // ── 4. Disable the button while printing ─────────────────────
+      const btn = document.getElementById('printBtn');
+      btn.disabled = true;
+      btn.textContent = 'Printing…';
+
+      // ── 5. POST to Star WebPRNT Browser (localhost:8080) ─────────
+      //       The Star WebPRNT Browser app on iOS acts as a local
+      //       HTTP server and forwards the job over Bluetooth.
+      const WEBPRNT_URL = 'http://localhost:8080/StarWebPRNT/SendMessage';
+
+      try {
+        const response = await fetch(WEBPRNT_URL, {
+          method:  'POST',
+          headers: { 'Content-Type': 'text/xml' },
+          body:    xml
+        });
+
+        if (!response.ok) {
+          // HTTP-level error (4xx / 5xx)
+          throw new Error(`Printer returned HTTP ${response.status}`);
+        }
+
+        // Star WebPRNT returns an XML response; a successful job
+        // contains <PrinterStatus> with no error nodes.
+        const responseText = await response.text();
+        handlePrinterResponse(responseText);
+
+      } catch (err) {
+        // Network error – WebPRNT Browser not reachable, or Bluetooth issue
+        if (err.name === 'TypeError' || err.message.includes('Failed to fetch')) {
+          alert(
+            '⚠️ Could not reach the Star WebPRNT Browser.\n\n' +
+            'Please make sure:\n' +
+            '• You have opened this page inside the Star WebPRNT Browser app.\n' +
+            '• The Star TSP100III is paired and powered on.\n' +
+            '• The app is running in the foreground.'
+          );
+        } else {
+          alert('Print error: ' + err.message);
+        }
+        console.error('[printReceipt] Error:', err);
+
+      } finally {
+        // Re-enable the button regardless of outcome
+        btn.disabled = false;
+        btn.textContent = 'Print Receipt';
+      }
+    }
+
+
+    // ────────────────────────────────────────────────────────────────
+    //  domToReceiptText(element)
+    //  Walks the receipt element's DOM and produces a plain-text
+    //  representation suitable for a thermal receipt printer.
+    //  - Block-level elements (h1–h6, p, div) get a newline appended.
+    //  - <br> becomes a newline.
+    //  - Inline text is concatenated as-is.
+    // ────────────────────────────────────────────────────────────────
+    function domToReceiptText(element) {
+      const BLOCK_TAGS = new Set([
+        'DIV', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+        'LI', 'TR', 'SECTION', 'ARTICLE', 'HEADER', 'FOOTER'
+      ]);
+
+      let lines = [];
+
+      function walk(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          // Collapse whitespace but keep content
+          const text = node.textContent.replace(/\s+/g, ' ').trim();
+          if (text) lines.push(text);
+          return;
+        }
+
+        if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+        const tag = node.tagName.toUpperCase();
+
+        if (tag === 'BR') {
+          lines.push('\n');
+          return;
+        }
+
+        // Divider elements (class="divider") → dashed line
+        if (node.classList && node.classList.contains('divider')) {
+          lines.push('--------------------------------\n');
+          return;
+        }
+
+        // Recurse into children
+        node.childNodes.forEach(walk);
+
+        // Add newline after block-level elements
+        if (BLOCK_TAGS.has(tag)) {
+          lines.push('\n');
+        }
+      }
+
+      walk(element);
+
+      // Join, clean up excessive blank lines, trim
+      return lines
+        .join('')
+        .replace(/\n{3,}/g, '\n\n')   // max two consecutive blank lines
+        .trim();
+    }
+
+
+    // ────────────────────────────────────────────────────────────────
+    //  buildStarWebPRNTXml(plainText)
+    //  Wraps plain receipt text in the Star WebPRNT XML envelope.
+    //
+    //  XML tags used:
+    //    <text>        – send raw text (newlines included)
+    //    <feed>        – advance paper before cutting
+    //    <cut>         – partial cut (standard for TSP100 series)
+    // ────────────────────────────────────────────────────────────────
+    function buildStarWebPRNTXml(plainText) {
+      // Escape characters that are special in XML
+      const escaped = escapeXml(plainText);
+
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<StarWebPrint>
+  <text>${escaped}</text>
+  <feed unit="line" count="4"/>
+  <cut type="partial"/>
+</StarWebPrint>`;
+    }
+
+
+    // ────────────────────────────────────────────────────────────────
+    //  escapeXml(str)
+    //  Replaces the five XML special characters so the payload is
+    //  valid XML when the receipt contains characters like & < > ' "
+    // ────────────────────────────────────────────────────────────────
+    function escapeXml(str) {
+      return str
+        .replace(/&/g,  '&amp;')
+        .replace(/</g,  '&lt;')
+        .replace(/>/g,  '&gt;')
+        .replace(/"/g,  '&quot;')
+        .replace(/'/g,  '&apos;');
+    }
+
+
+    // ────────────────────────────────────────────────────────────────
+    //  handlePrinterResponse(xmlString)
+    //  Star WebPRNT returns an XML response after every print job.
+    //  A successful response looks like:
+    //    <PrinterStatus>
+    //      <StatusCode>200</StatusCode>
+    //    </PrinterStatus>
+    //  Error responses include an <ErrorCode> node.
+    // ───────────────��────────────────────────────────────────────────
+    function handlePrinterResponse(xmlString) {
+      try {
+        const parser = new DOMParser();
+        const doc    = parser.parseFromString(xmlString, 'text/xml');
+
+        // Check for a printer-level error code in the response
+        const errorNode = doc.querySelector('ErrorCode');
+        if (errorNode && errorNode.textContent.trim() !== '0') {
+          alert('Printer error code: ' + errorNode.textContent.trim() +
+                '\nPlease check the printer and try again.');
+          console.warn('[printReceipt] Printer error response:', xmlString);
+        } else {
+          console.log('[printReceipt] Print job sent successfully.');
+        }
+      } catch (parseErr) {
+        // Non-XML response – treat as success (some firmware versions
+        // return plain text "OK")
+        console.log('[printReceipt] Printer response (raw):', xmlString);
+      }
+    }
+
+    // ═════════════════════════════════════════════════════════��══════
+    //  Your original POS application code continues below — unchanged
+    // ════════════════════════════════════════════════════════════════
+
+    // ... (rest of your existing POS JS goes here)
+
+  </script>
+</body>
+</html>
