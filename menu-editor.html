@@ -12,11 +12,13 @@
     h2 { margin:0 0 8px 0; color:#bbdefb; font-size:1.05rem; }
     .category { border:1px solid #223246; padding:8px; border-radius:8px; margin-bottom:8px; background:#0f1720; display:flex; gap:10px; align-items:flex-start; }
     .cat-left { flex:1; }
-    .cat-actions { display:flex; gap:8px; align-items:center; }
+    .cat-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
     .item { background:#0b1320; padding:6px; border-radius:6px; display:flex; justify-content:space-between; gap:8px; margin-bottom:6px; border:1px solid #1b2936; }
     .btn { background:#1976d2; color:#fff; border:0; padding:6px 8px; border-radius:6px; cursor:pointer; font-weight:700; }
     .ghost { background:#223246; color:#bbdefb; border:0; padding:6px 8px; border-radius:6px; cursor:pointer; }
-    input[type="text"], input[type="number"] { background:#071021; border:1px solid #1b2936; color:#eaf4ff; padding:6px 8px; border-radius:6px; }
+    input[type="text"], input[type="number"], select {
+      background:#071021; border:1px solid #1b2936; color:#eaf4ff; padding:6px 8px; border-radius:6px;
+    }
     .small { font-size:0.9rem; padding:4px 6px; }
     .muted { color:#8ea7bf; font-size:0.9rem; }
     .header { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
@@ -30,6 +32,37 @@
     .item.drag-over { outline: 2px dashed #42a5f5; }
 
     .hint { margin-top:8px; color:#9fb7cf; font-size:0.9rem; }
+
+    .badge {
+      display:inline-block;
+      margin-left:8px;
+      font-size:0.82rem;
+      padding:2px 6px;
+      border:1px solid #253246;
+      border-radius:999px;
+      color:#bbdefb;
+      background:#0b1320;
+      vertical-align:middle;
+      white-space:nowrap;
+    }
+
+    .cat-title-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+    }
+
+    .cat-title {
+      display:flex;
+      align-items:center;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+
+    .section-select {
+      min-width: 180px;
+    }
   </style>
 </head>
 <body>
@@ -42,7 +75,15 @@
 
       <div class="actions-row">
         <input id="newCategoryInput" placeholder="New category name" type="text" />
+        <select id="newCategorySection" class="section-select">
+          <option value="1">1 - Starters</option>
+          <option value="2">2 - Main Course</option>
+          <option value="3">3 - Desserts</option>
+          <option value="4">4 - Drinks</option>
+        </select>
         <button id="addCategoryBtn" class="btn small">Add Category</button>
+
+        <button id="sortBySectionBtn" class="ghost small">Sort by Section</button>
         <button id="refreshBtn" class="ghost small">Refresh</button>
         <button id="exportBtn" class="ghost small">Export JSON</button>
         <button id="importBtn" class="btn small">Import JSON</button>
@@ -55,7 +96,7 @@
         Tip: open order.html in another tab to see live updates. Drag a category to reorder categories. Drag an item to reorder within its category or drop into another category to move it there.
         <div style="margin-top:8px;"><a class="inline-link" href="order.html" target="_blank">Open Order page</a></div>
       </div>
-      <div class="hint">When dragging items, dropping on an item inserts before/after depending where you release; dropping on category appends at end.</div>
+      <div class="hint">Category sections: 1=Starters, 2=Main Course, 3=Desserts, 4=Drinks. Use “Sort by Section” if your receipt page expects that fixed order.</div>
     </div>
   </div>
 
@@ -75,9 +116,36 @@
     };
     firebase.initializeApp(firebaseConfig);
 
+    // Section mapping (for dropdown + labels)
+    const SECTION_OPTIONS = [
+      { value: 1, label: "Starters" },
+      { value: 2, label: "Main Course" },
+      { value: 3, label: "Desserts" },
+      { value: 4, label: "Drinks" }
+    ];
+
+    function sectionLabelFromValue(v){
+      const n = Number(v);
+      const found = SECTION_OPTIONS.find(o => o.value === n);
+      return found ? found.label : "Unassigned";
+    }
+
+    function normalizeCategory(cat){
+      // Ensure fields exist and have expected types
+      const normalized = Object.assign({}, cat || {});
+      if (!Array.isArray(normalized.items)) normalized.items = [];
+      // Default sectionOrder to 1 if missing
+      if (normalized.sectionOrder == null || isNaN(Number(normalized.sectionOrder))) normalized.sectionOrder = 1;
+      else normalized.sectionOrder = Number(normalized.sectionOrder);
+      if (typeof normalized.category !== 'string') normalized.category = String(normalized.category || '');
+      return normalized;
+    }
+
     const defaultMenu = [
-      { category: "Starters", items:[{name:"Tomato Shorba",price:5},{name:"Paneer Tikka",price:8}]},
-      { category: "Curries", items:[{name:"Butter Chicken",price:16},{name:"Paneer Butter Masala",price:15}]}
+      { category: "Starters", sectionOrder: 1, items:[{name:"Tomato Shorba",price:5},{name:"Paneer Tikka",price:8}]},
+      { category: "Curries", sectionOrder: 2, items:[{name:"Butter Chicken",price:16},{name:"Paneer Butter Masala",price:15}]},
+      { category: "Desserts", sectionOrder: 3, items:[{name:"Gulab Jamun",price:6}]},
+      { category: "Drinks", sectionOrder: 4, items:[{name:"Mango Lassi",price:5}]}
     ];
 
     const menuRef = firebase.database().ref('menu');
@@ -86,7 +154,9 @@
     // UI refs
     const categoriesList = document.getElementById('categoriesList');
     const newCategoryInput = document.getElementById('newCategoryInput');
+    const newCategorySection = document.getElementById('newCategorySection');
     const addCategoryBtn = document.getElementById('addCategoryBtn');
+    const sortBySectionBtn = document.getElementById('sortBySectionBtn');
     const refreshBtn = document.getElementById('refreshBtn');
     const exportBtn = document.getElementById('exportBtn');
     const importBtn = document.getElementById('importBtn');
@@ -100,27 +170,38 @@
       menuRef.set(menu).catch(err => alert('Error saving menu: ' + (err.message || err)));
     }
 
-    // Load realtime
-    menuRef.on('value', snap => {
-      const val = snap.val();
-      if(!val){ menu = defaultMenu.slice(); }
-      else {
-        if(Array.isArray(val)) menu = val;
+    function coerceLoadedMenu(val){
+      let loaded;
+      if(!val){
+        loaded = defaultMenu.slice();
+      } else {
+        if(Array.isArray(val)) loaded = val;
         else {
           const keys = Object.keys(val || {});
           const isNumericKeys = keys.length && keys.every(k => /^\d+$/.test(k));
-          if(isNumericKeys) menu = keys.sort((a,b)=>Number(a)-Number(b)).map(k=>val[k]);
-          else if(val.menu && Array.isArray(val.menu)) menu = val.menu;
-          else menu = Array.isArray(val) ? val : Object.values(val);
+          if(isNumericKeys) loaded = keys.sort((a,b)=>Number(a)-Number(b)).map(k=>val[k]);
+          else if(val.menu && Array.isArray(val.menu)) loaded = val.menu;
+          else loaded = Array.isArray(val) ? val : Object.values(val);
         }
       }
+      // Normalize
+      return (loaded || []).map(normalizeCategory);
+    }
+
+    // Load realtime
+    menuRef.on('value', snap => {
+      menu = coerceLoadedMenu(snap.val());
       renderCategories();
     });
 
     // Rendering + drag handlers
     function renderCategories(){
       categoriesList.innerHTML = '';
-      menu.forEach((cat, cIdx) => {
+      menu.forEach((catRaw, cIdx) => {
+        const cat = normalizeCategory(catRaw);
+        // ensure menu holds normalized data (in-memory)
+        menu[cIdx] = cat;
+
         const catEl = document.createElement('div');
         catEl.className = 'category';
         catEl.dataset.catIndex = cIdx;
@@ -145,7 +226,11 @@
           if(!data) { e.preventDefault(); return; }
           try {
             const parsed = JSON.parse(data);
-            if(parsed.type === 'category' || parsed.type === 'item'){ e.preventDefault(); catEl.classList.add('drag-over'); e.dataTransfer.dropEffect='move'; }
+            if(parsed.type === 'category' || parsed.type === 'item'){
+              e.preventDefault();
+              catEl.classList.add('drag-over');
+              e.dataTransfer.dropEffect='move';
+            }
           } catch(_) {}
         });
         catEl.addEventListener('dragleave', ()=> catEl.classList.remove('drag-over'));
@@ -162,7 +247,6 @@
             const to = cIdx;
             if(from === to) return;
             const moved = menu.splice(from,1)[0];
-            // compute insert index after removal
             const insertIndex = from < to ? to : to;
             menu.splice(insertIndex,0,moved);
             writeMenuToFirebase();
@@ -184,11 +268,44 @@
 
         // category content
         const left = document.createElement('div'); left.className='cat-left';
-        const titleRow = document.createElement('div'); titleRow.style.display='flex'; titleRow.style.justifyContent='space-between'; titleRow.style.alignItems='center';
-        const title = document.createElement('div'); title.innerHTML = '<strong>' + (cat.category || ('Category '+(cIdx+1))) + '</strong>';
+
+        const titleRow = document.createElement('div');
+        titleRow.className = 'cat-title-row';
+
+        const title = document.createElement('div');
+        title.className = 'cat-title';
+
+        const titleStrong = document.createElement('strong');
+        titleStrong.textContent = (cat.category || ('Category ' + (cIdx+1)));
+        title.appendChild(titleStrong);
+
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = cat.sectionOrder + ' - ' + sectionLabelFromValue(cat.sectionOrder);
+        title.appendChild(badge);
+
         const actions = document.createElement('div'); actions.className='cat-actions';
+
+        // NEW: section dropdown (stored per category)
+        const sectionSelect = document.createElement('select');
+        sectionSelect.className = 'section-select small';
+        SECTION_OPTIONS.forEach(opt => {
+          const o = document.createElement('option');
+          o.value = String(opt.value);
+          o.textContent = opt.value + ' - ' + opt.label;
+          sectionSelect.appendChild(o);
+        });
+        sectionSelect.value = String(cat.sectionOrder);
+
+        sectionSelect.addEventListener('change', () => {
+          const v = Number(sectionSelect.value);
+          menu[cIdx].sectionOrder = isNaN(v) ? 1 : v;
+          writeMenuToFirebase();
+        });
+
         const editCatBtn = document.createElement('button'); editCatBtn.className='ghost small'; editCatBtn.textContent='Edit';
         const delCatBtn = document.createElement('button'); delCatBtn.className='btn small'; delCatBtn.textContent='Delete';
+
         editCatBtn.onclick = ()=> {
           const nv = prompt('Edit category name:', cat.category || '');
           if(nv === null) return;
@@ -197,13 +314,17 @@
           menu[cIdx].category = name;
           writeMenuToFirebase();
         };
+
         delCatBtn.onclick = ()=> {
           if(!confirm('Delete category "' + (cat.category||'') + '"?')) return;
           menu.splice(cIdx,1);
           writeMenuToFirebase();
         };
+
+        actions.appendChild(sectionSelect);
         actions.appendChild(editCatBtn);
         actions.appendChild(delCatBtn);
+
         titleRow.appendChild(title);
         titleRow.appendChild(actions);
         left.appendChild(titleRow);
@@ -215,7 +336,11 @@
           if(!data) return;
           try {
             const parsed = JSON.parse(data);
-            if(parsed.type === 'item'){ e.preventDefault(); itemsWrap.classList.add('drag-over'); e.dataTransfer.dropEffect = 'move'; }
+            if(parsed.type === 'item'){
+              e.preventDefault();
+              itemsWrap.classList.add('drag-over');
+              e.dataTransfer.dropEffect = 'move';
+            }
           } catch(_) {}
         });
         itemsWrap.addEventListener('dragleave', ()=> itemsWrap.classList.remove('drag-over'));
@@ -264,7 +389,11 @@
             if(!data) return;
             try {
               const parsed = JSON.parse(data);
-              if(parsed.type === 'item'){ e.preventDefault(); itemEl.classList.add('drag-over'); e.dataTransfer.dropEffect='move'; }
+              if(parsed.type === 'item'){
+                e.preventDefault();
+                itemEl.classList.add('drag-over');
+                e.dataTransfer.dropEffect='move';
+              }
             } catch(_) {}
           });
           itemEl.addEventListener('dragleave', ()=> itemEl.classList.remove('drag-over'));
@@ -371,17 +500,34 @@
 
     addCategoryBtn.addEventListener('click', ()=> {
       const name = newCategoryInput.value.trim();
+      const sectionOrder = Number(newCategorySection.value);
       if(!name) return alert('Category name required');
-      menu.push({ category: name, items: [] });
+      menu.push({
+        category: name,
+        sectionOrder: isNaN(sectionOrder) ? 1 : sectionOrder,
+        items: []
+      });
       newCategoryInput.value = '';
+      newCategorySection.value = '1';
+      writeMenuToFirebase();
+    });
+
+    sortBySectionBtn.addEventListener('click', ()=> {
+      // Stable sort: sectionOrder then category name
+      menu.sort((a,b) => {
+        const sa = Number(a.sectionOrder) || 99;
+        const sb = Number(b.sectionOrder) || 99;
+        if(sa !== sb) return sa - sb;
+        const ca = String(a.category || '').toLowerCase();
+        const cb = String(b.category || '').toLowerCase();
+        return ca.localeCompare(cb);
+      });
       writeMenuToFirebase();
     });
 
     refreshBtn.addEventListener('click', ()=> {
       menuRef.once('value').then(snap => {
-        const val = snap.val();
-        if(!val) menu = defaultMenu.slice();
-        else menu = Array.isArray(val) ? val : (val.menu || Object.values(val));
+        menu = coerceLoadedMenu(snap.val());
         renderCategories();
       });
     });
@@ -407,12 +553,14 @@
       reader.onload = function(ev){
         try {
           const data = JSON.parse(ev.target.result);
+          let imported;
           if(!Array.isArray(data)) {
-            if(Array.isArray(data.menu)) menu = data.menu;
+            if(Array.isArray(data.menu)) imported = data.menu;
             else return alert('Imported JSON must be an array of categories');
           } else {
-            menu = data;
+            imported = data;
           }
+          menu = (imported || []).map(normalizeCategory);
           writeMenuToFirebase();
         } catch(err) {
           alert('Invalid JSON file: ' + (err.message||err));
