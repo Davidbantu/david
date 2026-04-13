@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Menu Editor</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet" />
   <style>
     :root{
       --bg:#0b1220;
@@ -18,843 +18,723 @@
       --card:#0f1720;
       --item:#0b1320;
     }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);padding:18px;}
+    .wrap{max-width:1100px;margin:0 auto;}
+    .panel{background:var(--panel);border-radius:10px;padding:12px;border:1px solid var(--border);}
+    h2{margin:0 0 8px 0;color:#bbdefb;font-size:1.05rem;}
 
-    * { box-sizing: border-box; }
-    body { margin:0; font-family:Poppins, sans-serif; background:var(--bg); color:var(--text); padding:18px; }
-    .wrap { max-width:1100px; margin:0 auto; display:block; gap:18px; }
-    .panel { background:var(--panel); border-radius:10px; padding:12px; border:1px solid var(--border); }
-    h2 { margin:0 0 8px 0; color:#bbdefb; font-size:1.05rem; }
+    .header{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;}
+    .header .muted{flex:1 1 auto;min-width:240px;}
 
-    .header { display:flex; gap:8px; align-items:flex-start; margin-bottom:10px; flex-wrap:wrap; }
-    .header .muted { flex: 1 1 auto; min-width: 240px; }
+    .category{
+      border:1px solid #223246;padding:8px;border-radius:8px;
+      margin-bottom:8px;background:var(--card);
+      display:flex;gap:10px;align-items:flex-start;
+    }
+    .cat-left{flex:1;min-width:0;}
+    .cat-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
 
-    .category { border:1px solid #223246; padding:8px; border-radius:8px; margin-bottom:8px; background:var(--card); display:flex; gap:10px; align-items:flex-start; }
-    .cat-left { flex:1; min-width:0; }
+    .item{
+      background:var(--item);padding:6px;border-radius:6px;
+      display:flex;justify-content:space-between;gap:8px;
+      margin-bottom:6px;border:1px solid #1b2936;
+    }
+    .btn{background:var(--primary);color:#fff;border:0;padding:6px 8px;border-radius:6px;cursor:pointer;font-weight:700;}
+    .ghost{background:var(--ghost);color:var(--ghostText);border:0;padding:6px 8px;border-radius:6px;cursor:pointer;}
 
-    .cat-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
-
-    .item { background:var(--item); padding:6px; border-radius:6px; display:flex; justify-content:space-between; gap:8px; margin-bottom:6px; border:1px solid #1b2936; }
-    .btn { background:var(--primary); color:#fff; border:0; padding:6px 8px; border-radius:6px; cursor:pointer; font-weight:700; }
-    .ghost { background:var(--ghost); color:var(--ghostText); border:0; padding:6px 8px; border-radius:6px; cursor:pointer; }
-
-    input[type="text"], input[type="number"], select {
-      background:#071021; border:1px solid #1b2936; color:var(--text); padding:6px 8px; border-radius:6px;
+    input[type="text"],
+    input[type="number"],
+    select{
+      background:#071021;
+      border:1px solid #1b2936;
+      color:var(--text);
+      padding:6px 8px;
+      border-radius:6px;
       max-width:100%;
     }
+    /* Fix select options visibility in dark mode */
+    select option{background:#071021;color:var(--text);}
 
-    .small { font-size:0.9rem; padding:4px 6px; }
-    .muted { color:var(--muted); font-size:0.9rem; }
-    .actions-row { display:flex; gap:8px; margin-bottom:10px; align-items:center; flex-wrap:wrap; }
-    .footer-note { margin-top:12px; color:#9fb7cf; font-size:0.92rem; }
-    a.inline-link { color:#bbdefb; text-decoration:none; background:transparent; padding:6px 8px; border-radius:6px; border:1px solid transparent; }
-    .hint { margin-top:8px; color:#9fb7cf; font-size:0.9rem; }
+    .small{font-size:0.9rem;padding:4px 6px;}
+    .muted{color:var(--muted);font-size:0.9rem;}
+    .actions-row{display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;}
+    .footer-note{margin-top:12px;color:#9fb7cf;font-size:0.92rem;}
+    a.inline-link{color:#bbdefb;text-decoration:none;background:transparent;padding:6px 8px;border-radius:6px;border:1px solid transparent;}
+    .hint{margin-top:8px;color:#9fb7cf;font-size:0.9rem;}
 
-    .badge {
-      display:inline-block;
-      margin-left:8px;
-      font-size:0.82rem;
-      padding:2px 6px;
-      border:1px solid #253246;
-      border-radius:999px;
-      color:#bbdefb;
-      background:#0b1320;
-      vertical-align:middle;
-      white-space:nowrap;
+    .badge{
+      display:inline-block;margin-left:8px;font-size:0.82rem;
+      padding:2px 6px;border:1px solid #253246;border-radius:999px;
+      color:#bbdefb;background:#0b1320;vertical-align:middle;white-space:nowrap;
     }
 
-    .cat-title-row {
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:10px;
-      flex-wrap:wrap;
+    .cat-title-row{
+      display:flex;justify-content:space-between;align-items:flex-start;
+      gap:10px;flex-wrap:wrap;
     }
-
-    .cat-title {
-      display:flex;
-      align-items:center;
-      gap:6px;
-      flex-wrap:wrap;
-      min-width: 0;
+    .cat-title{
+      display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;
     }
-
     .cat-title strong{
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      display:inline-block;
+      max-width:100%;overflow:hidden;text-overflow:ellipsis;
+      white-space:nowrap;display:inline-block;
     }
-
-    .section-select { min-width: 190px; max-width: 100%; }
+    .section-select{min-width:190px;max-width:100%;}
 
     /* Combo UI */
     .combo-box{
-      width:100%;
-      margin-top:8px;
-      padding:8px;
+      width:100%;margin-top:8px;padding:8px;
       border:1px dashed rgba(255,255,255,0.10);
-      border-radius:10px;
-      background: rgba(255,255,255,0.02);
+      border-radius:10px;background:rgba(255,255,255,0.02);
     }
-    .combo-title{
-      font-weight:700;
-      color:#bbdefb;
-      margin-bottom:6px;
-      font-size:0.95rem;
-    }
+    .combo-title{font-weight:700;color:#bbdefb;margin-bottom:6px;font-size:0.95rem;}
     .combo-grid{
       display:grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns:repeat(3,minmax(0,1fr));
       gap:8px;
     }
     .combo-card{
       border:1px solid rgba(255,255,255,0.08);
-      background: rgba(0,0,0,0.15);
-      border-radius:10px;
-      padding:8px;
-      min-width:0;
+      background:rgba(0,0,0,0.15);
+      border-radius:10px;padding:8px;min-width:0;
     }
-    .combo-card .label{
-      font-size:0.85rem;
-      color:var(--muted);
-      font-weight:700;
-      margin-bottom:6px;
-    }
-    .combo-row{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-    .combo-row input{
-      flex: 1 1 160px;
-      min-width: 140px;
-    }
-    .combo-row .btn, .combo-row .ghost{
-      flex: 0 0 auto;
-      white-space:nowrap;
-    }
+    .combo-card .label{font-size:0.85rem;color:var(--muted);font-weight:700;margin-bottom:6px;}
+    .combo-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+    .combo-row input{flex:1 1 160px;min-width:140px;}
+    .combo-row .btn,.combo-row .ghost{flex:0 0 auto;white-space:nowrap;}
 
-    /* Drag visuals */
-    .dragging { opacity: 0.45; }
-    .drag-over { outline: 2px dashed #42a5f5; border-radius:6px; }
-    .item.drag-over { outline: 2px dashed #42a5f5; }
+    /* comboPart per-item select */
+    .combo-part-select{
+      display:block;width:100%;margin-top:6px;
+      background:#071021;border:1px solid #1b2936;
+      color:var(--text);padding:4px 6px;border-radius:6px;font-size:0.85rem;
+    }
+    .combo-part-select option{background:#071021;color:var(--text);}
 
-    /* Mobile friendliness */
-    @media (max-width: 640px){
-      body { padding:12px; }
-      .panel { padding:10px; }
-      .category { flex-direction:column; }
-      .cat-actions { justify-content:flex-start; }
-      .section-select { min-width: 100%; }
-      .combo-grid{ grid-template-columns: 1fr; }
-      .item { flex-direction:column; align-items:flex-start; }
-      .item > div:last-child { width:100%; display:flex; gap:8px; }
-      .actions-row input, .actions-row select, .actions-row button { width:100%; }
-      .actions-row { gap:10px; }
-      .btn, .ghost { width:100%; }
-      .btn.small, .ghost.small { width:auto; }
+    /* Drag */
+    .dragging{opacity:0.45;}
+    .drag-over{outline:2px dashed #42a5f5;border-radius:6px;}
+    .item.drag-over{outline:2px dashed #42a5f5;}
+
+    @media(max-width:640px){
+      body{padding:12px;}
+      .panel{padding:10px;}
+      .category{flex-direction:column;}
+      .cat-actions{justify-content:flex-start;}
+      .section-select{min-width:100%;}
+      .combo-grid{grid-template-columns:1fr;}
+      .item{flex-direction:column;align-items:flex-start;}
+      .item>div:last-child{width:100%;display:flex;gap:8px;}
+      .actions-row input,.actions-row select,.actions-row button{width:100%;}
+      .actions-row{gap:10px;}
+      .btn,.ghost{width:100%;}
+      .btn.small,.ghost.small{width:auto;}
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="panel" id="editorPanel">
-      <div class="header">
-        <h2>Menu Editor</h2>
-        <div class="muted">
-          Drag categories or items to reorder; items can be moved between categories. Changes save to Firebase /menu.
-          <div style="margin-top:6px">Section order: 1=Starters, 2=Main Course, 3=Desserts, 4=Drinks, 5=Combo (shows in section 2)</div>
+<div class="wrap">
+  <div class="panel" id="editorPanel">
+    <div class="header">
+      <h2>Menu Editor</h2>
+      <div class="muted">
+        Drag categories or items to reorder; items can be moved between categories. Changes save to Firebase /menu.
+        <div style="margin-top:6px;">
+          Section order: <strong>1</strong>=Starters &nbsp;|&nbsp;
+          <strong>2</strong>=Main Course &nbsp;|&nbsp;
+          <strong>3</strong>=Desserts &nbsp;|&nbsp;
+          <strong>4</strong>=Drinks &nbsp;|&nbsp;
+          <strong>5</strong>=Combo (shows under their comboPart section on kitchen screen)
         </div>
       </div>
+    </div>
 
-      <div class="actions-row">
-        <input id="newCategoryInput" placeholder="New category name" type="text" />
-        <select id="newCategorySection" class="section-select">
-          <option value="1">1 - Starters</option>
-          <option value="2">2 - Main Course</option>
-          <option value="3">3 - Desserts</option>
-          <option value="4">4 - Drinks</option>
-          <option value="5">5 - Combo (shows in Main Course)</option>
-        </select>
-        <button id="addCategoryBtn" class="btn small">Add Category</button>
+    <div class="actions-row">
+      <input id="newCategoryInput" placeholder="New category name" type="text" />
+      <select id="newCategorySection" class="section-select">
+        <option value="1">1 - Starters</option>
+        <option value="2">2 - Main Course</option>
+        <option value="3">3 - Desserts</option>
+        <option value="4">4 - Drinks</option>
+        <option value="5">5 - Combo</option>
+      </select>
+      <button id="addCategoryBtn" class="btn small">Add Category</button>
+      <button id="sortBySectionBtn" class="ghost small">Sort by Section</button>
+      <button id="refreshBtn" class="ghost small">Refresh</button>
+      <button id="exportBtn" class="ghost small">Export JSON</button>
+      <button id="importBtn" class="btn small">Import JSON</button>
+      <input id="importArea" type="file" accept="application/json" style="display:none;" />
+    </div>
 
-        <button id="sortBySectionBtn" class="ghost small">Sort by Section</button>
-        <button id="refreshBtn" class="ghost small">Refresh</button>
-        <button id="exportBtn" class="ghost small">Export JSON</button>
-        <button id="importBtn" class="btn small">Import JSON</button>
-        <input id="importArea" type="file" accept="application/json" style="display:none;" />
-      </div>
+    <div id="categoriesList"></div>
 
-      <div id="categoriesList"></div>
-
-      <div class="footer-note">
-        Tip: open order.html in another tab to see live updates.
-        <div style="margin-top:8px;"><a class="inline-link" href="order.html" target="_blank">Open Order page</a></div>
-      </div>
-      <div class="hint">Combo section: When a category is set to Combo, you can set which items are Starter/Main/Dessert. This will be saved in Firebase.</div>
+    <div class="footer-note">
+      Tip: open order.html in another tab to see live updates.
+      <div style="margin-top:8px;"><a class="inline-link" href="order.html" target="_blank">Open Order page</a></div>
+    </div>
+    <div class="hint">
+      Combo section (5): Each item inside has a <em>comboPart</em> dropdown — choose whether it's a Starter/Main/Dessert part.
+      On the kitchen screen, combo items are grouped under their comboPart section and shown with a ★ COMBO badge.
+      A name that exists in a normal section (1-4) will never show as combo — rename combo items uniquely to avoid overlap.
     </div>
   </div>
+</div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script>
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtZvI",
-      authDomain: "newpos-dacb5.firebaseapp.com",
-      databaseURL: "https://newpos-dacb5-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "newpos-dacb5",
-      storageBucket: "newpos-dacb5.appspot.com",
-      messagingSenderId: "667100253940",
-      appId: "1:667100253940:web:cfd8f0b9b51b6e697818a1",
-      measurementId: "G-F5Q2JCNJ10"
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+/* ── FIREBASE ── */
+const firebaseConfig = {
+  apiKey:"AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtZvI",
+  authDomain:"newpos-dacb5.firebaseapp.com",
+  databaseURL:"https://newpos-dacb5-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"newpos-dacb5",
+  storageBucket:"newpos-dacb5.appspot.com",
+  messagingSenderId:"667100253940",
+  appId:"1:667100253940:web:cfd8f0b9b51b6e697818a1",
+  measurementId:"G-F5Q2JCNJ10"
+};
+firebase.initializeApp(firebaseConfig);
+
+/* ── CONSTANTS ── */
+const SECTION_OPTIONS = [
+  {value:1, label:"Starters"},
+  {value:2, label:"Main Course"},
+  {value:3, label:"Desserts"},
+  {value:4, label:"Drinks"},
+  {value:5, label:"Combo"}
+];
+
+function sectionLabel(v){
+  const found = SECTION_OPTIONS.find(o => o.value === Number(v));
+  return found ? found.label : "Unassigned";
+}
+
+/* ── NORMALISE ── */
+function normalizeItem(it, catSectionOrder){
+  const x = Object.assign({}, it || {});
+  x.name  = String(x.name  || '');
+  x.price = Number(x.price || 0);
+  /* comboPart only meaningful for combo categories (section 5) */
+  if(Number(catSectionOrder) === 5){
+    const cp = x.comboPart != null ? Number(x.comboPart) : 2;
+    x.comboPart = [1,2,3].includes(cp) ? cp : 2;
+  } else {
+    /* strip comboPart from non-combo items to keep data clean */
+    delete x.comboPart;
+  }
+  return x;
+}
+
+function normalizeCategory(cat){
+  const c = Object.assign({}, cat || {});
+  c.category     = String(c.category || '');
+  c.sectionOrder = [1,2,3,4,5].includes(Number(c.sectionOrder))
+                   ? Number(c.sectionOrder) : 1;
+  c.items = Array.isArray(c.items)
+            ? c.items.map(it => normalizeItem(it, c.sectionOrder))
+            : [];
+  if(c.sectionOrder === 5){
+    if(!c.comboDefinition || typeof c.comboDefinition !== 'object')
+      c.comboDefinition = {starterItem:'', mainItem:'', dessertItem:''};
+    else {
+      c.comboDefinition.starterItem  = String(c.comboDefinition.starterItem  || '');
+      c.comboDefinition.mainItem     = String(c.comboDefinition.mainItem     || '');
+      c.comboDefinition.dessertItem  = String(c.comboDefinition.dessertItem  || '');
+    }
+  }
+  return c;
+}
+
+/* ── DEFAULT MENU ── */
+const defaultMenu = [
+  {category:"Starters",   sectionOrder:1, items:[{name:"Tomato Shorba",price:5},{name:"Paneer Tikka",price:8}]},
+  {category:"Curries",    sectionOrder:2, items:[{name:"Butter Chicken",price:16},{name:"Paneer Butter Masala",price:15}]},
+  {category:"Desserts",   sectionOrder:3, items:[{name:"Gulab Jamun",price:6}]},
+  {category:"Drinks",     sectionOrder:4, items:[{name:"Mango Lassi",price:5}]},
+  {category:"Combo Meals",sectionOrder:5,
+   comboDefinition:{starterItem:'',mainItem:'',dessertItem:''},
+   items:[]}
+];
+
+/* ── STATE ── */
+const menuRef = firebase.database().ref('menu');
+let menu = [];
+let dragState = {type:null,fromCat:null,fromIndex:null,fromCategoryDragIndex:null};
+
+/* ── DOM REFS ── */
+const categoriesList   = document.getElementById('categoriesList');
+const newCategoryInput = document.getElementById('newCategoryInput');
+const newCategorySection = document.getElementById('newCategorySection');
+const addCategoryBtn   = document.getElementById('addCategoryBtn');
+const sortBySectionBtn = document.getElementById('sortBySectionBtn');
+const refreshBtn       = document.getElementById('refreshBtn');
+const exportBtn        = document.getElementById('exportBtn');
+const importBtn        = document.getElementById('importBtn');
+const importArea       = document.getElementById('importArea');
+
+/* ── FIREBASE WRITE ── */
+function writeMenuToFirebase(){
+  if(!Array.isArray(menu)) return alert('Menu invalid');
+  menuRef.set(menu).catch(err => alert('Error saving: ' + (err.message||err)));
+}
+
+/* ── COERCE LOADED DATA ── */
+function coerceLoadedMenu(val){
+  let loaded;
+  if(!val){
+    loaded = defaultMenu.slice();
+  } else if(Array.isArray(val)){
+    loaded = val;
+  } else {
+    const keys = Object.keys(val);
+    if(keys.length && keys.every(k => /^\d+$/.test(k)))
+      loaded = keys.sort((a,b)=>+a-+b).map(k=>val[k]);
+    else if(val.menu && Array.isArray(val.menu))
+      loaded = val.menu;
+    else
+      loaded = Object.values(val);
+  }
+  return (loaded||[]).map(normalizeCategory);
+}
+
+/* ── REALTIME LISTENER ── */
+menuRef.on('value', snap => {
+  menu = coerceLoadedMenu(snap.val());
+  renderCategories();
+});
+
+/* ════════════════════════════════════════════════════════════
+   RENDER
+════════════════════════════════════════════════════════════ */
+function renderCategories(){
+  categoriesList.innerHTML = '';
+
+  if(menu.length === 0){
+    categoriesList.innerHTML = '<div class="muted">No categories yet. Add one above.</div>';
+    return;
+  }
+
+  menu.forEach((catRaw, cIdx) => {
+    /* always work with normalised copy */
+    const cat = normalizeCategory(catRaw);
+    menu[cIdx] = cat;
+
+    /* ── category wrapper ── */
+    const catEl = document.createElement('div');
+    catEl.className = 'category';
+    catEl.dataset.catIndex = cIdx;
+    catEl.setAttribute('draggable','true');
+
+    /* category drag */
+    catEl.addEventListener('dragstart', e => {
+      dragState = {type:'category', fromCategoryDragIndex:cIdx};
+      e.dataTransfer.setData('text/plain', JSON.stringify({type:'category', index:cIdx}));
+      e.dataTransfer.effectAllowed = 'move';
+      catEl.classList.add('dragging');
+    });
+    catEl.addEventListener('dragend', () => {
+      dragState = {type:null,fromCat:null,fromIndex:null,fromCategoryDragIndex:null};
+      document.querySelectorAll('.dragging').forEach(el=>el.classList.remove('dragging'));
+      document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+    });
+    catEl.addEventListener('dragover', e => {
+      const raw = e.dataTransfer.getData('text/plain');
+      if(!raw){e.preventDefault();return;}
+      try{
+        const p = JSON.parse(raw);
+        if(p.type==='category'||p.type==='item'){
+          e.preventDefault();
+          catEl.classList.add('drag-over');
+          e.dataTransfer.dropEffect='move';
+        }
+      }catch(_){}
+    });
+    catEl.addEventListener('dragleave', () => catEl.classList.remove('drag-over'));
+    catEl.addEventListener('drop', e => {
+      e.preventDefault();
+      catEl.classList.remove('drag-over');
+      const raw = e.dataTransfer.getData('text/plain');
+      if(!raw) return;
+      let p; try{p=JSON.parse(raw);}catch(_){return;}
+
+      if(p.type==='category'){
+        const from=p.index, to=cIdx;
+        if(from===to) return;
+        const moved=menu.splice(from,1)[0];
+        /* after removing 'from', target index may shift */
+        const insertAt = from<to ? to-1 : to;
+        menu.splice(insertAt,0,moved);
+        writeMenuToFirebase();
+        return;
+      }
+      if(p.type==='item'){
+        const fromCat=p.fromCat, fromIndex=p.fromIndex;
+        if(fromCat==null||fromIndex==null) return;
+        const obj=menu[fromCat].items.splice(fromIndex,1)[0];
+        if(!obj) return;
+        menu[cIdx].items = menu[cIdx].items||[];
+        menu[cIdx].items.push(obj);
+        writeMenuToFirebase();
+      }
+    });
+
+    /* ── cat-left ── */
+    const left = document.createElement('div'); left.className='cat-left';
+
+    /* title row */
+    const titleRow = document.createElement('div'); titleRow.className='cat-title-row';
+
+    const titleDiv = document.createElement('div'); titleDiv.className='cat-title';
+    const strong = document.createElement('strong');
+    strong.textContent = cat.category || ('Category '+(cIdx+1));
+    const badge = document.createElement('span'); badge.className='badge';
+    badge.textContent = cat.sectionOrder+' - '+sectionLabel(cat.sectionOrder);
+    titleDiv.appendChild(strong); titleDiv.appendChild(badge);
+
+    /* actions */
+    const actions = document.createElement('div'); actions.className='cat-actions';
+
+    /* section dropdown */
+    const secSel = document.createElement('select'); secSel.className='section-select small';
+    SECTION_OPTIONS.forEach(opt=>{
+      const o=document.createElement('option');
+      o.value=String(opt.value);
+      o.textContent=opt.value+' - '+opt.label;
+      secSel.appendChild(o);
+    });
+    secSel.value = String(cat.sectionOrder);
+    secSel.addEventListener('change', () => {
+      const v = Number(secSel.value);
+      menu[cIdx].sectionOrder = isNaN(v)?1:v;
+      if(menu[cIdx].sectionOrder===5){
+        if(!menu[cIdx].comboDefinition||typeof menu[cIdx].comboDefinition!=='object')
+          menu[cIdx].comboDefinition={starterItem:'',mainItem:'',dessertItem:''};
+        /* re-normalise items so they get comboPart defaults */
+        menu[cIdx].items = menu[cIdx].items.map(it=>normalizeItem(it,5));
+      } else {
+        /* strip comboPart from items when switched away from combo */
+        menu[cIdx].items = menu[cIdx].items.map(it=>normalizeItem(it,menu[cIdx].sectionOrder));
+      }
+      writeMenuToFirebase();
+    });
+
+    const editBtn = document.createElement('button'); editBtn.className='ghost small'; editBtn.textContent='Edit';
+    editBtn.onclick = () => {
+      const nv = prompt('Edit category name:', cat.category||'');
+      if(nv===null) return;
+      const n = nv.trim();
+      if(!n) return alert('Name cannot be empty');
+      menu[cIdx].category = n;
+      writeMenuToFirebase();
     };
-    firebase.initializeApp(firebaseConfig);
 
-    // Sections (note: 5 is Combo; should display in section 2 on kitchen screen)
-    const SECTION_OPTIONS = [
-      { value: 1, label: "Starters" },
-      { value: 2, label: "Main Course" },
-      { value: 3, label: "Desserts" },
-      { value: 4, label: "Drinks" },
-      { value: 5, label: "Combo (shows in Main Course)" }
-    ];
-
-    function sectionLabelFromValue(v){
-      const n = Number(v);
-      const found = SECTION_OPTIONS.find(o => o.value === n);
-      return found ? found.label : "Unassigned";
-    }
-
-    function normalizeItem(it){
-      const x = Object.assign({}, it || {});
-      x.name = String(x.name || '');
-      x.price = Number(x.price || 0);
-      // For combo categories, item can have comboPart: 1|2|3 representing Starter/Main/Dessert
-      if(x.comboPart != null){
-        const cp = Number(x.comboPart);
-        x.comboPart = [1,2,3].includes(cp) ? cp : 2;
-      }
-      return x;
-    }
-
-    function normalizeCategory(cat){
-      const normalized = Object.assign({}, cat || {});
-      if (!Array.isArray(normalized.items)) normalized.items = [];
-      normalized.items = normalized.items.map(normalizeItem);
-
-      if (normalized.sectionOrder == null || isNaN(Number(normalized.sectionOrder))) normalized.sectionOrder = 1;
-      else normalized.sectionOrder = Number(normalized.sectionOrder);
-
-      if (typeof normalized.category !== 'string') normalized.category = String(normalized.category || '');
-
-      // comboDefinition stores selected items for starter/main/dessert
-      // { starterItem: "Name", mainItem:"Name", dessertItem:"Name" }
-      if(!normalized.comboDefinition || typeof normalized.comboDefinition !== 'object'){
-        normalized.comboDefinition = { starterItem:'', mainItem:'', dessertItem:'' };
-      } else {
-        normalized.comboDefinition.starterItem = String(normalized.comboDefinition.starterItem || '');
-        normalized.comboDefinition.mainItem = String(normalized.comboDefinition.mainItem || '');
-        normalized.comboDefinition.dessertItem = String(normalized.comboDefinition.dessertItem || '');
-      }
-
-      return normalized;
-    }
-
-    const defaultMenu = [
-      { category: "Starters", sectionOrder: 1, items:[{name:"Tomato Shorba",price:5},{name:"Paneer Tikka",price:8}]},
-      { category: "Curries", sectionOrder: 2, items:[{name:"Butter Chicken",price:16},{name:"Paneer Butter Masala",price:15}]},
-      { category: "Desserts", sectionOrder: 3, items:[{name:"Gulab Jamun",price:6}]},
-      { category: "Drinks", sectionOrder: 4, items:[{name:"Mango Lassi",price:5}]},
-      { category: "Combo Meals", sectionOrder: 5, comboDefinition:{ starterItem:"", mainItem:"", dessertItem:"" }, items:[] }
-    ];
-
-    const menuRef = firebase.database().ref('menu');
-    let menu = [];
-
-    // UI refs
-    const categoriesList = document.getElementById('categoriesList');
-    const newCategoryInput = document.getElementById('newCategoryInput');
-    const newCategorySection = document.getElementById('newCategorySection');
-    const addCategoryBtn = document.getElementById('addCategoryBtn');
-    const sortBySectionBtn = document.getElementById('sortBySectionBtn');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const importBtn = document.getElementById('importBtn');
-    const importArea = document.getElementById('importArea');
-
-    // Drag state
-    let dragState = { type: null, fromCat: null, fromIndex: null, fromCategoryDragIndex: null };
-
-    function writeMenuToFirebase(){
-      if(!Array.isArray(menu)) return alert('Menu invalid');
-      menuRef.set(menu).catch(err => alert('Error saving menu: ' + (err.message || err)));
-    }
-
-    function coerceLoadedMenu(val){
-      let loaded;
-      if(!val){
-        loaded = defaultMenu.slice();
-      } else {
-        if(Array.isArray(val)) loaded = val;
-        else {
-          const keys = Object.keys(val || {});
-          const isNumericKeys = keys.length && keys.every(k => /^\d+$/.test(k));
-          if(isNumericKeys) loaded = keys.sort((a,b)=>Number(a)-Number(b)).map(k=>val[k]);
-          else if(val.menu && Array.isArray(val.menu)) loaded = val.menu;
-          else loaded = Object.values(val || {});
-        }
-      }
-      return (loaded || []).map(normalizeCategory);
-    }
-
-    // realtime load
-    menuRef.on('value', snap => {
-      menu = coerceLoadedMenu(snap.val());
-      renderCategories();
-    });
-
-    function renderCategories(){
-      categoriesList.innerHTML = '';
-
-      menu.forEach((catRaw, cIdx) => {
-        const cat = normalizeCategory(catRaw);
-        menu[cIdx] = cat;
-
-        const catEl = document.createElement('div');
-        catEl.className = 'category';
-        catEl.dataset.catIndex = cIdx;
-        catEl.setAttribute('draggable','true');
-
-        // Category dragstart/dragend
-        catEl.addEventListener('dragstart', e => {
-          dragState = { type:'category', fromCategoryDragIndex: cIdx };
-          e.dataTransfer.setData('text/plain', JSON.stringify({ type:'category', index:cIdx }));
-          e.dataTransfer.effectAllowed = 'move';
-          catEl.classList.add('dragging');
-        });
-        catEl.addEventListener('dragend', ()=> {
-          dragState = { type: null, fromCat: null, fromIndex: null, fromCategoryDragIndex: null };
-          document.querySelectorAll('.dragging').forEach(el=>el.classList.remove('dragging'));
-          document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
-        });
-
-        // Drop on category (reorder categories or append item)
-        catEl.addEventListener('dragover', e => {
-          const data = e.dataTransfer.getData('text/plain');
-          if(!data) { e.preventDefault(); return; }
-          try {
-            const parsed = JSON.parse(data);
-            if(parsed.type === 'category' || parsed.type === 'item'){
-              e.preventDefault();
-              catEl.classList.add('drag-over');
-              e.dataTransfer.dropEffect='move';
-            }
-          } catch(_) {}
-        });
-        catEl.addEventListener('dragleave', ()=> catEl.classList.remove('drag-over'));
-        catEl.addEventListener('drop', e => {
-          e.preventDefault();
-          catEl.classList.remove('drag-over');
-          const data = e.dataTransfer.getData('text/plain');
-          if(!data) return;
-          let parsed;
-          try { parsed = JSON.parse(data); } catch(_) { return; }
-
-          if(parsed.type === 'category'){
-            const from = parsed.index;
-            const to = cIdx;
-            if(from === to) return;
-            const moved = menu.splice(from,1)[0];
-            const insertIndex = from < to ? to : to;
-            menu.splice(insertIndex,0,moved);
-            writeMenuToFirebase();
-            return;
-          }
-
-          if(parsed.type === 'item'){
-            const fromCat = parsed.fromCat;
-            const fromIndex = parsed.fromIndex;
-            if(fromCat == null || fromIndex == null) return;
-            const itemObj = menu[fromCat].items.splice(fromIndex,1)[0];
-            if(!itemObj) return;
-            menu[cIdx].items = menu[cIdx].items || [];
-            menu[cIdx].items.push(itemObj);
-            writeMenuToFirebase();
-            return;
-          }
-        });
-
-        // content
-        const left = document.createElement('div'); left.className='cat-left';
-
-        const titleRow = document.createElement('div');
-        titleRow.className = 'cat-title-row';
-
-        const title = document.createElement('div');
-        title.className = 'cat-title';
-
-        const titleStrong = document.createElement('strong');
-        titleStrong.textContent = (cat.category || ('Category ' + (cIdx+1)));
-        title.appendChild(titleStrong);
-
-        const badge = document.createElement('span');
-        badge.className = 'badge';
-        badge.textContent = cat.sectionOrder + ' - ' + sectionLabelFromValue(cat.sectionOrder);
-        title.appendChild(badge);
-
-        const actions = document.createElement('div'); actions.className='cat-actions';
-
-        // section dropdown
-        const sectionSelect = document.createElement('select');
-        sectionSelect.className = 'section-select small';
-        SECTION_OPTIONS.forEach(opt => {
-          const o = document.createElement('option');
-          o.value = String(opt.value);
-          o.textContent = opt.value + ' - ' + opt.label;
-          sectionSelect.appendChild(o);
-        });
-        sectionSelect.value = String(cat.sectionOrder);
-
-        sectionSelect.addEventListener('change', () => {
-          const v = Number(sectionSelect.value);
-          menu[cIdx].sectionOrder = isNaN(v) ? 1 : v;
-
-          // If switched away from combo, keep comboDefinition but it's fine.
-          // If switched to combo, ensure comboDefinition exists.
-          if(menu[cIdx].sectionOrder === 5){
-            if(!menu[cIdx].comboDefinition || typeof menu[cIdx].comboDefinition !== 'object'){
-              menu[cIdx].comboDefinition = { starterItem:'', mainItem:'', dessertItem:'' };
-            }
-          }
-          writeMenuToFirebase();
-        });
-
-        const editCatBtn = document.createElement('button'); editCatBtn.className='ghost small'; editCatBtn.textContent='Edit';
-        const delCatBtn = document.createElement('button'); delCatBtn.className='btn small'; delCatBtn.textContent='Delete';
-
-        editCatBtn.onclick = ()=> {
-          const nv = prompt('Edit category name:', cat.category || '');
-          if(nv === null) return;
-          const name = nv.trim();
-          if(!name) return alert('Name cannot be empty');
-          menu[cIdx].category = name;
-          writeMenuToFirebase();
-        };
-
-        delCatBtn.onclick = ()=> {
-          if(!confirm('Delete category "' + (cat.category||'') + '"?')) return;
-          menu.splice(cIdx,1);
-          writeMenuToFirebase();
-        };
-
-        actions.appendChild(sectionSelect);
-        actions.appendChild(editCatBtn);
-        actions.appendChild(delCatBtn);
-
-        titleRow.appendChild(title);
-        titleRow.appendChild(actions);
-        left.appendChild(titleRow);
-
-        // If combo section: show combo picker (starter/main/dessert)
-        if(Number(cat.sectionOrder) === 5){
-          const comboBox = document.createElement('div');
-          comboBox.className = 'combo-box';
-
-          const comboTitle = document.createElement('div');
-          comboTitle.className = 'combo-title';
-          comboTitle.textContent = 'Combo Setup (Saved to Firebase)';
-          comboBox.appendChild(comboTitle);
-
-          const comboGrid = document.createElement('div');
-          comboGrid.className = 'combo-grid';
-
-          function makeComboCard(partKey, labelText){
-            const card = document.createElement('div');
-            card.className = 'combo-card';
-
-            const label = document.createElement('div');
-            label.className = 'label';
-            label.textContent = labelText;
-            card.appendChild(label);
-
-            const row = document.createElement('div');
-            row.className = 'combo-row';
-
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = 'Enter item name (exact)';
-            input.value = (menu[cIdx].comboDefinition && menu[cIdx].comboDefinition[partKey]) ? menu[cIdx].comboDefinition[partKey] : '';
-
-            const saveBtn = document.createElement('button');
-            saveBtn.className = 'btn small';
-            saveBtn.textContent = 'Save';
-            saveBtn.onclick = () => {
-              const val = input.value.trim();
-              if(!menu[cIdx].comboDefinition || typeof menu[cIdx].comboDefinition !== 'object'){
-                menu[cIdx].comboDefinition = { starterItem:'', mainItem:'', dessertItem:'' };
-              }
-              menu[cIdx].comboDefinition[partKey] = val;
-              writeMenuToFirebase();
-            };
-
-            const clearBtn = document.createElement('button');
-            clearBtn.className = 'ghost small';
-            clearBtn.textContent = 'Clear';
-            clearBtn.onclick = () => {
-              input.value = '';
-              if(!menu[cIdx].comboDefinition || typeof menu[cIdx].comboDefinition !== 'object'){
-                menu[cIdx].comboDefinition = { starterItem:'', mainItem:'', dessertItem:'' };
-              }
-              menu[cIdx].comboDefinition[partKey] = '';
-              writeMenuToFirebase();
-            };
-
-            row.appendChild(input);
-            row.appendChild(saveBtn);
-            row.appendChild(clearBtn);
-
-            card.appendChild(row);
-
-            const note = document.createElement('div');
-            note.className = 'muted';
-            note.style.marginTop = '6px';
-            note.style.fontSize = '0.82rem';
-            note.textContent = 'Tip: type exact menu item name. (You can also keep empty.)';
-            card.appendChild(note);
-
-            return card;
-          }
-
-          comboGrid.appendChild(makeComboCard('starterItem','Starter item (printed under Starters)'));
-          comboGrid.appendChild(makeComboCard('mainItem','Main Course item (printed under Main Course)'));
-          comboGrid.appendChild(makeComboCard('dessertItem','Dessert item (printed under Desserts)'));
-
-          comboBox.appendChild(comboGrid);
-
-          const extra = document.createElement('div');
-          extra.className = 'muted';
-          extra.style.marginTop = '8px';
-          extra.style.fontSize = '0.86rem';
-          extra.textContent = 'Combo category itself will be treated as section 2 (Main Course) on kitchen screen, but combo parts can be printed under Starter/Main/Dessert.';
-          comboBox.appendChild(extra);
-
-          left.appendChild(comboBox);
-        }
-
-        // items container (accept drops)
-        const itemsWrap = document.createElement('div');
-        itemsWrap.style.marginTop='8px';
-        itemsWrap.dataset.catIndex = cIdx;
-
-        itemsWrap.addEventListener('dragover', e => {
-          const data = e.dataTransfer.getData('text/plain');
-          if(!data) return;
-          try {
-            const parsed = JSON.parse(data);
-            if(parsed.type === 'item'){
-              e.preventDefault();
-              itemsWrap.classList.add('drag-over');
-              e.dataTransfer.dropEffect = 'move';
-            }
-          } catch(_) {}
-        });
-        itemsWrap.addEventListener('dragleave', ()=> itemsWrap.classList.remove('drag-over'));
-        itemsWrap.addEventListener('drop', e => {
-          e.preventDefault();
-          itemsWrap.classList.remove('drag-over');
-          const data = e.dataTransfer.getData('text/plain');
-          if(!data) return;
-          try {
-            const parsed = JSON.parse(data);
-            if(parsed.type === 'item'){
-              const fromCat = parsed.fromCat;
-              const fromIndex = parsed.fromIndex;
-              const toCat = parseInt(itemsWrap.dataset.catIndex,10);
-              if(fromCat == null || fromIndex == null || isNaN(toCat)) return;
-              const itemObj = menu[fromCat].items.splice(fromIndex,1)[0];
-              if(!itemObj) return;
-              menu[toCat].items = menu[toCat].items || [];
-              menu[toCat].items.push(itemObj);
-              writeMenuToFirebase();
-            }
-          } catch(_) {}
-        });
-
-        // items
-        (cat.items || []).forEach((it, iIdx) => {
-          const itemEl = document.createElement('div'); itemEl.className='item';
-          itemEl.dataset.catIndex = cIdx; itemEl.dataset.itemIndex = iIdx;
-          itemEl.setAttribute('draggable','true');
-
-          itemEl.addEventListener('dragstart', e => {
-            dragState = { type:'item', fromCat:cIdx, fromIndex:iIdx };
-            e.dataTransfer.setData('text/plain', JSON.stringify({ type:'item', fromCat:cIdx, fromIndex:iIdx }));
-            e.dataTransfer.effectAllowed = 'move';
-            itemEl.classList.add('dragging');
-          });
-          itemEl.addEventListener('dragend', () => {
-            dragState = { type:null, fromCat:null, fromIndex:null, fromCategoryDragIndex:null };
-            document.querySelectorAll('.dragging').forEach(el=>el.classList.remove('dragging'));
-            document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
-          });
-
-          // insert before/after on drop
-          itemEl.addEventListener('dragover', e => {
-            const data = e.dataTransfer.getData('text/plain');
-            if(!data) return;
-            try {
-              const parsed = JSON.parse(data);
-              if(parsed.type === 'item'){
-                e.preventDefault();
-                itemEl.classList.add('drag-over');
-                e.dataTransfer.dropEffect='move';
-              }
-            } catch(_) {}
-          });
-          itemEl.addEventListener('dragleave', ()=> itemEl.classList.remove('drag-over'));
-          itemEl.addEventListener('drop', e => {
-            e.preventDefault();
-            itemEl.classList.remove('drag-over');
-            const data = e.dataTransfer.getData('text/plain');
-            if(!data) return;
-            try {
-              const parsed = JSON.parse(data);
-              if(parsed.type !== 'item') return;
-              const fromCat = parsed.fromCat;
-              const fromIndex = parsed.fromIndex;
-              const toCat = cIdx;
-              let toIndex = iIdx;
-
-              const rect = itemEl.getBoundingClientRect();
-              const insertAfter = (e.clientY - rect.top) > (rect.height / 2);
-              if(insertAfter) toIndex = iIdx + 1;
-
-              if(fromCat === toCat){
-                const itemObj = menu[fromCat].items.splice(fromIndex,1)[0];
-                if(fromIndex < toIndex) toIndex = toIndex - 1;
-                menu[toCat].items.splice(toIndex,0,itemObj);
-              } else {
-                const itemObj = menu[fromCat].items.splice(fromIndex,1)[0];
-                menu[toCat].items = menu[toCat].items || [];
-                menu[toCat].items.splice(toIndex,0,itemObj);
-              }
-              writeMenuToFirebase();
-            } catch(_) {}
-          });
-
-          const itemLeft = document.createElement('div');
-          itemLeft.style.minWidth = '0';
-          itemLeft.style.flex = '1 1 auto';
-          const nameSpan = document.createElement('span');
-          nameSpan.textContent = it.name + ' ';
-          nameSpan.style.display = 'inline-block';
-          nameSpan.style.maxWidth = '100%';
-          nameSpan.style.overflow = 'hidden';
-          nameSpan.style.textOverflow = 'ellipsis';
-          nameSpan.style.whiteSpace = 'nowrap';
-
-          const priceSpan = document.createElement('span'); priceSpan.className='muted';
-          priceSpan.textContent = '€' + (Number(it.price)||0).toFixed(2);
-          itemLeft.appendChild(nameSpan);
-          itemLeft.appendChild(priceSpan);
-
-          // If this is a combo category, allow selecting Starter/Main/Dessert per ITEM
-          if(Number(cat.sectionOrder) === 5){
-            const partSelect = document.createElement('select');
-            partSelect.className = 'small';
-            partSelect.style.marginTop = '6px';
-            partSelect.style.width = '100%';
-            const opts = [
-              { v: 1, t: 'Starter part' },
-              { v: 2, t: 'Main Course part' },
-              { v: 3, t: 'Dessert part' }
-            ];
-            opts.forEach(o => {
-              const op = document.createElement('option');
-              op.value = String(o.v);
-              op.textContent = o.t;
-              partSelect.appendChild(op);
-            });
-            const cur = (it.comboPart != null) ? Number(it.comboPart) : 2;
-            partSelect.value = String([1,2,3].includes(cur) ? cur : 2);
-
-            partSelect.addEventListener('change', () => {
-              const v = Number(partSelect.value);
-              menu[cIdx].items[iIdx].comboPart = [1,2,3].includes(v) ? v : 2;
-              writeMenuToFirebase();
-            });
-
-            itemLeft.appendChild(document.createElement('br'));
-            itemLeft.appendChild(partSelect);
-          }
-
-          const itemActions = document.createElement('div');
-          const editItBtn = document.createElement('button'); editItBtn.className='ghost small'; editItBtn.textContent='Edit';
-          const delItBtn = document.createElement('button'); delItBtn.className='btn small'; delItBtn.textContent='Delete';
-
-          editItBtn.onclick = ()=> {
-            const newName = prompt('Item name:', it.name);
-            if(newName === null) return;
-            const nn = newName.trim();
-            if(!nn) return alert('Name cannot be empty');
-            const newPrice = prompt('Item price (number):', String(it.price || '0'));
-            if(newPrice === null) return;
-            const np = parseFloat(newPrice);
-            if(isNaN(np)) return alert('Price must be a number');
-            menu[cIdx].items[iIdx].name = nn;
-            menu[cIdx].items[iIdx].price = np;
-            writeMenuToFirebase();
-          };
-
-          delItBtn.onclick = ()=> {
-            if(!confirm('Delete item "' + it.name + '"?')) return;
-            menu[cIdx].items.splice(iIdx,1);
-            writeMenuToFirebase();
-          };
-
-          itemActions.appendChild(editItBtn);
-          itemActions.appendChild(delItBtn);
-
-          itemEl.appendChild(itemLeft);
-          itemEl.appendChild(itemActions);
-          itemsWrap.appendChild(itemEl);
-        });
-
-        // add item inputs
-        const addRow = document.createElement('div');
-        addRow.style.display='flex';
-        addRow.style.gap='8px';
-        addRow.style.marginTop='8px';
-        addRow.style.flexWrap = 'wrap';
-
-        const itName = document.createElement('input'); itName.type='text'; itName.placeholder='Item name'; itName.style.flex='1 1 200px';
-        const itPrice = document.createElement('input'); itPrice.type='number'; itPrice.step='0.01'; itPrice.placeholder='Price'; itPrice.style.width='120px';
-        const addItBtn = document.createElement('button'); addItBtn.className='btn small'; addItBtn.textContent='Add Item';
-
-        addItBtn.onclick = ()=> {
-          const name = itName.value.trim();
-          const price = parseFloat(itPrice.value);
-          if(!name) return alert('Item name required');
-          if(isNaN(price)) return alert('Price must be a number');
-          menu[cIdx].items = menu[cIdx].items || [];
-          const newItem = { name: name, price: price };
-
-          // default comboPart for combo categories
-          if(Number(menu[cIdx].sectionOrder) === 5){
-            newItem.comboPart = 2; // main course part by default
-          }
-
-          menu[cIdx].items.push(newItem);
-          itName.value=''; itPrice.value='';
-          writeMenuToFirebase();
-        };
-
-        addRow.appendChild(itName);
-        addRow.appendChild(itPrice);
-        addRow.appendChild(addItBtn);
-
-        left.appendChild(itemsWrap);
-        left.appendChild(addRow);
-
-        catEl.appendChild(left);
-        categoriesList.appendChild(catEl);
-      });
-
-      if(menu.length === 0){
-        categoriesList.innerHTML = '<div class="muted">No categories. Add a category to get started.</div>';
-      }
-    }
-
-    addCategoryBtn.addEventListener('click', ()=> {
-      const name = newCategoryInput.value.trim();
-      const sectionOrder = Number(newCategorySection.value);
-      if(!name) return alert('Category name required');
-
-      const catObj = {
-        category: name,
-        sectionOrder: isNaN(sectionOrder) ? 1 : sectionOrder,
-        items: []
-      };
-      if(catObj.sectionOrder === 5){
-        catObj.comboDefinition = { starterItem:'', mainItem:'', dessertItem:'' };
-      }
-
-      menu.push(catObj);
-      newCategoryInput.value = '';
-      newCategorySection.value = '1';
+    const delBtn = document.createElement('button'); delBtn.className='btn small'; delBtn.textContent='Delete';
+    delBtn.onclick = () => {
+      if(!confirm('Delete category "'+cat.category+'"?')) return;
+      menu.splice(cIdx,1);
       writeMenuToFirebase();
-    });
+    };
 
-    sortBySectionBtn.addEventListener('click', ()=> {
-      // Stable sort: sectionOrder then category name
-      menu.sort((a,b) => {
-        const sa = Number(a.sectionOrder); const sb = Number(b.sectionOrder);
-        const aFixed = isNaN(sa) ? 99 : sa;
-        const bFixed = isNaN(sb) ? 99 : sb;
-        if(aFixed !== bFixed) return aFixed - bFixed;
-        const ca = String(a.category || '').toLowerCase();
-        const cb = String(b.category || '').toLowerCase();
-        return ca.localeCompare(cb);
-      });
-      writeMenuToFirebase();
-    });
+    actions.appendChild(secSel);
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+    titleRow.appendChild(titleDiv);
+    titleRow.appendChild(actions);
+    left.appendChild(titleRow);
 
-    refreshBtn.addEventListener('click', ()=> {
-      menuRef.once('value').then(snap => {
-        menu = coerceLoadedMenu(snap.val());
-        renderCategories();
-      });
-    });
+    /* ── COMBO DEFINITION BOX (only if section 5) ── */
+    if(cat.sectionOrder===5){
+      const comboBox = document.createElement('div'); comboBox.className='combo-box';
+      const comboTitle = document.createElement('div'); comboTitle.className='combo-title';
+      comboTitle.textContent='Combo Setup';
+      comboBox.appendChild(comboTitle);
 
-    exportBtn.addEventListener('click', ()=> {
-      const data = JSON.stringify(menu, null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'menu.json';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    });
+      const grid = document.createElement('div'); grid.className='combo-grid';
 
-    importBtn.addEventListener('click', ()=> importArea.click());
-    importArea.addEventListener('change', (e)=> {
-      const file = e.target.files && e.target.files[0];
-      if(!file) return;
-      const reader = new FileReader();
-      reader.onload = function(ev){
-        try {
-          const data = JSON.parse(ev.target.result);
-          let imported;
-          if(!Array.isArray(data)) {
-            if(Array.isArray(data.menu)) imported = data.menu;
-            else return alert('Imported JSON must be an array of categories');
-          } else imported = data;
-
-          menu = (imported || []).map(normalizeCategory);
+      function makeComboCard(partKey, labelTxt){
+        const card = document.createElement('div'); card.className='combo-card';
+        const lbl = document.createElement('div'); lbl.className='label'; lbl.textContent=labelTxt;
+        card.appendChild(lbl);
+        const row = document.createElement('div'); row.className='combo-row';
+        const inp = document.createElement('input'); inp.type='text';
+        inp.placeholder='Exact item name';
+        inp.value = (cat.comboDefinition&&cat.comboDefinition[partKey]) ? cat.comboDefinition[partKey] : '';
+        const saveB = document.createElement('button'); saveB.className='btn small'; saveB.textContent='Save';
+        saveB.onclick=()=>{
+          const v=inp.value.trim();
+          if(!menu[cIdx].comboDefinition||typeof menu[cIdx].comboDefinition!=='object')
+            menu[cIdx].comboDefinition={starterItem:'',mainItem:'',dessertItem:''};
+          menu[cIdx].comboDefinition[partKey]=v;
           writeMenuToFirebase();
-        } catch(err) {
-          alert('Invalid JSON file: ' + (err.message||err));
+        };
+        const clrB = document.createElement('button'); clrB.className='ghost small'; clrB.textContent='Clear';
+        clrB.onclick=()=>{
+          inp.value='';
+          if(!menu[cIdx].comboDefinition||typeof menu[cIdx].comboDefinition!=='object')
+            menu[cIdx].comboDefinition={starterItem:'',mainItem:'',dessertItem:''};
+          menu[cIdx].comboDefinition[partKey]='';
+          writeMenuToFirebase();
+        };
+        row.appendChild(inp); row.appendChild(saveB); row.appendChild(clrB);
+        card.appendChild(row);
+        const tip=document.createElement('div'); tip.className='muted';
+        tip.style.marginTop='6px'; tip.style.fontSize='0.82rem';
+        tip.textContent='Type exact item name or leave empty.';
+        card.appendChild(tip);
+        return card;
+      }
+
+      grid.appendChild(makeComboCard('starterItem', 'Starter part'));
+      grid.appendChild(makeComboCard('mainItem',    'Main Course part'));
+      grid.appendChild(makeComboCard('dessertItem', 'Dessert part'));
+      comboBox.appendChild(grid);
+
+      const note=document.createElement('div'); note.className='muted';
+      note.style.marginTop='8px';note.style.fontSize='0.86rem';
+      note.textContent='Items in this category will show ★ COMBO badge on kitchen screen and be grouped by their comboPart section.';
+      comboBox.appendChild(note);
+      left.appendChild(comboBox);
+    }
+
+    /* ── items container ── */
+    const itemsWrap = document.createElement('div');
+    itemsWrap.style.marginTop='8px';
+    itemsWrap.dataset.catIndex = cIdx;
+
+    itemsWrap.addEventListener('dragover', e=>{
+      const raw=e.dataTransfer.getData('text/plain'); if(!raw) return;
+      try{const p=JSON.parse(raw);if(p.type==='item'){e.preventDefault();itemsWrap.classList.add('drag-over');e.dataTransfer.dropEffect='move';}}catch(_){}
+    });
+    itemsWrap.addEventListener('dragleave',()=>itemsWrap.classList.remove('drag-over'));
+    itemsWrap.addEventListener('drop',e=>{
+      e.preventDefault(); itemsWrap.classList.remove('drag-over');
+      const raw=e.dataTransfer.getData('text/plain'); if(!raw) return;
+      try{
+        const p=JSON.parse(raw);
+        if(p.type==='item'){
+          const fc=p.fromCat,fi=p.fromIndex,tc=parseInt(itemsWrap.dataset.catIndex,10);
+          if(fc==null||fi==null||isNaN(tc)) return;
+          const obj=menu[fc].items.splice(fi,1)[0]; if(!obj) return;
+          menu[tc].items=menu[tc].items||[];
+          menu[tc].items.push(obj);
+          writeMenuToFirebase();
         }
-      };
-      reader.readAsText(file);
-      importArea.value = '';
+      }catch(_){}
     });
 
-    // seed default if empty
-    menuRef.once('value').then(snap => {
-      if(!snap.exists()){
-        menuRef.set(defaultMenu).catch(err => console.warn('Could not seed default menu:', err));
-      }
-    }).catch(err => console.warn('Error checking menu path:', err));
+    /* ── individual items ── */
+    (cat.items||[]).forEach((it, iIdx)=>{
+      const itemEl=document.createElement('div'); itemEl.className='item';
+      itemEl.dataset.catIndex=cIdx; itemEl.dataset.itemIndex=iIdx;
+      itemEl.setAttribute('draggable','true');
 
-    // initial fallback render
+      itemEl.addEventListener('dragstart',e=>{
+        dragState={type:'item',fromCat:cIdx,fromIndex:iIdx};
+        e.dataTransfer.setData('text/plain',JSON.stringify({type:'item',fromCat:cIdx,fromIndex:iIdx}));
+        e.dataTransfer.effectAllowed='move'; itemEl.classList.add('dragging');
+      });
+      itemEl.addEventListener('dragend',()=>{
+        dragState={type:null,fromCat:null,fromIndex:null,fromCategoryDragIndex:null};
+        document.querySelectorAll('.dragging').forEach(el=>el.classList.remove('dragging'));
+        document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+      });
+      itemEl.addEventListener('dragover',e=>{
+        const raw=e.dataTransfer.getData('text/plain'); if(!raw) return;
+        try{const p=JSON.parse(raw);if(p.type==='item'){e.preventDefault();itemEl.classList.add('drag-over');e.dataTransfer.dropEffect='move';}}catch(_){}
+      });
+      itemEl.addEventListener('dragleave',()=>itemEl.classList.remove('drag-over'));
+      itemEl.addEventListener('drop',e=>{
+        e.preventDefault(); itemEl.classList.remove('drag-over');
+        const raw=e.dataTransfer.getData('text/plain'); if(!raw) return;
+        try{
+          const p=JSON.parse(raw); if(p.type!=='item') return;
+          const fc=p.fromCat,fi=p.fromIndex,tc=cIdx;
+          let ti=iIdx;
+          const rect=itemEl.getBoundingClientRect();
+          if((e.clientY-rect.top)>(rect.height/2)) ti=iIdx+1;
+          if(fc===tc){
+            const obj=menu[fc].items.splice(fi,1)[0];
+            const adj=fi<ti?ti-1:ti;
+            menu[tc].items.splice(adj,0,obj);
+          } else {
+            const obj=menu[fc].items.splice(fi,1)[0];
+            menu[tc].items=menu[tc].items||[];
+            menu[tc].items.splice(ti,0,obj);
+          }
+          writeMenuToFirebase();
+        }catch(_){}
+      });
+
+      /* item left: name + price */
+      const itemLeft=document.createElement('div');
+      itemLeft.style.cssText='min-width:0;flex:1 1 auto;';
+
+      const nameSpan=document.createElement('span');
+      nameSpan.style.cssText='display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+      nameSpan.textContent=it.name+' ';
+
+      const priceSpan=document.createElement('span'); priceSpan.className='muted';
+      priceSpan.textContent='€'+(Number(it.price)||0).toFixed(2);
+
+      itemLeft.appendChild(nameSpan);
+      itemLeft.appendChild(priceSpan);
+
+      /* comboPart dropdown — ONLY for section 5 */
+      if(cat.sectionOrder===5){
+        const partSel=document.createElement('select');
+        partSel.className='combo-part-select';
+        const PARTS=[{v:1,t:'Starter part'},{v:2,t:'Main Course part'},{v:3,t:'Dessert part'}];
+        PARTS.forEach(o=>{
+          const op=document.createElement('option');
+          op.value=String(o.v); op.textContent=o.t;
+          partSel.appendChild(op);
+        });
+        /* FIX: read comboPart correctly and set dropdown value */
+        const curPart = (it.comboPart!=null&&[1,2,3].includes(Number(it.comboPart)))
+                        ? Number(it.comboPart) : 2;
+        partSel.value = String(curPart);
+
+        partSel.addEventListener('change',()=>{
+          const v=Number(partSel.value);
+          menu[cIdx].items[iIdx].comboPart=[1,2,3].includes(v)?v:2;
+          writeMenuToFirebase();
+        });
+        itemLeft.appendChild(partSel);
+      }
+
+      /* item actions */
+      const itemActions=document.createElement('div');
+      const editItBtn=document.createElement('button'); editItBtn.className='ghost small'; editItBtn.textContent='Edit';
+      const delItBtn=document.createElement('button'); delItBtn.className='btn small'; delItBtn.textContent='Delete';
+
+      editItBtn.onclick=()=>{
+        const newName=prompt('Item name:',it.name);
+        if(newName===null) return;
+        const nn=newName.trim();
+        if(!nn) return alert('Name cannot be empty');
+        const newPrice=prompt('Item price:',String(it.price||'0'));
+        if(newPrice===null) return;
+        const np=parseFloat(newPrice);
+        if(isNaN(np)) return alert('Price must be a number');
+        menu[cIdx].items[iIdx].name=nn;
+        menu[cIdx].items[iIdx].price=np;
+        writeMenuToFirebase();
+      };
+      delItBtn.onclick=()=>{
+        if(!confirm('Delete item "'+it.name+'"?')) return;
+        menu[cIdx].items.splice(iIdx,1);
+        writeMenuToFirebase();
+      };
+      itemActions.appendChild(editItBtn);
+      itemActions.appendChild(delItBtn);
+
+      itemEl.appendChild(itemLeft);
+      itemEl.appendChild(itemActions);
+      itemsWrap.appendChild(itemEl);
+    });
+
+    /* ── add item row ── */
+    const addRow=document.createElement('div');
+    addRow.style.cssText='display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;';
+    const itName=document.createElement('input');
+    itName.type='text'; itName.placeholder='Item name'; itName.style.flex='1 1 200px';
+    const itPrice=document.createElement('input');
+    itPrice.type='number'; itPrice.step='0.01'; itPrice.placeholder='Price'; itPrice.style.width='120px';
+    const addItBtn=document.createElement('button'); addItBtn.className='btn small'; addItBtn.textContent='Add Item';
+
+    addItBtn.onclick=()=>{
+      const name=itName.value.trim();
+      const price=parseFloat(itPrice.value);
+      if(!name) return alert('Item name required');
+      if(isNaN(price)) return alert('Price must be a number');
+      menu[cIdx].items=menu[cIdx].items||[];
+      const newItem={name,price};
+      if(cat.sectionOrder===5) newItem.comboPart=2; // default: Main Course part
+      menu[cIdx].items.push(newItem);
+      itName.value=''; itPrice.value='';
+      writeMenuToFirebase();
+    };
+
+    addRow.appendChild(itName);
+    addRow.appendChild(itPrice);
+    addRow.appendChild(addItBtn);
+    left.appendChild(itemsWrap);
+    left.appendChild(addRow);
+
+    catEl.appendChild(left);
+    categoriesList.appendChild(catEl);
+  });
+}
+
+/* ── ADD CATEGORY ── */
+addCategoryBtn.addEventListener('click',()=>{
+  const name=newCategoryInput.value.trim();
+  const sec=Number(newCategorySection.value);
+  if(!name) return alert('Category name required');
+  const catObj={category:name, sectionOrder:isNaN(sec)?1:sec, items:[]};
+  if(catObj.sectionOrder===5)
+    catObj.comboDefinition={starterItem:'',mainItem:'',dessertItem:''};
+  menu.push(catObj);
+  newCategoryInput.value='';
+  newCategorySection.value='1';
+  writeMenuToFirebase();
+});
+
+/* ── SORT BY SECTION ── */
+sortBySectionBtn.addEventListener('click',()=>{
+  menu.sort((a,b)=>{
+    const sa=isNaN(Number(a.sectionOrder))?99:Number(a.sectionOrder);
+    const sb=isNaN(Number(b.sectionOrder))?99:Number(b.sectionOrder);
+    if(sa!==sb) return sa-sb;
+    return String(a.category||'').toLowerCase().localeCompare(String(b.category||'').toLowerCase());
+  });
+  writeMenuToFirebase();
+});
+
+/* ── REFRESH ── */
+refreshBtn.addEventListener('click',()=>{
+  menuRef.once('value').then(snap=>{
+    menu=coerceLoadedMenu(snap.val());
     renderCategories();
-  </script>
+  });
+});
+
+/* ── EXPORT ── */
+exportBtn.addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(menu,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='menu.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+/* ── IMPORT ── */
+importBtn.addEventListener('click',()=>importArea.click());
+importArea.addEventListener('change',e=>{
+  const file=e.target.files&&e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      let imported;
+      if(!Array.isArray(data)){
+        if(Array.isArray(data.menu)) imported=data.menu;
+        else return alert('Imported JSON must be an array of categories');
+      } else imported=data;
+      menu=(imported||[]).map(normalizeCategory);
+      writeMenuToFirebase();
+    }catch(err){alert('Invalid JSON: '+(err.message||err));}
+  };
+  reader.readAsText(file);
+  importArea.value='';
+});
+
+/* ── SEED DEFAULT IF EMPTY ── */
+menuRef.once('value').then(snap=>{
+  if(!snap.exists())
+    menuRef.set(defaultMenu).catch(err=>console.warn('Seed error:',err));
+}).catch(err=>console.warn('Check error:',err));
+</script>
 </body>
 </html>
