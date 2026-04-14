@@ -8,287 +8,115 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
   <style>
     :root{
-      --bg: linear-gradient(135deg, #0d47a1 0%, #000 100%);
+      --bg:linear-gradient(135deg,#0d47a1 0%,#000 100%);
       --card:#181c24;
       --accent:#bbdefb;
       --primary:#42a5f5;
-      --success:#43a047; /* Done button color */
+      --success:#43a047;
       --warning:#ffb300;
       --danger:#e53935;
       --muted:#9aa8c0;
       --white:#ffffff;
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;min-height:100%;font-family:"Poppins",sans-serif;color:#fff;background:var(--bg);background-attachment:fixed;-webkit-font-smoothing:antialiased;}
+    .topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px 0;max-width:1400px;margin:0 auto;}
+    .title{font-weight:900;color:var(--accent);font-size:1.1rem;letter-spacing:.5px;}
+    .controls{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    .small-muted{color:var(--muted);font-size:.82rem;font-weight:700;}
+    .btn{background:var(--primary);color:#fff;border:0;padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:.85rem;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--accent);}
+    .btn.success{background:var(--success);}
+    .btn.sm{padding:5px 8px;font-size:.8rem;}
+    .btn.icon-btn{width:34px;height:34px;padding:0;justify-content:center;}
+    .grid-wrap{max-width:1400px;margin:12px auto;padding:0 14px 20px;}
+    .orders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;}
+    @media(max-width:600px){.orders-grid{grid-template-columns:1fr;}.grid-wrap{padding:0 8px 16px;}.topbar{padding:10px 8px 0;}}
 
-      /* Combo tag style (GREEN + STAR like Done button) */
-      --comboBg: rgba(67,160,71,0.14);
-      --comboBorder: rgba(67,160,71,0.40);
-      --comboText: #d7ffe0;
-    }
+    .order-card{background:var(--card);border-radius:12px;border:1px solid rgba(255,255,255,.05);box-shadow:0 6px 20px rgba(0,0,0,.4);padding:12px;display:flex;flex-direction:column;gap:8px;position:relative;word-break:break-word;}
+    .tbl-badge{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1565c0,#1976d2);border-radius:8px;padding:8px 10px;cursor:pointer;}
+    .tbl-name{font-weight:900;font-size:1.15rem;background:rgba(255,255,255,.12);padding:4px 10px;border-radius:6px;letter-spacing:1px;}
+    .order-meta-row{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
+    .order-id-txt{font-size:.78rem;color:var(--muted);font-weight:700;}
+    .payment-pill{font-size:.74rem;font-weight:700;color:var(--muted);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);padding:2px 8px;border-radius:999px;flex-shrink:0;}
+    .timer-total-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+    .timer-txt{font-weight:800;font-size:.9rem;color:var(--white);white-space:nowrap;}
+    .total-txt{font-weight:900;font-size:.95rem;color:var(--primary);}
+    .prog-row{display:flex;align-items:center;gap:8px;}
+    .prog-bar{flex:1;height:8px;border-radius:8px;background:rgba(255,255,255,.06);overflow:hidden;}
+    .prog-fill{height:100%;background:linear-gradient(90deg,var(--success),#2e7d32);width:0%;transition:width .4s;}
+    .prog-lbl{font-size:.78rem;font-weight:800;color:var(--muted);white-space:nowrap;}
+    .card-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;}
+    .card-actions .right{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+    .expand-btn{background:transparent;border:1px solid rgba(255,255,255,.09);color:var(--accent);width:32px;height:32px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+    .collapse-btn{position:absolute;top:10px;right:10px;background:transparent;border:1px solid rgba(255,255,255,.09);color:var(--accent);width:32px;height:32px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+    .status-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;cursor:pointer;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.1);}
+    .status-dot.ready{background:var(--success);box-shadow:0 0 6px rgba(67,160,71,.5);}
+    .status-dot.delayed{background:var(--danger);box-shadow:0 0 6px rgba(229,57,53,.5);}
+    .schedule-txt{font-size:.75rem;color:var(--muted);}
+    .details{margin-top:4px;display:flex;flex-direction:column;gap:8px;}
+    .sec-block{border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:7px 8px;background:rgba(255,255,255,.02);}
+    .sec-block-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+    .sec-block-title{font-weight:900;font-size:.78rem;color:var(--accent);letter-spacing:.4px;text-transform:uppercase;}
+    .sec-count-badge{font-size:.7rem;font-weight:900;background:rgba(66,165,245,.18);border:1px solid rgba(66,165,245,.35);color:var(--accent);padding:1px 7px;border-radius:999px;white-space:nowrap;}
+    .item-list{display:flex;flex-direction:column;gap:6px;}
+    .item-row{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;}
+    .item-row-left{display:flex;gap:7px;align-items:flex-start;flex:1;min-width:0;}
+    .item-cb{margin-top:3px;cursor:pointer;flex-shrink:0;}
+    .item-info{flex:1;min-width:0;}
+    .item-name{font-weight:700;font-size:.85rem;color:var(--accent);cursor:pointer;word-break:break-word;}
+    .item-name.done{text-decoration:line-through;opacity:.5;color:var(--muted);}
+    .item-price-line{font-size:.74rem;color:var(--muted);font-weight:700;margin-top:2px;}
+    .item-note-txt{font-size:.74rem;color:var(--warning);font-style:italic;margin-top:2px;}
+    .item-row-right{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+    .qty-box{padding:3px 7px;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.06);font-weight:800;font-size:.82rem;white-space:nowrap;}
+    .item-price-txt{font-size:.78rem;color:var(--primary);font-weight:700;white-space:nowrap;}
+    .expanded-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:2px;}
+    .expanded-footer .ftotal{font-weight:900;color:var(--primary);font-size:.95rem;}
+    .expanded-footer .factions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
 
-    *{ box-sizing:border-box; }
-    html,body{
-      margin:0; padding:0; min-height:100%;
-      font-family:"Poppins",sans-serif; color:#fff;
-      background:var(--bg); background-attachment:fixed;
-      -webkit-font-smoothing:antialiased;
-    }
-
-    /* Topbar */
-    .topbar{
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-      padding:12px 14px 0;
-      max-width:1400px; margin:0 auto;
-    }
-    .title{ font-weight:900; color:var(--accent); font-size:1.1rem; letter-spacing:.5px; }
-    .controls{ margin-left:auto; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .small-muted{ color:var(--muted); font-size:.82rem; font-weight:700; }
-    .btn{
-      background:var(--primary); color:#fff; border:0;
-      padding:7px 12px; border-radius:8px; cursor:pointer;
-      font-weight:700; font-size:.85rem;
-      display:inline-flex; align-items:center; gap:6px;
-      white-space:nowrap;
-    }
-    .btn.ghost{ background:transparent; border:1px solid rgba(255,255,255,.1); color:var(--accent); }
-    .btn.success{ background:var(--success); }
-    .btn.sm{ padding:5px 8px; font-size:.8rem; }
-    .btn.icon-btn{ width:34px; height:34px; padding:0; justify-content:center; }
-
-    /* Grid */
-    .grid-wrap{ max-width:1400px; margin:12px auto; padding:0 14px 20px; }
-    .orders-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));
-      gap:12px;
-    }
-    @media(max-width:600px){
-      .orders-grid{ grid-template-columns:1fr; }
-      .grid-wrap{ padding:0 8px 16px; }
-      .topbar{ padding:10px 8px 0; }
-    }
-
-    /* Card */
-    .order-card{
-      background:var(--card);
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.05);
-      box-shadow:0 6px 20px rgba(0,0,0,.4);
-      padding:12px;
-      display:flex; flex-direction:column; gap:8px;
-      position:relative;
-      word-break:break-word;
-    }
-
-    .tbl-badge{
-      display:flex; align-items:center; justify-content:space-between;
-      background:linear-gradient(135deg,#1565c0,#1976d2);
-      border-radius:8px;
-      padding:8px 10px;
-      cursor:pointer;
-      gap:8px;
-    }
-    .tbl-name{
-      font-weight:900; font-size:1.15rem;
-      background:rgba(255,255,255,.12);
-      padding:4px 10px; border-radius:6px;
-      letter-spacing:1px;
-    }
-
-    .order-meta-row{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:6px; flex-wrap:wrap;
-    }
-    .order-id-txt{ font-size:.78rem; color:var(--muted); font-weight:700; }
-    .payment-pill{
-      font-size:.74rem; font-weight:700; color:var(--muted);
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.06);
-      padding:2px 8px; border-radius:999px;
-      flex-shrink:0;
-    }
-
-    .timer-total-row{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
-    .timer-txt{ font-weight:800; font-size:.9rem; color:var(--white); white-space:nowrap; }
-    .total-txt{ font-weight:900; font-size:.95rem; color:var(--primary); }
-
-    .prog-row{ display:flex; align-items:center; gap:8px; }
-    .prog-bar{ flex:1; height:8px; border-radius:8px; background:rgba(255,255,255,.06); overflow:hidden; }
-    .prog-fill{ height:100%; background:linear-gradient(90deg,var(--success),#2e7d32); width:0%; transition:width .4s; }
-    .prog-lbl{ font-size:.78rem; font-weight:800; color:var(--muted); white-space:nowrap; }
-
-    /* actions */
-    .card-actions{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:2px; }
-    .card-actions .right{ margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
-    .expand-btn{
-      background:transparent;
-      border:1px solid rgba(255,255,255,.09);
-      color:var(--accent);
-      width:32px; height:32px;
-      border-radius:9px;
-      cursor:pointer;
-      display:inline-flex; align-items:center; justify-content:center;
-      flex-shrink:0;
-    }
-
-    /* expanded */
-    .collapse-btn{
-      position:absolute; top:10px; right:10px;
-      background:transparent;
-      border:1px solid rgba(255,255,255,.09);
-      color:var(--accent);
-      width:32px; height:32px;
-      border-radius:9px;
-      cursor:pointer;
-      display:inline-flex; align-items:center; justify-content:center;
-    }
-    .status-dot{
-      width:14px; height:14px; border-radius:50%;
-      background:rgba(255,255,255,.08);
-      border:2px solid rgba(255,255,255,.1);
-      cursor:pointer; flex-shrink:0;
-    }
-    .status-dot.ready{ background:var(--success); box-shadow:0 0 6px rgba(67,160,71,.5); }
-    .status-dot.delayed{ background:var(--danger); box-shadow:0 0 6px rgba(229,57,53,.5); }
-    .schedule-txt{ font-size:.75rem; color:var(--muted); }
-
-    .details{ margin-top:4px; display:flex; flex-direction:column; gap:8px; }
-
-    /* sections */
-    .sec-block{
-      border:1px solid rgba(255,255,255,.07);
-      border-radius:10px;
-      padding:7px 8px;
-      background:rgba(255,255,255,.02);
-    }
-    .sec-block-head{
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:6px;
-    }
-    .sec-block-title{
-      font-weight:900; font-size:.78rem; color:var(--accent);
-      letter-spacing:.4px; text-transform:uppercase;
-      display:flex; align-items:center; gap:6px;
-      min-width:0;
-    }
-    .sec-badge{
-      font-size:.7rem; font-weight:900;
-      background:rgba(66,165,245,.18);
-      border:1px solid rgba(66,165,245,.35);
-      color:var(--accent);
-      padding:1px 7px; border-radius:999px;
-      white-space:nowrap;
-      flex-shrink:0;
-    }
-
-    /* items */
-    .item-list{ display:flex; flex-direction:column; gap:5px; }
-    .item-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:6px; }
-    .item-row-left{ display:flex; gap:7px; align-items:flex-start; flex:1; min-width:0; }
-    .item-cb{ margin-top:3px; cursor:pointer; flex-shrink:0; }
-    .item-info{ flex:1; min-width:0; }
-    .item-name{ font-weight:700; font-size:.85rem; color:var(--accent); cursor:pointer; word-break:break-word; }
-    .item-name.done{ text-decoration:line-through; opacity:.55; color:var(--muted); }
-    .item-subline{ font-size:.74rem; color:var(--muted); font-weight:800; margin-top:1px; }
-    .item-note-txt{ font-size:.74rem; color:var(--warning); font-style:italic; margin-top:2px; }
-    .item-row-right{ display:flex; gap:5px; align-items:center; flex-shrink:0; }
-    .qty-box{
-      padding:3px 7px; border-radius:7px;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.06);
-      font-weight:800; font-size:.82rem;
-      white-space:nowrap;
-    }
-    .item-price{ font-size:.78rem; color:var(--primary); font-weight:700; white-space:nowrap; }
-
-    /* COMBO tag (GREEN + STAR + small curve) */
+    /* ══ COMBO TAG — hardcoded visible green pill ══ */
     .combo-tag{
-      display:inline-flex;
+      display:inline-flex !important;
+      visibility:visible !important;
       align-items:center;
-      gap:4px;
-      background:var(--comboBg);
-      border:1px solid var(--comboBorder);
-      color:var(--comboText);
+      gap:3px;
+      background:#1b3a1f;
+      border:1.5px solid #43a047;
+      color:#a5d6a7;
+      font-size:.72rem;
       font-weight:900;
-      font-size:.70rem;
-      padding:2px 7px;
-      border-radius:10px;
-      letter-spacing:.35px;
-      margin-right:6px;
-      line-height:1;
+      padding:3px 9px 3px 7px;
+      border-radius:20px;
+      letter-spacing:.5px;
       white-space:nowrap;
-    }
-    .combo-tag .star{
-      color: var(--success);
-      font-size: .72rem;
-      transform: translateY(-0.5px);
+      line-height:1.3;
+      margin-top:3px;
     }
 
-    /* expanded footer */
-    .expanded-footer{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:2px;
-    }
-    .expanded-footer .total{ font-weight:900; color:var(--primary); font-size:.95rem; }
-    .expanded-footer .actions{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
-
-    /* PRINT */
     @media print{
-      body *{ visibility:hidden !important; }
-      #printArea, #printArea *{
-        visibility:visible !important;
-        background:#fff !important;
-        color:#000 !important;
-        box-shadow:none !important;
-      }
-      #printArea{
-        position:absolute; left:0; top:0;
-        width:72mm; max-width:80mm; min-width:56mm;
-        font-family:'Montserrat', Arial, sans-serif;
-        font-size:13px; line-height:1.4;
-        padding:10px 8px 14px;
-      }
-      #printArea .p-center{ text-align:center; }
-      #printArea .p-tbl{
-        display:flex; align-items:center; justify-content:center;
-        gap:8px; border:2px solid #000; padding:5px 8px;
-        margin:6px 0;
-      }
-      #printArea .p-tbl-num{
-        background:#000; color:#fff;
-        font-size:20px; font-weight:900;
-        padding:4px 10px; border-radius:5px;
-      }
-      #printArea .p-info{ font-size:12px; margin-bottom:2px; }
-      #printArea .p-bold{ font-weight:900; }
-      #printArea .p-note{ font-size:14px; font-weight:800; text-transform:uppercase; margin:8px 0 2px; }
-      #printArea .p-sec-head{
-        font-weight:900; font-size:13px;
-        text-transform:uppercase; letter-spacing:1px;
-        margin:10px 0 4px;
-        border-top:2px solid #000; padding-top:6px;
-      }
-      #printArea .p-sec-head.first{ border-top:none; margin-top:4px; }
-      #printArea table{ width:100%; border-collapse:collapse; margin-bottom:4px; }
-      #printArea table th, #printArea table td{
-        border:1.5px solid #333; padding:7px 4px;
-        text-align:left; vertical-align:middle;
-      }
-      #printArea .p-qty{ font-size:26px; font-weight:900; text-align:center; }
-      #printArea .p-iname{ font-weight:900; font-size:14px; text-transform:uppercase; letter-spacing:.5px; }
-      #printArea .p-iprice{ font-size:11px; font-weight:600; margin-top:1px; display:block; }
-      #printArea .p-inote{ font-size:11px; font-style:italic; margin-top:2px; }
-      #printArea .p-total{ font-weight:900; font-size:20px; text-align:right; border-top:1.5px solid #000; padding-top:5px; margin-top:5px; }
-      #printArea .p-footer{ text-align:center; font-size:11px; border-top:1px dashed #000; padding-top:4px; margin-top:16px; }
-      #printArea .p-sched{ text-align:center; font-size:26px; font-weight:900; margin-top:8px; }
-      #printArea .p-empty{ font-size:11px; color:#666; font-style:italic; }
-      #printArea .p-combo-tag{
-        font-weight:900; font-size:11px;
-        border:1px solid #000; padding:1px 4px;
-        border-radius:6px; display:inline-block; margin-right:6px;
-      }
+      body *{visibility:hidden !important;}
+      #printArea,#printArea *{visibility:visible !important;background:#fff !important;color:#000 !important;box-shadow:none !important;}
+      #printArea{position:fixed;left:0;top:0;width:72mm;max-width:80mm;min-width:56mm;font-family:'Montserrat',Arial,sans-serif;font-size:13px;line-height:1.4;padding:10px 8px 14px;}
+      #printArea .pc{text-align:center;}
+      #printArea .ptbl{display:flex;align-items:center;justify-content:center;gap:8px;border:2px solid #000;padding:5px 8px;margin:6px 0;}
+      #printArea .ptbl-num{background:#000;color:#fff;font-size:20px;font-weight:900;padding:4px 10px;border-radius:5px;}
+      #printArea .pinfo{font-size:12px;margin-bottom:2px;}
+      #printArea .pbold{font-weight:900;}
+      #printArea .porder-note{font-size:14px;font-weight:800;text-transform:uppercase;margin:8px 0 2px;}
+      #printArea .psec-head{font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px;border-top:2px solid #000;padding-top:6px;}
+      #printArea .psec-head.pfirst{border-top:none;margin-top:4px;}
+      #printArea table{width:100%;border-collapse:collapse;margin-bottom:4px;}
+      #printArea table th,#printArea table td{border:1.5px solid #333;padding:7px 4px;text-align:left;vertical-align:middle;}
+      #printArea .pqty{font-size:26px;font-weight:900;text-align:center;vertical-align:middle;}
+      #printArea .piname{font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.5px;}
+      #printArea .pcombo{display:inline-block;margin-top:3px;font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;border:1.5px solid #000;padding:1px 5px;border-radius:4px;}
+      #printArea .piprice{font-size:11px;font-weight:600;margin-top:2px;display:block;}
+      #printArea .pinote{font-size:11px;font-style:italic;margin-top:2px;}
+      #printArea .ptotal{font-weight:900;font-size:20px;text-align:right;border-top:1.5px solid #000;padding-top:5px;margin-top:5px;}
+      #printArea .pfooter{text-align:center;font-size:11px;border-top:1px dashed #000;padding-top:4px;margin-top:16px;}
+      #printArea .psched{text-align:center;font-size:26px;font-weight:900;margin-top:8px;}
+      #printArea .pempty{font-size:11px;color:#666;font-style:italic;}
     }
   </style>
 </head>
@@ -311,747 +139,696 @@
   </div>
 </div>
 
-<div id="printArea" style="display:none"></div>
+<div id="printArea" style="position:fixed;left:-9999px;top:0;display:block;visibility:hidden;"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
+/* ══ FIREBASE ══════════════════════════════════════════════════════ */
 firebase.initializeApp({
-  apiKey: "AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtZvI",
-  authDomain: "newpos-dacb5.firebaseapp.com",
-  databaseURL: "https://newpos-dacb5-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "newpos-dacb5",
-  storageBucket: "newpos-dacb5.appspot.com",
-  messagingSenderId: "667100253940",
-  appId: "1:667100253940:web:cfd8f0b9b51b6e697818a1"
+  apiKey:"AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtZvI",
+  authDomain:"newpos-dacb5.firebaseapp.com",
+  databaseURL:"https://newpos-dacb5-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"newpos-dacb5",
+  storageBucket:"newpos-dacb5.appspot.com",
+  messagingSenderId:"667100253940",
+  appId:"1:667100253940:web:cfd8f0b9b51b6e697818a1"
 });
 const db = firebase.database();
 
-const SEC = { 1:"Starters", 2:"Main Course", 3:"Desserts", 4:"Drinks" };
+/* ══ SECTION LABELS ══════════════════════════════════════════════ */
+const SEC = {1:"Starters",2:"Main Course",3:"Desserts",4:"Drinks"};
 
-let ordersCache = {};
-let menuItemMap = {};
-let timers = {};
-let activeId = null;
-let knownIds = new Set();
-let firstOrders = false;
+/* ══════════════════════════════════════════════════════════════════
+   MENU MAPS
+   normalMap : itemNameLower → displaySec (1-4)   from sectionOrder 1-4
+   comboMap  : itemNameLower → displaySec (1-4)   from sectionOrder 5 ONLY
+               (skips names already in normalMap — normal always wins)
 
-const ordersGrid = document.getElementById('ordersGrid');
-const emptyMsg = document.getElementById('emptyMsg');
-const pendingCnt = document.getElementById('pendingCnt');
-const doneCnt = document.getElementById('doneCnt');
-const todayLbl = document.getElementById('todayLbl');
-const printArea = document.getElementById('printArea');
-const refreshBtn = document.getElementById('refreshBtn');
+   menuReady / ordersReady: renderGrid() waits for BOTH so that
+   comboMap is always populated before any item is resolved.
+══════════════════════════════════════════════════════════════════ */
+let normalMap   = {};
+let comboMap    = {};
+let menuReady   = false;
+let ordersReady = false;
 
-const todayStr = () => new Date().toISOString().slice(0,10);
-const nowMs = () => Date.now();
-const pad = n => String(n).padStart(2,'0');
-function hms(sec){
-  sec = Math.max(0, Math.floor(sec));
-  return [Math.floor(sec/3600), Math.floor((sec%3600)/60), sec%60].map(pad).join(':');
-}
-const isCompleted = s => s && String(s).toLowerCase() === 'completed';
+function buildMenuMaps(rawVal){
+  normalMap = {};
+  comboMap  = {};
 
-function parseScheduled(order){
-  const st = order.scheduledTime;
-  if(!st) return null;
-  if(typeof st === 'number') return st;
-  try {
-    const s = String(st).trim();
-    if(/\d{4}-\d{2}-\d{2}T/.test(s)){ const d=new Date(s); if(!isNaN(d)) return +d; }
-    if(/^\d{1,2}:\d{2}/.test(s)){
-      const dp = order.scheduledDate || order.date || todayStr();
-      const tp = s.length<=5 ? s+':00' : s;
-      const d = new Date(dp+'T'+tp); if(!isNaN(d)) return +d;
-    }
-    const dp = Date.parse(s); if(!isNaN(dp)) return dp;
-  } catch(e){}
-  return null;
-}
-function fmtAMPM(ms){
-  try {
-    const d=new Date(ms); if(isNaN(d)) return '';
-    let h=d.getHours(), m=d.getMinutes();
-    const ap=h>=12?'PM':'AM'; h=h%12||12;
-    return h+':'+pad(m)+' '+ap;
-  } catch(e){ return ''; }
-}
-function progress(order){
-  const items = Array.isArray(order.items) ? order.items : [];
-  if(!items.length) return {done:0,total:0,pct:0};
-  const done = items.filter(x=>!!x.done).length;
-  return {done, total:items.length, pct:Math.round(done/items.length*100)};
-}
-function playAlert(){
-  try{
-    const ctx=new(window.AudioContext||window.webkitAudioContext)();
-    const o=ctx.createOscillator(), g=ctx.createGain();
-    o.type='sine'; o.frequency.value=880; g.gain.value=.0001;
-    o.connect(g); g.connect(ctx.destination);
-    const t=ctx.currentTime;
-    g.gain.linearRampToValueAtTime(.15,t+.01); o.start(t);
-    g.gain.linearRampToValueAtTime(.0001,t+.35); o.stop(t+.36);
-  }catch(e){}
-}
+  if(!rawVal){ menuReady=true; return; }
 
-/* Menu map */
-function buildMenuMap(menuVal){
-  menuItemMap = {};
-  if(!menuVal) return;
-
+  /* ── normalise Firebase value → plain JS array of category objects ── */
   let cats = [];
-  if(Array.isArray(menuVal)) cats = menuVal;
-  else {
-    const keys = Object.keys(menuVal);
-    if(keys.length && keys.every(k=>/^\d+$/.test(k)))
-      cats = keys.sort((a,b)=>+a-+b).map(k=>menuVal[k]);
-    else if(menuVal.menu && Array.isArray(menuVal.menu))
-      cats = menuVal.menu;
-    else
-      cats = Object.values(menuVal);
+  if(Array.isArray(rawVal)){
+    cats = rawVal;
+  } else {
+    const keys = Object.keys(rawVal);
+    if(keys.length && keys.every(k=>/^\d+$/.test(k))){
+      cats = keys.sort((a,b)=>+a-+b).map(k=>rawVal[k]);
+    } else if(rawVal.menu && Array.isArray(rawVal.menu)){
+      cats = rawVal.menu;
+    } else {
+      cats = Object.values(rawVal);
+    }
   }
 
+  /* ── Pass 1: sectionOrder 1-4 → normalMap ── */
   for(const cat of cats){
     if(!cat) continue;
-    const sec = Number(cat.sectionOrder) || 1; // 1..4, 5=combo
+    const sec = Number(cat.sectionOrder) || 1;
+    if(sec === 5) continue;
+    const s = [1,2,3,4].includes(sec) ? sec : 2;
+    const items = Array.isArray(cat.items) ? cat.items : [];
+    for(const it of items){
+      if(!it || !it.name) continue;
+      const nm = String(it.name).trim().toLowerCase();
+      if(nm && normalMap[nm] == null) normalMap[nm] = s;
+    }
+  }
+
+  /* ── Pass 2: sectionOrder 5 → comboMap
+                skip names already in normalMap ── */
+  for(const cat of cats){
+    if(!cat) continue;
+    const sec = Number(cat.sectionOrder) || 1;
+    if(sec !== 5) continue;
     const items = Array.isArray(cat.items) ? cat.items : [];
     for(const it of items){
       if(!it || !it.name) continue;
       const nm = String(it.name).trim().toLowerCase();
       if(!nm) continue;
-      if(!menuItemMap[nm]){
-        const cp = it.comboPart != null ? Number(it.comboPart) : null;
-        menuItemMap[nm] = { sec, comboPart: cp };
-      }
+      if(normalMap[nm] != null) continue;  // normal wins
+      /* displaySec comes from comboPart saved in menu-editor */
+      const cp = [1,2,3].includes(Number(it.comboPart)) ? Number(it.comboPart) : 2;
+      if(comboMap[nm] == null) comboMap[nm] = cp; // store displaySec directly
     }
   }
+
+  menuReady = true;
 }
 
+/* ══ RESOLVE ONE ORDER ITEM ══════════════════════════════════════
+   Returns { displaySec:1-4, isCombo:bool }
+══════════════════════════════════════════════════════════════════ */
 function resolveItem(it){
-  const nm = String(it.name||'').trim().toLowerCase();
-  const info = menuItemMap[nm];
-  if(!info) return { displaySec:2, isCombo:false, comboPart:null };
-
-  const sec = Number(info.sec);
-  if(sec === 5){
-    const cp = it.comboPart != null ? Number(it.comboPart)
-             : (info.comboPart != null ? info.comboPart : 2);
-    const part = [1,2,3].includes(cp) ? cp : 2;
-    return { displaySec: part, isCombo:true, comboPart: part };
-  }
-  return { displaySec: [1,2,3,4].includes(sec) ? sec : 2, isCombo:false, comboPart:null };
+  const nm = String(it.name || '').trim().toLowerCase();
+  /* 1 — normal section */
+  if(normalMap[nm] != null)
+    return { displaySec: normalMap[nm], isCombo: false };
+  /* 2 — combo section 5 */
+  if(comboMap[nm] != null)
+    return { displaySec: comboMap[nm], isCombo: true };
+  /* 3 — unknown: default Main Course, not combo */
+  return { displaySec: 2, isCombo: false };
 }
 
-function comboPartLabel(part){
-  if(part === 1) return 'Starter';
-  if(part === 2) return 'Main';
-  if(part === 3) return 'Dessert';
-  return 'Combo';
-}
-
-/* group ALL items */
-function groupAllItems(order){
-  const groups = { 1:[], 2:[], 3:[], 4:[] };
-  const items = Array.isArray(order.items) ? order.items : [];
-  items.forEach((it, idx) => {
+/* ══ GROUP ITEMS by display section ══════════════════════════════ */
+function groupItems(order){
+  const groups = {1:[],2:[],3:[],4:[]};
+  const items  = Array.isArray(order.items) ? order.items : [];
+  items.forEach((it,idx)=>{
     const r = resolveItem(it);
     const s = [1,2,3,4].includes(r.displaySec) ? r.displaySec : 2;
-    groups[s].push({ it, idx, r });
+    groups[s].push({ it, idx, isCombo: r.isCombo });
   });
   return groups;
 }
 
-/* timers */
-function startTimer(id, order, el){
-  if(!el) return;
+/* ══ STATE ════════════════════════════════════════════════════════ */
+let ordersCache={}, timers={};
+let activeId=null, knownIds=new Set(), firstOrders=false;
+
+/* ══ DOM ══════════════════════════════════════════════════════════ */
+const ordersGrid = document.getElementById('ordersGrid');
+const emptyMsg   = document.getElementById('emptyMsg');
+const pendingCnt = document.getElementById('pendingCnt');
+const doneCnt    = document.getElementById('doneCnt');
+const todayLbl   = document.getElementById('todayLbl');
+const printArea  = document.getElementById('printArea');
+const refreshBtn = document.getElementById('refreshBtn');
+
+/* ══ UTILS ════════════════════════════════════════════════════════ */
+const todayStr = () => new Date().toISOString().slice(0,10);
+const nowMs    = () => Date.now();
+const pad      = n  => String(n).padStart(2,'0');
+function hms(sec){
+  sec = Math.max(0,Math.floor(sec));
+  return [Math.floor(sec/3600),Math.floor((sec%3600)/60),sec%60].map(pad).join(':');
+}
+const isCompleted = s => s && String(s).toLowerCase()==='completed';
+
+function parseScheduled(order){
+  const st = order.scheduledTime;
+  if(!st) return null;
+  if(typeof st==='number') return st;
+  try{
+    const s=String(st).trim();
+    if(/\d{4}-\d{2}-\d{2}T/.test(s)){const d=new Date(s);if(!isNaN(d))return+d;}
+    if(/^\d{1,2}:\d{2}/.test(s)){
+      const dp=order.scheduledDate||order.date||todayStr();
+      const tp=s.length<=5?s+':00':s;
+      const d=new Date(dp+'T'+tp);if(!isNaN(d))return+d;
+    }
+    const dp=Date.parse(s);if(!isNaN(dp))return dp;
+  }catch(e){}
+  return null;
+}
+function fmtAMPM(ms){
+  try{
+    const d=new Date(ms);if(isNaN(d))return'';
+    let h=d.getHours(),m=d.getMinutes();
+    const ap=h>=12?'PM':'AM';h=h%12||12;
+    return h+':'+pad(m)+' '+ap;
+  }catch(e){return'';}
+}
+function progress(order){
+  const items=Array.isArray(order.items)?order.items:[];
+  if(!items.length)return{done:0,total:0,pct:0};
+  const done=items.filter(x=>!!x.done).length;
+  return{done,total:items.length,pct:Math.round(done/items.length*100)};
+}
+function playAlert(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.type='sine';o.frequency.value=880;g.gain.value=.0001;
+    o.connect(g);g.connect(ctx.destination);
+    const t=ctx.currentTime;
+    g.gain.linearRampToValueAtTime(.15,t+.01);o.start(t);
+    g.gain.linearRampToValueAtTime(.0001,t+.35);o.stop(t+.36);
+  }catch(e){}
+}
+
+/* ══ TIMERS ══════════════════════════════════════════════════════ */
+function startTimer(id,order,el){
+  if(!el)return;
   stopTimer(id);
   function upd(){
-    const now = nowMs();
-    const sm  = parseScheduled(order);
-    const created = order.createdAt || (order.date ? new Date(order.date+'T'+(order.time||'00:00:00')).getTime() : now);
-    if(sm && sm > now){
-      const rem = Math.ceil((sm-now)/1000);
-      el.textContent = hms(rem)+' left';
-      el.style.color = rem <= (30*60) ? 'var(--danger)' : 'var(--white)';
-    } else if(isCompleted(order.status)){
-      const ca = order.completedAt||order.updatedAt||now;
-      el.textContent = hms(Math.floor((ca-created)/1000))+' (done)';
-      el.style.color = 'var(--muted)';
-    } else {
-      el.textContent = hms(Math.floor((now-created)/1000));
-      el.style.color = 'var(--white)';
+    const now=nowMs();
+    const sm=parseScheduled(order);
+    const created=order.createdAt||(order.date
+      ?new Date(order.date+'T'+(order.time||'00:00:00')).getTime():now);
+    if(sm&&sm>now){
+      const rem=Math.ceil((sm-now)/1000);
+      el.textContent=hms(rem)+' left';
+      el.style.color=rem<=(30*60)?'var(--danger)':'var(--white)';
+    }else if(isCompleted(order.status)){
+      const ca=order.completedAt||order.updatedAt||now;
+      el.textContent=hms(Math.floor((ca-created)/1000))+' (done)';
+      el.style.color='var(--muted)';
+    }else{
+      el.textContent=hms(Math.floor((now-created)/1000));
+      el.style.color='var(--white)';
     }
   }
   upd();
-  timers[id] = setInterval(upd, 1000);
+  timers[id]=setInterval(upd,1000);
 }
 function stopTimer(id){
-  if(timers[id]){ clearInterval(timers[id]); delete timers[id]; }
+  if(timers[id]){clearInterval(timers[id]);delete timers[id];}
 }
 
-/* db helpers */
-function dbToggleItem(orderId, idx, val){
-  const u = {};
-  u[`orders/${orderId}/items/${idx}/done`] = !!val;
-  u[`orders/${orderId}/updatedAt`] = nowMs();
+/* ══ DB HELPERS ══════════════════════════════════════════════════ */
+function dbToggleItem(orderId,idx,val){
+  const u={};
+  u[`orders/${orderId}/items/${idx}/done`]=!!val;
+  u[`orders/${orderId}/updatedAt`]=nowMs();
   db.ref().update(u).catch(e=>console.error(e));
 }
-function dbReadyState(orderId, state){
-  db.ref(`orders/${orderId}`).update({ readyState: state, updatedAt: nowMs() }).catch(e=>console.error(e));
+function dbReadyState(orderId,state){
+  db.ref(`orders/${orderId}`).update({readyState:state,updatedAt:nowMs()}).catch(e=>console.error(e));
 }
 function dbMarkAll(orderId){
   db.ref(`orders/${orderId}`).once('value').then(snap=>{
-    const d = snap.val(); if(!d) return;
-    const items = (Array.isArray(d.items)?d.items:[]).map(x=>({...x, done:true, doneAt: nowMs()}));
-    return db.ref(`orders/${orderId}`).update({ items, updatedAt: nowMs() });
-  }).catch(e=>{ console.error(e); alert('Error: ' + (e && e.message)); });
+    const d=snap.val();if(!d)return;
+    const items=(Array.isArray(d.items)?d.items:[]).map(x=>({...x,done:true,doneAt:nowMs()}));
+    return db.ref(`orders/${orderId}`).update({items,updatedAt:nowMs()});
+  }).catch(e=>{console.error(e);alert('Error: '+(e&&e.message));});
 }
 function dbMarkDone(orderId){
-  const now = nowMs();
-  db.ref(`orders/${orderId}`).update({ status:'completed', completedAt: now, updatedAt: now })
+  const now=nowMs();
+  db.ref(`orders/${orderId}`).update({status:'completed',completedAt:now,updatedAt:now})
     .then(()=>{
       stopTimer(orderId);
-      if(ordersCache[orderId]) ordersCache[orderId].status = 'completed';
-      if(activeId === orderId) activeId = null;
+      if(ordersCache[orderId])ordersCache[orderId].status='completed';
+      if(activeId===orderId)activeId=null;
       renderGrid();
     }).catch(e=>console.error(e));
 }
 
-/* UI builders */
-function makeItemRow(order, it, idx, r, withCheckboxes){
-  const row = document.createElement('div');
-  row.className = 'item-row';
+/* ══ COMBO TAG ELEMENT ════════════════════════════════════════════
+   Built entirely in JS with full inline styles so nothing can
+   override or hide it. No reliance on external CSS class.
+══════════════════════════════════════════════════════════════════ */
+function makeComboTag(){
+  const tag = document.createElement('span');
+  /* full inline style — guaranteed visible regardless of CSS cascade */
+  tag.style.cssText = [
+    'display:inline-flex',
+    'align-items:center',
+    'gap:4px',
+    'background:#1a3d1e',
+    'border:1.5px solid #43a047',
+    'color:#a5d6a7',
+    'font-size:0.72rem',
+    'font-weight:900',
+    'padding:3px 9px 3px 6px',
+    'border-radius:20px',
+    'letter-spacing:0.5px',
+    'white-space:nowrap',
+    'line-height:1.3',
+    'margin-top:3px',
+    'font-family:Poppins,sans-serif',
+    'visibility:visible',
+    'opacity:1'
+  ].join(';');
 
-  const left = document.createElement('div');
-  left.className = 'item-row-left';
+  const star = document.createElement('span');
+  star.style.cssText = 'color:#66bb6a;font-size:0.85rem;line-height:1;';
+  star.textContent   = '★';
 
-  if(withCheckboxes){
+  const txt = document.createElement('span');
+  txt.textContent = 'COMBO';
+
+  tag.appendChild(star);
+  tag.appendChild(txt);
+  return tag;
+}
+
+/* ══ SINGLE ITEM ROW ══════════════════════════════════════════════ */
+function makeItemRow(order, it, idx, isCombo, withCb){
+  const row  = document.createElement('div'); row.className  = 'item-row';
+  const left = document.createElement('div'); left.className = 'item-row-left';
+
+  if(withCb){
     const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.className = 'item-cb';
-    cb.checked = !!it.done;
-    cb.addEventListener('click', e=>{ e.stopPropagation(); dbToggleItem(order.id, idx, cb.checked); });
+    cb.type='checkbox'; cb.className='item-cb'; cb.checked=!!it.done;
+    cb.addEventListener('click',e=>{e.stopPropagation();dbToggleItem(order.id,idx,cb.checked);});
     left.appendChild(cb);
   }
 
-  const info = document.createElement('div');
-  info.className = 'item-info';
+  const info = document.createElement('div'); info.className='item-info';
 
-  const nm = document.createElement('div');
-  nm.className = 'item-name' + (it.done ? ' done' : '');
-  nm.textContent = it.name || '';
-  if(withCheckboxes){
-    nm.addEventListener('click', e=>{ e.stopPropagation(); dbToggleItem(order.id, idx, !it.done); });
-  }
-  info.appendChild(nm);
+  /* name */
+  const nameEl = document.createElement('div');
+  nameEl.className = 'item-name' + (it.done?' done':'');
+  nameEl.textContent = it.name || '';
+  if(withCb)
+    nameEl.addEventListener('click',e=>{e.stopPropagation();dbToggleItem(order.id,idx,!it.done);});
+  info.appendChild(nameEl);
 
-  const sub = document.createElement('div');
-  sub.className = 'item-subline';
-  if(r.isCombo){
-    sub.innerHTML = `<span class="combo-tag"><span class="star">★</span>COMBO</span>${comboPartLabel(r.comboPart)}`;
+  /* ── COMBO TAG or price line ── */
+  if(isCombo){
+    /* attach the tag directly under the item name */
+    info.appendChild(makeComboTag());
   } else {
-    sub.textContent = '€' + Number(it.price||0).toFixed(2) + ' each';
+    const priceLine = document.createElement('div');
+    priceLine.className = 'item-price-line';
+    priceLine.textContent = '€' + Number(it.price||0).toFixed(2) + ' each';
+    info.appendChild(priceLine);
   }
-  info.appendChild(sub);
 
+  /* note */
   if(it.note && String(it.note).trim()){
-    const note = document.createElement('div');
-    note.className = 'item-note-txt';
-    note.textContent = it.note;
-    info.appendChild(note);
+    const n = document.createElement('div'); n.className='item-note-txt';
+    n.textContent = it.note; info.appendChild(n);
   }
-
   left.appendChild(info);
 
-  const right = document.createElement('div');
-  right.className = 'item-row-right';
-
-  const qb = document.createElement('div');
-  qb.className = 'qty-box';
-  qb.textContent = 'x' + (it.qty||1);
-  right.appendChild(qb);
-
-  const pr = document.createElement('div');
-  pr.className = 'item-price';
-  pr.textContent = '€' + ((Number(it.price||0) * Number(it.qty||1)).toFixed(2));
+  /* right: qty + line total */
+  const right = document.createElement('div'); right.className='item-row-right';
+  const qb = document.createElement('div'); qb.className='qty-box';
+  qb.textContent = 'x'+(it.qty||1); right.appendChild(qb);
+  const pr = document.createElement('div'); pr.className='item-price-txt';
+  pr.textContent = '€'+((Number(it.price||0)*Number(it.qty||1)).toFixed(2));
   right.appendChild(pr);
 
-  row.appendChild(left);
-  row.appendChild(right);
+  row.appendChild(left); row.appendChild(right);
   return row;
 }
 
-function makeSectionBlocks(order, withCheckboxes){
-  const groups = groupAllItems(order);
-  const frag = document.createDocumentFragment();
+/* ══ SECTION BLOCKS ══════════════════════════════════════════════ */
+function makeSectionBlocks(order, withCb){
+  const groups = groupItems(order);
+  const frag   = document.createDocumentFragment();
   let any = false;
-
   for(const s of [1,2,3,4]){
-    const listItems = groups[s];
-    if(!listItems.length) continue;
+    const list = groups[s];
+    if(!list.length) continue;
     any = true;
-
-    const block = document.createElement('div');
-    block.className = 'sec-block';
-
-    const head = document.createElement('div');
-    head.className = 'sec-block-head';
-
-    const titleEl = document.createElement('div');
-    titleEl.className = 'sec-block-title';
-    titleEl.textContent = s + ' — ' + SEC[s];
-
-    const countBadge = document.createElement('span');
-    countBadge.className = 'sec-badge';
-    countBadge.textContent = String(listItems.length);
-
-    head.appendChild(titleEl);
-    head.appendChild(countBadge);
-    block.appendChild(head);
-
-    const list = document.createElement('div');
-    list.className = 'item-list';
-    for(const {it,idx,r} of listItems){
-      list.appendChild(makeItemRow(order, it, idx, r, withCheckboxes));
-    }
-
-    block.appendChild(list);
-    frag.appendChild(block);
+    const block = document.createElement('div'); block.className='sec-block';
+    const head  = document.createElement('div'); head.className='sec-block-head';
+    const title = document.createElement('div'); title.className='sec-block-title';
+    title.textContent = SEC[s];
+    const cnt = document.createElement('span'); cnt.className='sec-count-badge';
+    cnt.textContent = String(list.length);
+    head.appendChild(title); head.appendChild(cnt); block.appendChild(head);
+    const ul = document.createElement('div'); ul.className='item-list';
+    for(const {it,idx,isCombo} of list)
+      ul.appendChild(makeItemRow(order,it,idx,isCombo,withCb));
+    block.appendChild(ul); frag.appendChild(block);
   }
-
   if(!any){
     const nd = document.createElement('div');
-    nd.style.cssText = 'font-size:.8rem;color:var(--muted);text-align:center;padding:4px 0;';
-    nd.textContent = 'No items';
-    frag.appendChild(nd);
+    nd.style.cssText='font-size:.8rem;color:var(--muted);text-align:center;padding:6px 0;';
+    nd.textContent='No items'; frag.appendChild(nd);
   }
-
   return frag;
 }
 
-/* cards */
+/* ══ COMPACT CARD ════════════════════════════════════════════════ */
 function buildCompactCard(order){
   const card = document.createElement('div');
-  card.className = 'order-card';
-  card.dataset.id = order.id;
+  card.className='order-card'; card.dataset.id=order.id;
 
-  const tblBadge = document.createElement('div');
-  tblBadge.className = 'tbl-badge';
-  tblBadge.innerHTML = `<span class="tbl-name">${String(order.table||order.id||'').toUpperCase()}</span>`;
-  tblBadge.addEventListener('click', e=>{ e.stopPropagation(); setActive(order.id); });
-  card.appendChild(tblBadge);
+  const tbl = document.createElement('div'); tbl.className='tbl-badge';
+  tbl.innerHTML=`<span class="tbl-name">${String(order.table||order.id||'').toUpperCase()}</span>`;
+  tbl.addEventListener('click',e=>{e.stopPropagation();setActive(order.id);});
+  card.appendChild(tbl);
 
-  const meta = document.createElement('div');
-  meta.className = 'order-meta-row';
-  const oid = document.createElement('span');
-  oid.className = 'order-id-txt';
-  oid.textContent = 'Order #' + (order.id||'');
-  const pay = document.createElement('span');
-  pay.className = 'payment-pill';
-  const sl = (order.status||'').toLowerCase();
-  pay.textContent = sl==='paid'?'Paid': sl==='completed'?'Completed':'Pending Payment';
-  meta.appendChild(oid); meta.appendChild(pay);
-  card.appendChild(meta);
+  const meta = document.createElement('div'); meta.className='order-meta-row';
+  const oid  = document.createElement('span'); oid.className='order-id-txt';
+  oid.textContent = 'Order #'+(order.id||'');
+  const pay  = document.createElement('span'); pay.className='payment-pill';
+  const sl   = (order.status||'').toLowerCase();
+  pay.textContent = sl==='paid'?'Paid':sl==='completed'?'Completed':'Pending Payment';
+  meta.appendChild(oid); meta.appendChild(pay); card.appendChild(meta);
 
-  const ttRow = document.createElement('div');
-  ttRow.className = 'timer-total-row';
-  const timerEl = document.createElement('div');
-  timerEl.className = 'timer-txt';
-  timerEl.textContent = '00:00:00';
-  const totEl = document.createElement('div');
-  totEl.className = 'total-txt';
-  totEl.textContent = '€' + Number(order.total||0).toFixed(2);
-  ttRow.appendChild(timerEl); ttRow.appendChild(totEl);
-  card.appendChild(ttRow);
+  const ttRow   = document.createElement('div'); ttRow.className='timer-total-row';
+  const timerEl = document.createElement('div'); timerEl.className='timer-txt'; timerEl.textContent='00:00:00';
+  const totEl   = document.createElement('div'); totEl.className='total-txt';
+  totEl.textContent = '€'+Number(order.total||0).toFixed(2);
+  ttRow.appendChild(timerEl); ttRow.appendChild(totEl); card.appendChild(ttRow);
 
-  const pr = progress(order);
-  const pRow = document.createElement('div');
-  pRow.className = 'prog-row';
-  const pBar = document.createElement('div'); pBar.className = 'prog-bar';
-  const pFill = document.createElement('div'); pFill.className = 'prog-fill';
-  pFill.style.width = pr.pct + '%';
-  pBar.appendChild(pFill);
-  const pLbl = document.createElement('div'); pLbl.className = 'prog-lbl';
+  const pr    = progress(order);
+  const pRow  = document.createElement('div'); pRow.className='prog-row';
+  const pBar  = document.createElement('div'); pBar.className='prog-bar';
+  const pFill = document.createElement('div'); pFill.className='prog-fill';
+  pFill.style.width = pr.pct+'%'; pBar.appendChild(pFill);
+  const pLbl  = document.createElement('div'); pLbl.className='prog-lbl';
   pLbl.textContent = `${pr.done}/${pr.total}`;
-  pRow.appendChild(pBar); pRow.appendChild(pLbl);
-  card.appendChild(pRow);
+  pRow.appendChild(pBar); pRow.appendChild(pLbl); card.appendChild(pRow);
 
-  const acts = document.createElement('div');
-  acts.className = 'card-actions';
+  const acts = document.createElement('div'); acts.className='card-actions';
+  const pBtn = document.createElement('button');
+  pBtn.className='btn sm icon-btn'; pBtn.title='Print receipt';
+  pBtn.innerHTML='<i class="fas fa-print"></i>';
+  pBtn.addEventListener('click',e=>{e.stopPropagation();printReceipt(order,true);});
+  acts.appendChild(pBtn);
 
-  const printBtn = document.createElement('button');
-  printBtn.className = 'btn sm icon-btn';
-  printBtn.title = 'Print receipt';
-  printBtn.innerHTML = '<i class="fas fa-print"></i>';
-  printBtn.addEventListener('click', e=>{ e.stopPropagation(); printReceipt(order, true); });
-  acts.appendChild(printBtn);
-
-  const right = document.createElement('div');
-  right.className = 'right';
-
+  const right = document.createElement('div'); right.className='right';
   if(!isCompleted(order.status)){
-    const doneBtn = document.createElement('button');
-    doneBtn.className = 'btn success sm';
-    doneBtn.textContent = 'Done';
-    doneBtn.addEventListener('click', e=>{ e.stopPropagation(); if(confirm('Mark order #'+order.id+' as DONE?')) dbMarkDone(order.id); });
+    const doneBtn = document.createElement('button'); doneBtn.className='btn success sm'; doneBtn.textContent='Done';
+    doneBtn.addEventListener('click',e=>{e.stopPropagation();if(confirm('Mark order #'+order.id+' as DONE?'))dbMarkDone(order.id);});
     right.appendChild(doneBtn);
-  } else {
-    const dl = document.createElement('span');
-    dl.className = 'small-muted';
-    dl.textContent = 'Completed';
+  }else{
+    const dl=document.createElement('span'); dl.className='small-muted'; dl.textContent='Completed';
     right.appendChild(dl);
   }
+  const expBtn = document.createElement('button'); expBtn.className='expand-btn';
+  expBtn.innerHTML='<i class="fas fa-chevron-down"></i>';
+  expBtn.addEventListener('click',e=>{e.stopPropagation();setActive(order.id);});
+  right.appendChild(expBtn); acts.appendChild(right); card.appendChild(acts);
 
-  const expBtn = document.createElement('button');
-  expBtn.className = 'expand-btn';
-  expBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
-  expBtn.addEventListener('click', e=>{ e.stopPropagation(); setActive(order.id); });
-  right.appendChild(expBtn);
-
-  acts.appendChild(right);
-  card.appendChild(acts);
-
-  startTimer(String(order.id), order, timerEl);
+  startTimer(String(order.id),order,timerEl);
   return card;
 }
 
+/* ══ EXPANDED CARD ════════════════════════════════════════════════ */
 function buildExpandedCard(order){
   const card = document.createElement('div');
-  card.className = 'order-card';
-  card.dataset.id = order.id;
+  card.className='order-card'; card.dataset.id=order.id;
 
-  const colBtn = document.createElement('button');
-  colBtn.className = 'collapse-btn';
-  colBtn.innerHTML = '<i class="fas fa-chevron-up"></i>';
-  colBtn.addEventListener('click', e=>{ e.stopPropagation(); setActive(null); });
+  const colBtn = document.createElement('button'); colBtn.className='collapse-btn';
+  colBtn.innerHTML='<i class="fas fa-chevron-up"></i>';
+  colBtn.addEventListener('click',e=>{e.stopPropagation();setActive(null);});
   card.appendChild(colBtn);
 
-  const tblBadge = document.createElement('div');
-  tblBadge.className = 'tbl-badge';
-  tblBadge.style.paddingRight = '44px';
-  tblBadge.innerHTML = `<span class="tbl-name">${String(order.table||order.id||'').toUpperCase()}</span>`;
-  tblBadge.addEventListener('click', e=>{ e.stopPropagation(); setActive(null); });
-  card.appendChild(tblBadge);
+  const tbl = document.createElement('div'); tbl.className='tbl-badge'; tbl.style.paddingRight='44px';
+  tbl.innerHTML=`<span class="tbl-name">${String(order.table||order.id||'').toUpperCase()}</span>`;
+  tbl.addEventListener('click',e=>{e.stopPropagation();setActive(null);});
+  card.appendChild(tbl);
 
-  const meta = document.createElement('div');
-  meta.className = 'order-meta-row';
-  const oid = document.createElement('span');
-  oid.className = 'order-id-txt';
-  oid.textContent = 'Order #' + (order.id||'') + ' • ' + (order.date||'') + ' ' + (order.time||'');
-  const pay = document.createElement('span');
-  pay.className = 'payment-pill';
-  const sl = (order.status||'').toLowerCase();
-  pay.textContent = sl==='paid'?'Paid': sl==='completed'?'Completed':'Pending Payment';
-  meta.appendChild(oid); meta.appendChild(pay);
-  card.appendChild(meta);
+  const meta = document.createElement('div'); meta.className='order-meta-row';
+  const oid  = document.createElement('span'); oid.className='order-id-txt';
+  oid.textContent = 'Order #'+(order.id||'')+' • '+(order.date||'')+' '+(order.time||'');
+  const pay  = document.createElement('span'); pay.className='payment-pill';
+  const sl   = (order.status||'').toLowerCase();
+  pay.textContent = sl==='paid'?'Paid':sl==='completed'?'Completed':'Pending Payment';
+  meta.appendChild(oid); meta.appendChild(pay); card.appendChild(meta);
 
-  const ttRow = document.createElement('div');
-  ttRow.className = 'timer-total-row';
-
+  const ttRow  = document.createElement('div'); ttRow.className='timer-total-row';
   const leftTT = document.createElement('div');
-  leftTT.style.cssText = 'display:flex;align-items:center;gap:7px;flex-wrap:wrap;';
-  const dot = document.createElement('div');
-  dot.className = 'status-dot';
-  const ir = order.readyState||'off';
-  if(ir==='ready') dot.classList.add('ready');
+  leftTT.style.cssText='display:flex;align-items:center;gap:7px;flex-wrap:wrap;';
+  const dot = document.createElement('div'); dot.className='status-dot';
+  const ir  = order.readyState||'off';
+  if(ir==='ready')   dot.classList.add('ready');
   if(ir==='delayed') dot.classList.add('delayed');
-  dot.addEventListener('click', e=>{
+  dot.addEventListener('click',e=>{
     e.stopPropagation();
-    const cur = order.readyState||'off';
-    dbReadyState(order.id, cur==='off'?'ready':cur==='ready'?'delayed':'off');
+    const cur=order.readyState||'off';
+    dbReadyState(order.id,cur==='off'?'ready':cur==='ready'?'delayed':'off');
   });
+  const timerEl = document.createElement('div'); timerEl.className='timer-txt'; timerEl.textContent='00:00:00';
+  leftTT.appendChild(dot); leftTT.appendChild(timerEl);
+  if(order.scheduledTime&&String(order.scheduledTime).trim()){
+    const st=document.createElement('div'); st.className='schedule-txt';
+    st.textContent='Sched: '+order.scheduledTime; leftTT.appendChild(st);
+  }
+  const totEl = document.createElement('div'); totEl.className='total-txt';
+  totEl.textContent='€'+Number(order.total||0).toFixed(2);
+  ttRow.appendChild(leftTT); ttRow.appendChild(totEl); card.appendChild(ttRow);
 
-  const timerEl = document.createElement('div');
-  timerEl.className = 'timer-txt';
-  timerEl.textContent = '00:00:00';
+  const pr    = progress(order);
+  const pRow  = document.createElement('div'); pRow.className='prog-row';
+  const pBar  = document.createElement('div'); pBar.className='prog-bar';
+  const pFill = document.createElement('div'); pFill.className='prog-fill';
+  pFill.style.width=pr.pct+'%'; pBar.appendChild(pFill);
+  const pLbl  = document.createElement('div'); pLbl.className='prog-lbl';
+  pLbl.textContent=`${pr.done}/${pr.total}`;
+  pRow.appendChild(pBar); pRow.appendChild(pLbl); card.appendChild(pRow);
 
-  leftTT.appendChild(dot);
-  leftTT.appendChild(timerEl);
-
-  if(order.scheduledTime && String(order.scheduledTime).trim()){
-    const st = document.createElement('div');
-    st.className = 'schedule-txt';
-    st.textContent = 'Sched: ' + order.scheduledTime;
-    leftTT.appendChild(st);
+  if(order.note&&String(order.note).trim()){
+    const on=document.createElement('div'); on.className='item-note-txt';
+    on.textContent='Note: '+order.note; card.appendChild(on);
   }
 
-  const totEl = document.createElement('div');
-  totEl.className = 'total-txt';
-  totEl.textContent = '€' + Number(order.total||0).toFixed(2);
-
-  ttRow.appendChild(leftTT);
-  ttRow.appendChild(totEl);
-  card.appendChild(ttRow);
-
-  const pr = progress(order);
-  const pRow = document.createElement('div');
-  pRow.className = 'prog-row';
-  const pBar = document.createElement('div'); pBar.className = 'prog-bar';
-  const pFill = document.createElement('div'); pFill.className = 'prog-fill';
-  pFill.style.width = pr.pct + '%';
-  pBar.appendChild(pFill);
-  const pLbl = document.createElement('div'); pLbl.className = 'prog-lbl';
-  pLbl.textContent = `${pr.done}/${pr.total}`;
-  pRow.appendChild(pBar); pRow.appendChild(pLbl);
-  card.appendChild(pRow);
-
-  if(order.note && String(order.note).trim()){
-    const on = document.createElement('div');
-    on.className = 'item-note-txt';
-    on.textContent = 'Note: ' + order.note;
-    card.appendChild(on);
-  }
-
-  const details = document.createElement('div');
-  details.className = 'details';
-  details.appendChild(makeSectionBlocks(order, true));
+  const details = document.createElement('div'); details.className='details';
+  details.appendChild(makeSectionBlocks(order,true));
   card.appendChild(details);
 
-  const foot = document.createElement('div');
-  foot.className = 'expanded-footer';
+  const foot    = document.createElement('div'); foot.className='expanded-footer';
+  const ftotal  = document.createElement('div'); ftotal.className='ftotal';
+  ftotal.textContent='Total: €'+Number(order.total||0).toFixed(2);
+  foot.appendChild(ftotal);
 
-  const total = document.createElement('div');
-  total.className = 'total';
-  total.textContent = 'Total: €' + Number(order.total||0).toFixed(2);
-  foot.appendChild(total);
-
-  const actions = document.createElement('div');
-  actions.className = 'actions';
-
-  const printBtn = document.createElement('button');
-  printBtn.className = 'btn sm';
-  printBtn.style.cssText = 'background:#fff;color:#222;border:1px solid #ccc;';
-  printBtn.innerHTML = '<i class="fas fa-print"></i>';
-  printBtn.addEventListener('click', e=>{ e.stopPropagation(); printReceipt(order, false); });
-  actions.appendChild(printBtn);
+  const factions = document.createElement('div'); factions.className='factions';
+  const pBtn = document.createElement('button'); pBtn.className='btn sm';
+  pBtn.style.cssText='background:#fff;color:#222;border:1px solid #ccc;';
+  pBtn.innerHTML='<i class="fas fa-print"></i>';
+  pBtn.addEventListener('click',e=>{e.stopPropagation();printReceipt(order,false);});
+  factions.appendChild(pBtn);
 
   if(!isCompleted(order.status)){
-    const markAllBtn = document.createElement('button');
-    markAllBtn.className = 'btn sm ghost';
-    markAllBtn.textContent = 'Mark all';
-    markAllBtn.addEventListener('click', e=>{ e.stopPropagation(); if(confirm('Mark all items done?')) dbMarkAll(order.id); });
-    actions.appendChild(markAllBtn);
-
-    const doneBtn = document.createElement('button');
-    doneBtn.className = 'btn success sm';
-    doneBtn.textContent = 'Done';
-    doneBtn.addEventListener('click', e=>{ e.stopPropagation(); if(confirm('Mark order #'+order.id+' as DONE?')) dbMarkDone(order.id); });
-    actions.appendChild(doneBtn);
-  } else {
-    const dl = document.createElement('span');
-    dl.className = 'small-muted';
-    dl.textContent = 'Completed';
-    actions.appendChild(dl);
+    const maBtn = document.createElement('button'); maBtn.className='btn sm ghost'; maBtn.textContent='Mark all';
+    maBtn.addEventListener('click',e=>{e.stopPropagation();if(confirm('Mark all items done?'))dbMarkAll(order.id);});
+    factions.appendChild(maBtn);
+    const dBtn = document.createElement('button'); dBtn.className='btn success sm'; dBtn.textContent='Done';
+    dBtn.addEventListener('click',e=>{e.stopPropagation();if(confirm('Mark order #'+order.id+' as DONE?'))dbMarkDone(order.id);});
+    factions.appendChild(dBtn);
+  }else{
+    const dl=document.createElement('span'); dl.className='small-muted'; dl.textContent='Completed';
+    factions.appendChild(dl);
   }
+  const oBtn=document.createElement('button'); oBtn.className='btn sm ghost'; oBtn.textContent='Open';
+  oBtn.addEventListener('click',e=>{e.stopPropagation();location.href='order.html?order='+encodeURIComponent(order.id);});
+  factions.appendChild(oBtn);
+  foot.appendChild(factions); card.appendChild(foot);
 
-  const openBtn = document.createElement('button');
-  openBtn.className = 'btn sm ghost';
-  openBtn.textContent = 'Open';
-  openBtn.addEventListener('click', e=>{
-    e.stopPropagation();
-    location.href = 'order.html?order=' + encodeURIComponent(order.id);
-  });
-  actions.appendChild(openBtn);
-
-  foot.appendChild(actions);
-  card.appendChild(foot);
-
-  startTimer(String(order.id), order, timerEl);
+  startTimer(String(order.id),order,timerEl);
   return card;
 }
 
+/* ══ ACTIVE / RENDER ══════════════════════════════════════════════ */
 function setActive(id){
-  const idStr = id == null ? null : String(id);
-  activeId = (activeId === idStr) ? null : idStr;
+  const s=id==null?null:String(id);
+  activeId=(activeId===s)?null:s;
   renderGrid();
 }
 
 function renderGrid(){
-  const today = todayStr();
-  const all = Object.values(ordersCache);
-  const todays = all.filter(o => (o.date||'') === today);
+  /* wait until BOTH menu and orders have loaded at least once */
+  if(!menuReady || !ordersReady) return;
 
-  const pending = todays.filter(o => !isCompleted(o.status));
-  const done = todays.filter(o => isCompleted(o.status));
+  const today   = todayStr();
+  const all     = Object.values(ordersCache);
+  const todays  = all.filter(o=>(o.date||'')===today);
+  const pending = todays.filter(o=>!isCompleted(o.status));
+  const done    = todays.filter(o=>isCompleted(o.status));
 
   pendingCnt.textContent = pending.length;
-  doneCnt.textContent = done.length;
-  todayLbl.textContent = today;
+  doneCnt.textContent    = done.length;
+  todayLbl.textContent   = today;
+  ordersGrid.innerHTML   = '';
+  emptyMsg.style.display = pending.length?'none':'block';
 
-  ordersGrid.innerHTML = '';
-  emptyMsg.style.display = pending.length ? 'none' : 'block';
+  pending.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
 
-  pending.sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
-
-  const liveIds = new Set();
+  const liveIds=new Set();
   for(const o of pending){
     liveIds.add(String(o.id));
-    const card = (activeId && activeId === String(o.id)) ? buildExpandedCard(o) : buildCompactCard(o);
-    ordersGrid.appendChild(card);
+    ordersGrid.appendChild(
+      (activeId&&activeId===String(o.id))?buildExpandedCard(o):buildCompactCard(o)
+    );
   }
-
-  Object.keys(timers).forEach(id=>{
-    if(!liveIds.has(id)) stopTimer(id);
-  });
+  Object.keys(timers).forEach(id=>{if(!liveIds.has(id))stopTimer(id);});
 }
 
-/* print section-wise (combo only marked on item line) */
+/* ══ PRINT ════════════════════════════════════════════════════════ */
 function printReceipt(order, aggregate){
-  const raw = Array.isArray(order.items) ? order.items : [];
+  const raw    = Array.isArray(order.items)?order.items:[];
   const groups = {1:[],2:[],3:[],4:[]};
-  const maps = {1:{},2:{},3:{},4:{}};
+  const maps   = {1:{},2:{},3:{},4:{}};
+  const src    = aggregate ? raw : raw.filter(it=>!it.done);
 
-  const itemsToUse = aggregate ? raw : raw.filter(it => !it.done);
-
-  for(const it of itemsToUse){
-    const r = resolveItem(it);
-    const s = [1,2,3,4].includes(r.displaySec) ? r.displaySec : 2;
-    const nm = (it.name||'').trim();
-    if(!nm) continue;
-
-    const tag = r.isCombo ? `COMBO • ${comboPartLabel(r.comboPart)}` : '';
-
+  for(const it of src){
+    const r  = resolveItem(it);
+    const s  = [1,2,3,4].includes(r.displaySec)?r.displaySec:2;
+    const nm = (it.name||'').trim(); if(!nm) continue;
     if(aggregate){
-      const key = (r.isCombo ? 'C|' : 'N|') + nm.toLowerCase() + '||' + Number(it.price||0).toFixed(2) + '||' + tag;
-      if(!maps[s][key]) maps[s][key] = { name:nm, qty:0, price:Number(it.price||0), notes:[], tag };
-      maps[s][key].qty += Number(it.qty||1);
-      if(it.note && String(it.note).trim()) maps[s][key].notes.push(it.note.trim());
-    } else {
-      groups[s].push({ name:nm, qty:it.qty||1, price:Number(it.price||0), note:it.note||'', tag });
+      const key=(r.isCombo?'C:':'N:')+nm.toLowerCase()+'|'+Number(it.price||0).toFixed(2);
+      if(!maps[s][key])
+        maps[s][key]={name:nm,qty:0,price:Number(it.price||0),notes:[],isCombo:r.isCombo};
+      maps[s][key].qty+=Number(it.qty||1);
+      if(it.note&&String(it.note).trim()) maps[s][key].notes.push(it.note.trim());
+    }else{
+      groups[s].push({name:nm,qty:it.qty||1,price:Number(it.price||0),note:it.note||'',isCombo:r.isCombo});
     }
   }
-
   if(aggregate){
-    for(const s of [1,2,3,4]){
-      groups[s] = Object.values(maps[s]).map(x=>{
-        const uniqueNotes = Array.from(new Set(x.notes));
-        return { name:x.name, qty:x.qty, price:x.price, note: uniqueNotes.join(' / '), tag:x.tag };
-      });
-    }
+    for(const s of[1,2,3,4])
+      groups[s]=Object.values(maps[s]).map(x=>({
+        name:x.name,qty:x.qty,price:x.price,
+        note:Array.from(new Set(x.notes)).join(' / '),
+        isCombo:x.isCombo
+      }));
   }
 
-  function tableRows(list){
-    if(!list || !list.length) return `<tr><td colspan="3" class="p-empty">— none —</td></tr>`;
+  const tRows = list => {
+    if(!list||!list.length)
+      return`<tr><td colspan="3" class="pempty">— none —</td></tr>`;
     return list.map(it=>{
-      const tot = (Number(it.price||0)*Number(it.qty||1)).toFixed(2);
-      const nameLine = it.tag
-        ? `<span class="p-combo-tag">COMBO</span>${String(it.name||'').toUpperCase()}<div style="font-size:11px;font-weight:900;margin-top:2px;">${String(it.tag).toUpperCase()}</div>`
-        : `${String(it.name||'').toUpperCase()}`;
-      return `<tr>
-        <td class="p-qty">${it.qty||1}</td>
+      const tot=(Number(it.price||0)*Number(it.qty||1)).toFixed(2);
+      const comboLine=it.isCombo?`<div class="pcombo">&#9733; COMBO</div>`:'';
+      return`<tr>
+        <td class="pqty">${it.qty||1}</td>
         <td>
-          <div class="p-iname">${nameLine}</div>
-          <span class="p-iprice">€${Number(it.price||0).toFixed(2)}</span>
-          ${it.note ? `<div class="p-inote">${String(it.note).toUpperCase()}</div>` : ``}
+          <div class="piname">${String(it.name||'').toUpperCase()}</div>
+          ${comboLine}
+          <span class="piprice">€${Number(it.price||0).toFixed(2)}</span>
+          ${it.note?`<div class="pinote">${String(it.note).toUpperCase()}</div>`:''}
         </td>
         <td style="text-align:right;font-weight:900;">€${tot}</td>
       </tr>`;
     }).join('');
-  }
+  };
 
-  let html = '';
-  html += `<div class="p-center"><img src="https://raw.githubusercontent.com/Davidbantu/david/refs/heads/main/logo_header.png" alt="logo" style="max-width:150px;display:inline-block;margin-bottom:6px;"></div>`;
-  html += `<div class="p-tbl"><span class="p-tbl-num">${String(order.table||'').toUpperCase()}</span></div>`;
-  html += `<div class="p-info"><span class="p-bold">Order #:</span> ${order.id||''}</div>`;
-  html += `<div class="p-info"><span class="p-bold">Date:</span> ${order.date||''} ${order.time||''}</div>`;
-  if(order.note && String(order.note).trim()) html += `<div class="p-note">${String(order.note).toUpperCase()}</div>`;
+  let html='';
+  html+=`<div class="pc"><img src="https://raw.githubusercontent.com/Davidbantu/david/refs/heads/main/logo_header.png" alt="logo" style="max-width:150px;display:inline-block;margin-bottom:6px;"></div>`;
+  html+=`<div class="ptbl"><span class="ptbl-num">${String(order.table||'').toUpperCase()}</span></div>`;
+  html+=`<div class="pinfo"><span class="pbold">Order #:</span> ${order.id||''}</div>`;
+  html+=`<div class="pinfo"><span class="pbold">Date:</span> ${order.date||''} ${order.time||''}</div>`;
+  if(order.note&&String(order.note).trim())
+    html+=`<div class="porder-note">${String(order.note).toUpperCase()}</div>`;
 
-  let first = true;
-  for(const s of [1,2,3,4]){
+  let first=true;
+  for(const s of[1,2,3,4]){
     if(!groups[s].length) continue;
-    html += `<div class="p-sec-head${first?' first':''}">${s} — ${SEC[s]}</div>`;
-    first = false;
-    html += `<table><thead><tr>
+    html+=`<div class="psec-head${first?' pfirst':''}">${SEC[s]}</div>`;
+    first=false;
+    html+=`<table><thead><tr>
       <th style="width:15%;text-align:center;">QTY</th>
       <th style="width:65%;">ITEM</th>
       <th style="width:20%;text-align:right;">TOTAL</th>
-    </tr></thead><tbody>${tableRows(groups[s])}</tbody></table>`;
+    </tr></thead><tbody>${tRows(groups[s])}</tbody></table>`;
   }
 
-  html += `<div class="p-total">Total: €${Number(order.total||0).toFixed(2)}</div>`;
+  html+=`<div class="ptotal">Total: €${Number(order.total||0).toFixed(2)}</div>`;
+  const sm=parseScheduled(order);
+  if(sm){const f=fmtAMPM(sm);if(f)html+=`<div class="psched">${f}</div>`;}
+  html+=`<div class="pfooter">— END OF ORDER —</div>`;
 
-  const sm = parseScheduled(order);
-  if(sm){
-    const f = fmtAMPM(sm);
-    if(f) html += `<div class="p-sched">${f}</div>`;
-  }
-  html += `<div class="p-footer">— END OF ORDER —</div>`;
-
-  printArea.innerHTML = html;
-  printArea.style.display = 'block';
+  printArea.innerHTML=html;
+  printArea.style.visibility='visible';
   setTimeout(()=>{
     window.print();
-    setTimeout(()=>{ printArea.style.display='none'; printArea.innerHTML=''; }, 400);
-  }, 30);
+    setTimeout(()=>{printArea.style.visibility='hidden';printArea.innerHTML='';},500);
+  },60);
 }
 
-/* listeners */
-db.ref('menu').on('value', snap => {
-  buildMenuMap(snap.val());
+/* ══ FIREBASE LISTENERS ═══════════════════════════════════════════
+   Both start simultaneously.
+   renderGrid() is gated by menuReady && ordersReady.
+   This means the grid only draws after BOTH have responded,
+   so comboMap is ALWAYS populated before items are resolved.
+══════════════════════════════════════════════════════════════════ */
+db.ref('menu').on('value', snap=>{
+  buildMenuMaps(snap.val());   // sets menuReady=true, fills comboMap
   renderGrid();
-}, e => console.error('menu read error', e));
+}, e=>console.error('menu error',e));
 
-db.ref('orders').on('value', snap => {
-  const val = snap.val() || {};
+db.ref('orders').on('value', snap=>{
+  const val  = snap.val()||{};
   const keys = Object.keys(val);
 
   if(!firstOrders){
     knownIds = new Set(keys);
     ordersCache = {};
-    keys.forEach(k => {
-      ordersCache[k] = val[k];
-      ordersCache[k].id = k;
-      const o = ordersCache[k];
+    keys.forEach(k=>{
+      ordersCache[k]=val[k]; ordersCache[k].id=k;
+      const o=ordersCache[k];
       if(!o.createdAt){
-        try { o.createdAt = (o.date && o.time) ? new Date(o.date + 'T' + o.time).getTime() : nowMs(); }
-        catch(e){ o.createdAt = nowMs(); }
+        try{o.createdAt=(o.date&&o.time)?new Date(o.date+'T'+o.time).getTime():nowMs();}
+        catch(e){o.createdAt=nowMs();}
       }
     });
-    renderGrid();
+    ordersReady = true;   // sets ordersReady=true
     firstOrders = true;
+    renderGrid();         // draws only if menuReady is also true
     return;
   }
 
-  const newIds = keys.filter(k => !knownIds.has(k));
-  knownIds = new Set(keys);
-
-  ordersCache = {};
-  keys.forEach(k => {
-    ordersCache[k] = val[k];
-    ordersCache[k].id = k;
-    const o = ordersCache[k];
+  const newIds=keys.filter(k=>!knownIds.has(k));
+  knownIds=new Set(keys);
+  ordersCache={};
+  keys.forEach(k=>{
+    ordersCache[k]=val[k]; ordersCache[k].id=k;
+    const o=ordersCache[k];
     if(!o.createdAt){
-      try { o.createdAt = (o.date && o.time) ? new Date(o.date + 'T' + o.time).getTime() : nowMs(); }
-        catch(e){ o.createdAt = nowMs(); }
+      try{o.createdAt=(o.date&&o.time)?new Date(o.date+'T'+o.time).getTime():nowMs();}
+      catch(e){o.createdAt=nowMs();}
     }
   });
 
   if(newIds.length) playAlert();
-
-  if(activeId && !keys.includes(activeId)){
-    stopTimer(activeId);
-    activeId = null;
-  }
-
-  Object.keys(timers).forEach(id => {
-    if(!keys.includes(id)) stopTimer(id);
-  });
-
+  if(activeId&&!keys.includes(activeId)){stopTimer(activeId);activeId=null;}
+  Object.keys(timers).forEach(id=>{if(!keys.includes(id))stopTimer(id);});
   renderGrid();
-}, e => console.error('orders read error', e));
+}, e=>console.error('orders error',e));
 
-refreshBtn.addEventListener('click', () => {
-  db.ref('orders').once('value').then(snap => {
-    const val = snap.val() || {};
-    ordersCache = {};
-    Object.keys(val).forEach(k => { ordersCache[k] = val[k]; ordersCache[k].id = k; });
+refreshBtn.addEventListener('click',()=>{
+  db.ref('orders').once('value').then(snap=>{
+    const val=snap.val()||{};
+    ordersCache={};
+    Object.keys(val).forEach(k=>{ordersCache[k]=val[k];ordersCache[k].id=k;});
     renderGrid();
-  }).catch(e => console.error(e));
+  }).catch(e=>console.error(e));
 });
 
-window.addEventListener('beforeunload', () => {
-  Object.keys(timers).forEach(id => clearInterval(timers[id]));
+window.addEventListener('beforeunload',()=>{
+  Object.keys(timers).forEach(id=>clearInterval(timers[id]));
 });
 </script>
 </body>
