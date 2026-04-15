@@ -75,7 +75,7 @@
     .expanded-footer .ftotal{font-weight:900;color:var(--primary);font-size:.95rem;}
     .expanded-footer .factions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
 
-    /* ══ COMBO TAG — hardcoded visible green pill ══ */
+    /* ══ COMBO TAG ══ */
     .combo-tag{
       display:inline-flex !important;
       visibility:visible !important;
@@ -94,29 +94,54 @@
       margin-top:3px;
     }
 
-    @media print{
-      body *{visibility:hidden !important;}
-      #printArea,#printArea *{visibility:visible !important;background:#fff !important;color:#000 !important;box-shadow:none !important;}
-      #printArea{position:fixed;left:0;top:0;width:72mm;max-width:80mm;min-width:56mm;font-family:'Montserrat',Arial,sans-serif;font-size:13px;line-height:1.4;padding:10px 8px 14px;}
-      #printArea .pc{text-align:center;}
-      #printArea .ptbl{display:flex;align-items:center;justify-content:center;gap:8px;border:2px solid #000;padding:5px 8px;margin:6px 0;}
-      #printArea .ptbl-num{background:#000;color:#fff;font-size:20px;font-weight:900;padding:4px 10px;border-radius:5px;}
-      #printArea .pinfo{font-size:12px;margin-bottom:2px;}
-      #printArea .pbold{font-weight:900;}
-      #printArea .porder-note{font-size:14px;font-weight:800;text-transform:uppercase;margin:8px 0 2px;}
-      #printArea .psec-head{font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px;border-top:2px solid #000;padding-top:6px;}
-      #printArea .psec-head.pfirst{border-top:none;margin-top:4px;}
-      #printArea table{width:100%;border-collapse:collapse;margin-bottom:4px;}
-      #printArea table th,#printArea table td{border:1.5px solid #333;padding:7px 4px;text-align:left;vertical-align:middle;}
-      #printArea .pqty{font-size:26px;font-weight:900;text-align:center;vertical-align:middle;}
-      #printArea .piname{font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.5px;}
-      #printArea .pcombo{display:inline-block;margin-top:3px;font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;border:1.5px solid #000;padding:1px 5px;border-radius:4px;}
-      #printArea .piprice{font-size:11px;font-weight:600;margin-top:2px;display:block;}
-      #printArea .pinote{font-size:11px;font-style:italic;margin-top:2px;}
-      #printArea .ptotal{font-weight:900;font-size:20px;text-align:right;border-top:1.5px solid #000;padding-top:5px;margin-top:5px;}
-      #printArea .pfooter{text-align:center;font-size:11px;border-top:1px dashed #000;padding-top:4px;margin-top:16px;}
-      #printArea .psched{text-align:center;font-size:26px;font-weight:900;margin-top:8px;}
-      #printArea .pempty{font-size:11px;color:#666;font-style:italic;}
+    /* ══ PRINT OVERLAY — shown only during printing ══
+       Hidden on screen via a wrapper class toggled by JS.
+       The @media print block makes it fully visible & positioned. */
+    #printOverlay {
+      display: none;
+    }
+
+    @media print {
+      /* Hide everything on the page */
+      body > *:not(#printOverlay) {
+        display: none !important;
+      }
+      #printOverlay {
+        display: block !important;
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 72mm !important;
+        max-width: 80mm !important;
+        min-width: 56mm !important;
+        font-family: 'Montserrat', Arial, sans-serif !important;
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+        padding: 10px 8px 14px !important;
+        background: #fff !important;
+        color: #000 !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+      }
+      #printOverlay .pc{text-align:center;}
+      #printOverlay .ptbl{display:flex;align-items:center;justify-content:center;gap:8px;border:2px solid #000;padding:5px 8px;margin:6px 0;}
+      #printOverlay .ptbl-num{background:#000;color:#fff;font-size:20px;font-weight:900;padding:4px 10px;border-radius:5px;}
+      #printOverlay .pinfo{font-size:12px;margin-bottom:2px;}
+      #printOverlay .pbold{font-weight:900;}
+      #printOverlay .porder-note{font-size:14px;font-weight:800;text-transform:uppercase;margin:8px 0 2px;}
+      #printOverlay .psec-head{font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px;border-top:2px solid #000;padding-top:6px;}
+      #printOverlay .psec-head.pfirst{border-top:none;margin-top:4px;}
+      #printOverlay table{width:100%;border-collapse:collapse;margin-bottom:4px;}
+      #printOverlay table th,#printOverlay table td{border:1.5px solid #333;padding:7px 4px;text-align:left;vertical-align:middle;}
+      #printOverlay .pqty{font-size:26px;font-weight:900;text-align:center;vertical-align:middle;}
+      #printOverlay .piname{font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.5px;}
+      #printOverlay .pcombo{display:inline-block;margin-top:3px;font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;border:1.5px solid #000;padding:1px 5px;border-radius:4px;}
+      #printOverlay .piprice{font-size:11px;font-weight:600;margin-top:2px;display:block;}
+      #printOverlay .pinote{font-size:11px;font-style:italic;margin-top:2px;}
+      #printOverlay .ptotal{font-weight:900;font-size:20px;text-align:right;border-top:1.5px solid #000;padding-top:5px;margin-top:5px;}
+      #printOverlay .pfooter{text-align:center;font-size:11px;border-top:1px dashed #000;padding-top:4px;margin-top:16px;}
+      #printOverlay .psched{text-align:center;font-size:26px;font-weight:900;margin-top:8px;}
+      #printOverlay .pempty{font-size:11px;color:#666;font-style:italic;}
     }
   </style>
 </head>
@@ -139,7 +164,8 @@
   </div>
 </div>
 
-<div id="printArea" style="position:fixed;left:-9999px;top:0;display:block;visibility:hidden;"></div>
+<!-- PRINT OVERLAY: lives in normal DOM flow, shown only via @media print -->
+<div id="printOverlay"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -159,15 +185,6 @@ const db = firebase.database();
 /* ══ SECTION LABELS ══════════════════════════════════════════════ */
 const SEC = {1:"Starters",2:"Main Course",3:"Desserts",4:"Drinks"};
 
-/* ══════════════════════════════════════════════════════════════════
-   MENU MAPS
-   normalMap : itemNameLower → displaySec (1-4)   from sectionOrder 1-4
-   comboMap  : itemNameLower → displaySec (1-4)   from sectionOrder 5 ONLY
-               (skips names already in normalMap — normal always wins)
-
-   menuReady / ordersReady: renderGrid() waits for BOTH so that
-   comboMap is always populated before any item is resolved.
-══════════════════════════════════════════════════════════════════ */
 let normalMap   = {};
 let comboMap    = {};
 let menuReady   = false;
@@ -176,10 +193,7 @@ let ordersReady = false;
 function buildMenuMaps(rawVal){
   normalMap = {};
   comboMap  = {};
-
   if(!rawVal){ menuReady=true; return; }
-
-  /* ── normalise Firebase value → plain JS array of category objects ── */
   let cats = [];
   if(Array.isArray(rawVal)){
     cats = rawVal;
@@ -193,8 +207,6 @@ function buildMenuMaps(rawVal){
       cats = Object.values(rawVal);
     }
   }
-
-  /* ── Pass 1: sectionOrder 1-4 → normalMap ── */
   for(const cat of cats){
     if(!cat) continue;
     const sec = Number(cat.sectionOrder) || 1;
@@ -207,9 +219,6 @@ function buildMenuMaps(rawVal){
       if(nm && normalMap[nm] == null) normalMap[nm] = s;
     }
   }
-
-  /* ── Pass 2: sectionOrder 5 → comboMap
-                skip names already in normalMap ── */
   for(const cat of cats){
     if(!cat) continue;
     const sec = Number(cat.sectionOrder) || 1;
@@ -219,32 +228,21 @@ function buildMenuMaps(rawVal){
       if(!it || !it.name) continue;
       const nm = String(it.name).trim().toLowerCase();
       if(!nm) continue;
-      if(normalMap[nm] != null) continue;  // normal wins
-      /* displaySec comes from comboPart saved in menu-editor */
+      if(normalMap[nm] != null) continue;
       const cp = [1,2,3].includes(Number(it.comboPart)) ? Number(it.comboPart) : 2;
-      if(comboMap[nm] == null) comboMap[nm] = cp; // store displaySec directly
+      if(comboMap[nm] == null) comboMap[nm] = cp;
     }
   }
-
   menuReady = true;
 }
 
-/* ══ RESOLVE ONE ORDER ITEM ══════════════════════════════════════
-   Returns { displaySec:1-4, isCombo:bool }
-══════════════════════════════════════════════════════════════════ */
 function resolveItem(it){
   const nm = String(it.name || '').trim().toLowerCase();
-  /* 1 — normal section */
-  if(normalMap[nm] != null)
-    return { displaySec: normalMap[nm], isCombo: false };
-  /* 2 — combo section 5 */
-  if(comboMap[nm] != null)
-    return { displaySec: comboMap[nm], isCombo: true };
-  /* 3 — unknown: default Main Course, not combo */
+  if(normalMap[nm] != null) return { displaySec: normalMap[nm], isCombo: false };
+  if(comboMap[nm] != null)  return { displaySec: comboMap[nm],  isCombo: true  };
   return { displaySec: 2, isCombo: false };
 }
 
-/* ══ GROUP ITEMS by display section ══════════════════════════════ */
 function groupItems(order){
   const groups = {1:[],2:[],3:[],4:[]};
   const items  = Array.isArray(order.items) ? order.items : [];
@@ -261,13 +259,13 @@ let ordersCache={}, timers={};
 let activeId=null, knownIds=new Set(), firstOrders=false;
 
 /* ══ DOM ══════════════════════════════════════════════════════════ */
-const ordersGrid = document.getElementById('ordersGrid');
-const emptyMsg   = document.getElementById('emptyMsg');
-const pendingCnt = document.getElementById('pendingCnt');
-const doneCnt    = document.getElementById('doneCnt');
-const todayLbl   = document.getElementById('todayLbl');
-const printArea  = document.getElementById('printArea');
-const refreshBtn = document.getElementById('refreshBtn');
+const ordersGrid  = document.getElementById('ordersGrid');
+const emptyMsg    = document.getElementById('emptyMsg');
+const pendingCnt  = document.getElementById('pendingCnt');
+const doneCnt     = document.getElementById('doneCnt');
+const todayLbl    = document.getElementById('todayLbl');
+const printOverlay = document.getElementById('printOverlay');
+const refreshBtn  = document.getElementById('refreshBtn');
 
 /* ══ UTILS ════════════════════════════════════════════════════════ */
 const todayStr = () => new Date().toISOString().slice(0,10);
@@ -378,13 +376,9 @@ function dbMarkDone(orderId){
     }).catch(e=>console.error(e));
 }
 
-/* ══ COMBO TAG ELEMENT ════════════════════════════════════════════
-   Built entirely in JS with full inline styles so nothing can
-   override or hide it. No reliance on external CSS class.
-══════════════════════════════════════════════════════════════════ */
+/* ══ COMBO TAG ELEMENT ════════════════════════════════════════════ */
 function makeComboTag(){
   const tag = document.createElement('span');
-  /* full inline style — guaranteed visible regardless of CSS cascade */
   tag.style.cssText = [
     'display:inline-flex',
     'align-items:center',
@@ -404,14 +398,11 @@ function makeComboTag(){
     'visibility:visible',
     'opacity:1'
   ].join(';');
-
   const star = document.createElement('span');
   star.style.cssText = 'color:#66bb6a;font-size:0.85rem;line-height:1;';
   star.textContent   = '★';
-
   const txt = document.createElement('span');
   txt.textContent = 'COMBO';
-
   tag.appendChild(star);
   tag.appendChild(txt);
   return tag;
@@ -421,27 +412,20 @@ function makeComboTag(){
 function makeItemRow(order, it, idx, isCombo, withCb){
   const row  = document.createElement('div'); row.className  = 'item-row';
   const left = document.createElement('div'); left.className = 'item-row-left';
-
   if(withCb){
     const cb = document.createElement('input');
     cb.type='checkbox'; cb.className='item-cb'; cb.checked=!!it.done;
     cb.addEventListener('click',e=>{e.stopPropagation();dbToggleItem(order.id,idx,cb.checked);});
     left.appendChild(cb);
   }
-
   const info = document.createElement('div'); info.className='item-info';
-
-  /* name */
   const nameEl = document.createElement('div');
   nameEl.className = 'item-name' + (it.done?' done':'');
   nameEl.textContent = it.name || '';
   if(withCb)
     nameEl.addEventListener('click',e=>{e.stopPropagation();dbToggleItem(order.id,idx,!it.done);});
   info.appendChild(nameEl);
-
-  /* ── COMBO TAG or price line ── */
   if(isCombo){
-    /* attach the tag directly under the item name */
     info.appendChild(makeComboTag());
   } else {
     const priceLine = document.createElement('div');
@@ -449,22 +433,17 @@ function makeItemRow(order, it, idx, isCombo, withCb){
     priceLine.textContent = '€' + Number(it.price||0).toFixed(2) + ' each';
     info.appendChild(priceLine);
   }
-
-  /* note */
   if(it.note && String(it.note).trim()){
     const n = document.createElement('div'); n.className='item-note-txt';
     n.textContent = it.note; info.appendChild(n);
   }
   left.appendChild(info);
-
-  /* right: qty + line total */
   const right = document.createElement('div'); right.className='item-row-right';
   const qb = document.createElement('div'); qb.className='qty-box';
   qb.textContent = 'x'+(it.qty||1); right.appendChild(qb);
   const pr = document.createElement('div'); pr.className='item-price-txt';
   pr.textContent = '€'+((Number(it.price||0)*Number(it.qty||1)).toFixed(2));
   right.appendChild(pr);
-
   row.appendChild(left); row.appendChild(right);
   return row;
 }
@@ -502,12 +481,10 @@ function makeSectionBlocks(order, withCb){
 function buildCompactCard(order){
   const card = document.createElement('div');
   card.className='order-card'; card.dataset.id=order.id;
-
   const tbl = document.createElement('div'); tbl.className='tbl-badge';
   tbl.innerHTML=`<span class="tbl-name">${String(order.table||order.id||'').toUpperCase()}</span>`;
   tbl.addEventListener('click',e=>{e.stopPropagation();setActive(order.id);});
   card.appendChild(tbl);
-
   const meta = document.createElement('div'); meta.className='order-meta-row';
   const oid  = document.createElement('span'); oid.className='order-id-txt';
   oid.textContent = 'Order #'+(order.id||'');
@@ -515,13 +492,11 @@ function buildCompactCard(order){
   const sl   = (order.status||'').toLowerCase();
   pay.textContent = sl==='paid'?'Paid':sl==='completed'?'Completed':'Pending Payment';
   meta.appendChild(oid); meta.appendChild(pay); card.appendChild(meta);
-
   const ttRow   = document.createElement('div'); ttRow.className='timer-total-row';
   const timerEl = document.createElement('div'); timerEl.className='timer-txt'; timerEl.textContent='00:00:00';
   const totEl   = document.createElement('div'); totEl.className='total-txt';
   totEl.textContent = '€'+Number(order.total||0).toFixed(2);
   ttRow.appendChild(timerEl); ttRow.appendChild(totEl); card.appendChild(ttRow);
-
   const pr    = progress(order);
   const pRow  = document.createElement('div'); pRow.className='prog-row';
   const pBar  = document.createElement('div'); pBar.className='prog-bar';
@@ -530,14 +505,12 @@ function buildCompactCard(order){
   const pLbl  = document.createElement('div'); pLbl.className='prog-lbl';
   pLbl.textContent = `${pr.done}/${pr.total}`;
   pRow.appendChild(pBar); pRow.appendChild(pLbl); card.appendChild(pRow);
-
   const acts = document.createElement('div'); acts.className='card-actions';
   const pBtn = document.createElement('button');
   pBtn.className='btn sm icon-btn'; pBtn.title='Print receipt';
   pBtn.innerHTML='<i class="fas fa-print"></i>';
   pBtn.addEventListener('click',e=>{e.stopPropagation();printReceipt(order,true);});
   acts.appendChild(pBtn);
-
   const right = document.createElement('div'); right.className='right';
   if(!isCompleted(order.status)){
     const doneBtn = document.createElement('button'); doneBtn.className='btn success sm'; doneBtn.textContent='Done';
@@ -551,7 +524,6 @@ function buildCompactCard(order){
   expBtn.innerHTML='<i class="fas fa-chevron-down"></i>';
   expBtn.addEventListener('click',e=>{e.stopPropagation();setActive(order.id);});
   right.appendChild(expBtn); acts.appendChild(right); card.appendChild(acts);
-
   startTimer(String(order.id),order,timerEl);
   return card;
 }
@@ -560,17 +532,14 @@ function buildCompactCard(order){
 function buildExpandedCard(order){
   const card = document.createElement('div');
   card.className='order-card'; card.dataset.id=order.id;
-
   const colBtn = document.createElement('button'); colBtn.className='collapse-btn';
   colBtn.innerHTML='<i class="fas fa-chevron-up"></i>';
   colBtn.addEventListener('click',e=>{e.stopPropagation();setActive(null);});
   card.appendChild(colBtn);
-
   const tbl = document.createElement('div'); tbl.className='tbl-badge'; tbl.style.paddingRight='44px';
   tbl.innerHTML=`<span class="tbl-name">${String(order.table||order.id||'').toUpperCase()}</span>`;
   tbl.addEventListener('click',e=>{e.stopPropagation();setActive(null);});
   card.appendChild(tbl);
-
   const meta = document.createElement('div'); meta.className='order-meta-row';
   const oid  = document.createElement('span'); oid.className='order-id-txt';
   oid.textContent = 'Order #'+(order.id||'')+' • '+(order.date||'')+' '+(order.time||'');
@@ -578,7 +547,6 @@ function buildExpandedCard(order){
   const sl   = (order.status||'').toLowerCase();
   pay.textContent = sl==='paid'?'Paid':sl==='completed'?'Completed':'Pending Payment';
   meta.appendChild(oid); meta.appendChild(pay); card.appendChild(meta);
-
   const ttRow  = document.createElement('div'); ttRow.className='timer-total-row';
   const leftTT = document.createElement('div');
   leftTT.style.cssText='display:flex;align-items:center;gap:7px;flex-wrap:wrap;';
@@ -600,7 +568,6 @@ function buildExpandedCard(order){
   const totEl = document.createElement('div'); totEl.className='total-txt';
   totEl.textContent='€'+Number(order.total||0).toFixed(2);
   ttRow.appendChild(leftTT); ttRow.appendChild(totEl); card.appendChild(ttRow);
-
   const pr    = progress(order);
   const pRow  = document.createElement('div'); pRow.className='prog-row';
   const pBar  = document.createElement('div'); pBar.className='prog-bar';
@@ -609,28 +576,23 @@ function buildExpandedCard(order){
   const pLbl  = document.createElement('div'); pLbl.className='prog-lbl';
   pLbl.textContent=`${pr.done}/${pr.total}`;
   pRow.appendChild(pBar); pRow.appendChild(pLbl); card.appendChild(pRow);
-
   if(order.note&&String(order.note).trim()){
     const on=document.createElement('div'); on.className='item-note-txt';
     on.textContent='Note: '+order.note; card.appendChild(on);
   }
-
   const details = document.createElement('div'); details.className='details';
   details.appendChild(makeSectionBlocks(order,true));
   card.appendChild(details);
-
   const foot    = document.createElement('div'); foot.className='expanded-footer';
   const ftotal  = document.createElement('div'); ftotal.className='ftotal';
   ftotal.textContent='Total: €'+Number(order.total||0).toFixed(2);
   foot.appendChild(ftotal);
-
   const factions = document.createElement('div'); factions.className='factions';
   const pBtn = document.createElement('button'); pBtn.className='btn sm';
   pBtn.style.cssText='background:#fff;color:#222;border:1px solid #ccc;';
   pBtn.innerHTML='<i class="fas fa-print"></i>';
   pBtn.addEventListener('click',e=>{e.stopPropagation();printReceipt(order,false);});
   factions.appendChild(pBtn);
-
   if(!isCompleted(order.status)){
     const maBtn = document.createElement('button'); maBtn.className='btn sm ghost'; maBtn.textContent='Mark all';
     maBtn.addEventListener('click',e=>{e.stopPropagation();if(confirm('Mark all items done?'))dbMarkAll(order.id);});
@@ -646,7 +608,6 @@ function buildExpandedCard(order){
   oBtn.addEventListener('click',e=>{e.stopPropagation();location.href='order.html?order='+encodeURIComponent(order.id);});
   factions.appendChild(oBtn);
   foot.appendChild(factions); card.appendChild(foot);
-
   startTimer(String(order.id),order,timerEl);
   return card;
 }
@@ -659,23 +620,18 @@ function setActive(id){
 }
 
 function renderGrid(){
-  /* wait until BOTH menu and orders have loaded at least once */
   if(!menuReady || !ordersReady) return;
-
   const today   = todayStr();
   const all     = Object.values(ordersCache);
   const todays  = all.filter(o=>(o.date||'')===today);
   const pending = todays.filter(o=>!isCompleted(o.status));
   const done    = todays.filter(o=>isCompleted(o.status));
-
   pendingCnt.textContent = pending.length;
   doneCnt.textContent    = done.length;
   todayLbl.textContent   = today;
   ordersGrid.innerHTML   = '';
   emptyMsg.style.display = pending.length?'none':'block';
-
   pending.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
-
   const liveIds=new Set();
   for(const o of pending){
     liveIds.add(String(o.id));
@@ -686,16 +642,21 @@ function renderGrid(){
   Object.keys(timers).forEach(id=>{if(!liveIds.has(id))stopTimer(id);});
 }
 
-/* ══ PRINT ════════════════════════════════════════════════════════ */
+/* ══ PRINT ════════════════════════════════════════════════════════
+   FIX: Use #printOverlay (in normal DOM flow, display:none on screen,
+   shown via @media print). No off-screen positioning. No visibility
+   toggling. Use requestAnimationFrame + setTimeout for reliable repaint
+   before window.print() fires.
+══════════════���═══════════════════════════════════════════════════ */
 function printReceipt(order, aggregate){
-  const raw    = Array.isArray(order.items)?order.items:[];
+  const raw    = Array.isArray(order.items) ? order.items : [];
   const groups = {1:[],2:[],3:[],4:[]};
   const maps   = {1:{},2:{},3:{},4:{}};
   const src    = aggregate ? raw : raw.filter(it=>!it.done);
 
   for(const it of src){
     const r  = resolveItem(it);
-    const s  = [1,2,3,4].includes(r.displaySec)?r.displaySec:2;
+    const s  = [1,2,3,4].includes(r.displaySec) ? r.displaySec : 2;
     const nm = (it.name||'').trim(); if(!nm) continue;
     if(aggregate){
       const key=(r.isCombo?'C:':'N:')+nm.toLowerCase()+'|'+Number(it.price||0).toFixed(2);
@@ -708,7 +669,7 @@ function printReceipt(order, aggregate){
     }
   }
   if(aggregate){
-    for(const s of[1,2,3,4])
+    for(const s of [1,2,3,4])
       groups[s]=Object.values(maps[s]).map(x=>({
         name:x.name,qty:x.qty,price:x.price,
         note:Array.from(new Set(x.notes)).join(' / '),
@@ -744,7 +705,7 @@ function printReceipt(order, aggregate){
     html+=`<div class="porder-note">${String(order.note).toUpperCase()}</div>`;
 
   let first=true;
-  for(const s of[1,2,3,4]){
+  for(const s of [1,2,3,4]){
     if(!groups[s].length) continue;
     html+=`<div class="psec-head${first?' pfirst':''}">${SEC[s]}</div>`;
     first=false;
@@ -760,22 +721,24 @@ function printReceipt(order, aggregate){
   if(sm){const f=fmtAMPM(sm);if(f)html+=`<div class="psched">${f}</div>`;}
   html+=`<div class="pfooter">— END OF ORDER —</div>`;
 
-  printArea.innerHTML=html;
-  printArea.style.visibility='visible';
-  setTimeout(()=>{
-    window.print();
-    setTimeout(()=>{printArea.style.visibility='hidden';printArea.innerHTML='';},500);
-  },60);
+  /* ── Inject HTML, wait for repaint, then print ── */
+  printOverlay.innerHTML = html;
+
+  /* Use requestAnimationFrame inside setTimeout for maximum browser compat */
+  setTimeout(function(){
+    requestAnimationFrame(function(){
+      window.print();
+      /* Clean up after dialog closes */
+      setTimeout(function(){
+        printOverlay.innerHTML = '';
+      }, 1000);
+    });
+  }, 150);
 }
 
-/* ══ FIREBASE LISTENERS ═══════════════════════════════════════════
-   Both start simultaneously.
-   renderGrid() is gated by menuReady && ordersReady.
-   This means the grid only draws after BOTH have responded,
-   so comboMap is ALWAYS populated before items are resolved.
-══════════════════════════════════════════════════════════════════ */
+/* ══ FIREBASE LISTENERS ═══════════════════════════════════════════ */
 db.ref('menu').on('value', snap=>{
-  buildMenuMaps(snap.val());   // sets menuReady=true, fills comboMap
+  buildMenuMaps(snap.val());
   renderGrid();
 }, e=>console.error('menu error',e));
 
@@ -794,9 +757,9 @@ db.ref('orders').on('value', snap=>{
         catch(e){o.createdAt=nowMs();}
       }
     });
-    ordersReady = true;   // sets ordersReady=true
+    ordersReady = true;
     firstOrders = true;
-    renderGrid();         // draws only if menuReady is also true
+    renderGrid();
     return;
   }
 
