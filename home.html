@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kitchen Screen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+  <style>
+    :root{
+      --bg:linear-gradient(135deg,#051535 0%,#001a40 50%,#000818 100%);
+      --card:#121620;
+      --accent:#90caf9;
+      --primary:#2196f3;
+      --success:#43a047;
+      --warning:#ffb300;
+      --danger:#e53935;
+      --muted:#78909c;
+      --white:#ffffff;
+      --gold:#f5c842;
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;min-height:100%;font-family:"Poppins",sans-serif;color:#fff;background:var(--bg);background-attachment:fixed;-webkit-font-smoothing:antialiased;}
+    .topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px 0;max-width:1400px;margin:0 auto;}
+    .title{font-weight:900;color:var(--accent);font-size:1.1rem;letter-spacing:.5px;}
+    .controls{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    .small-muted{color:var(--muted);font-size:.82rem;font-weight:700;}
+    .btn{background:var(--primary);color:#fff;border:0;padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:.85rem;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--accent);}
+    .btn.success{background:var(--success);}
+    .btn.sm{padding:5px 8px;font-size:.8rem;}
+    .btn.icon-btn{width:34px;height:34px;padding:0;justify-content:center;}
+    .grid-wrap{max-width:1400px;margin:12px auto;padding:0 14px 20px;}
+    .orders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;}
+    @media(max-width:600px){.orders-grid{grid-template-columns:1fr;}.grid-wrap{padding:0 8px 16px;}.topbar{padding:10px 8px 0;}}
+
+    .order-card{background:#0d1626;border-radius:12px;border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 24px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.3);padding:12px;display:flex;flex-direction:column;gap:8px;position:relative;word-break:break-word;}
+    .tbl-badge{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#0d1626,#1a2744);border:1px solid rgba(33,150,243,.3);border-radius:8px;padding:8px 10px;cursor:pointer;}
+    .tbl-name{font-weight:900;font-size:1.15rem;background:rgba(255,255,255,.12);padding:4px 10px;border-radius:6px;letter-spacing:1px;}
+    .order-meta-row{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
+    .order-id-txt{font-size:.78rem;color:var(--muted);font-weight:700;}
+    .payment-pill{font-size:.74rem;font-weight:700;color:var(--muted);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);padding:2px 8px;border-radius:999px;flex-shrink:0;}
+    .timer-total-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+    .timer-txt{font-weight:800;font-size:.9rem;color:var(--white);white-space:nowrap;}
+    .total-txt{font-weight:900;font-size:.95rem;color:var(--primary);}
+    .prog-row{display:flex;align-items:center;gap:8px;}
+    .prog-bar{flex:1;height:8px;border-radius:8px;background:rgba(255,255,255,.06);overflow:hidden;}
+    .prog-fill{height:100%;background:linear-gradient(90deg,var(--success),#2e7d32);width:0%;transition:width .4s;}
+    .prog-lbl{font-size:.78rem;font-weight:800;color:var(--muted);white-space:nowrap;}
+    .card-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;}
+    .card-actions .right{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+    .expand-btn{background:transparent;border:1px solid rgba(255,255,255,.09);color:var(--accent);width:32px;height:32px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+    .collapse-btn{position:absolute;top:10px;right:10px;background:transparent;border:1px solid rgba(255,255,255,.09);color:var(--accent);width:32px;height:32px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+    .status-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;cursor:pointer;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.1);}
+    .status-dot.ready{background:var(--success);box-shadow:0 0 6px rgba(67,160,71,.5);}
+    .status-dot.delayed{background:var(--danger);box-shadow:0 0 6px rgba(229,57,53,.5);}
+    .schedule-txt{font-size:.75rem;color:var(--muted);}
+    .details{margin-top:4px;display:flex;flex-direction:column;gap:8px;}
+    .sec-block{border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;background:rgba(13,22,38,.5);}
+    .sec-block-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+    .sec-block-title{font-weight:900;font-size:.78rem;color:var(--accent);letter-spacing:.4px;text-transform:uppercase;}
+    .sec-count-badge{font-size:.7rem;font-weight:900;background:rgba(66,165,245,.18);border:1px solid rgba(66,165,245,.35);color:var(--accent);padding:1px 7px;border-radius:999px;white-space:nowrap;}
+    .item-list{display:flex;flex-direction:column;gap:6px;}
+    .item-row{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;}
+    .item-row-left{display:flex;gap:8px;align-items:center;flex:1;min-width:0;}
+    .item-cb{cursor:pointer;flex-shrink:0;transform:scale(1.2);opacity:0;position:absolute;}
+    .item-info{flex:1;min-width:0;}
+    .item-name{font-weight:700;font-size:.9rem;color:#fff;cursor:pointer;word-break:break-word;flex:1;}
+    .item-name.done{text-decoration:line-through;opacity:.5;color:var(--muted);}
+    .item-price-line{font-size:.74rem;color:var(--muted);font-weight:700;margin-top:2px;}
+    .item-note-txt{font-size:.74rem;color:var(--warning);font-style:italic;margin-top:2px;}
+    .item-row-right{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+    .qty-box{padding:4px 10px;border-radius:8px;background:rgba(33,150,243,.2);border:1px solid rgba(33,150,243,.4);font-weight:900;font-size:1rem;white-space:nowrap;color:#90caf9;}
+    .item-price-txt{font-size:1.1rem;color:var(--gold);font-weight:900;white-space:nowrap;}
+    .expanded-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:2px;}
+    .expanded-footer .ftotal{font-weight:900;color:var(--primary);font-size:.95rem;}
+    .expanded-footer .factions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+
+    /* ══ COMBO TAG ══ */
+    .combo-tag{
+      display:inline-flex !important;
+      visibility:visible !important;
+      align-items:center;
+      gap:3px;
+      background:#3d2914;
+      border:1.5px solid #f5c842;
+      color:#ffe082;
+      font-size:.72rem;
+      font-weight:900;
+      padding:3px 9px 3px 7px;
+      border-radius:20px;
+      letter-spacing:.5px;
+      white-space:nowrap;
+      line-height:1.3;
+      margin-top:3px;
+    }
+
+    /* ══ FULL SCREEN OVERLAY ══ */
+    #fullViewOverlay{
+      display:none;
+      position:fixed;
+      inset:0;
+      z-index:1000;
+      background:var(--bg);
+      flex-direction:column;
+      overflow:hidden;
+    }
+    #fullViewOverlay.open{display:flex;animation:fvIn .25s ease}
+    @keyframes fvIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+    .fv-header-bar{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 16px;
+      background:rgba(0,0,0,.6);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.1);
+      flex-shrink:0;
+    }
+    .fv-close-btn{
+      padding:6px 14px;border-radius:8px;
+      background:linear-gradient(135deg,#0d1626,#1a2744);border:1px solid rgba(33,150,243,.3);
+      color:#90caf9;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;font-size:.9rem;font-weight:700;transition:all .2s;flex-shrink:0;gap:6px;
+    }
+    .fv-close-btn:hover{background:linear-gradient(135deg,#1a2744,#0d1626);border-color:rgba(33,150,243,.5);}
+    .fv-title{flex:1;font-weight:900;font-size:1rem;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .fv-print-btn{background:linear-gradient(135deg,#0d1626,#1a2744);border:1px solid rgba(33,150,243,.3);color:#90caf9;padding:6px 16px;border-radius:8px;cursor:pointer;font-weight:700;font-size:.85rem;white-space:nowrap;}
+    .fv-body{flex:1;overflow:hidden;padding:12px;max-width:900px;margin:0 auto;width:100%;display:flex;flex-direction:column;}
+    .fv-card{background:#0d1626;border-radius:12px;border:1px solid rgba(255,255,255,.1);padding:10px;flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    .fv-card-header{display:flex;align-items:center;gap:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:6px;}
+    .fv-tbl-badge{background:linear-gradient(135deg,#0d1626,#1a2744);border:1px solid rgba(33,150,243,.3);color:#90caf9;font-weight:900;font-size:1.1rem;padding:5px 12px;border-radius:8px;letter-spacing:1px;}
+    .fv-meta{flex:1;}
+    .fv-oid{font-size:.7rem;color:var(--muted);font-weight:700;}
+    .fv-time{font-size:.75rem;color:var(--accent);font-weight:600;}
+    .fv-stats{display:flex;gap:8px;flex-wrap:wrap;}
+    .fv-stat{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 8px;}
+    .fv-stat-l{font-size:.6rem;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+    .fv-stat-v{font-size:.85rem;font-weight:900;color:#90caf9;}
+    .fv-items{flex:1;overflow:hidden;padding:4px 0;display:flex;gap:10px;}
+    .fv-col{flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column;}
+    .fv-sec-title{font-size:.7rem;color:var(--accent);font-weight:900;letter-spacing:1px;text-transform:uppercase;margin:4px 0 3px;padding-bottom:2px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .fv-item{display:flex;align-items:center;gap:8px;padding:4px 6px;background:rgba(255,255,255,.03);border-radius:6px;margin-bottom:2px;}
+    .fv-item-cb{width:18px;height:18px;border-radius:4px;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:0;position:absolute;}
+    .fv-item-cb.checked{background:var(--success);border-color:var(--success);}
+    .fv-item-cb.checked::after{content:'✓';color:#fff;font-size:.65rem;font-weight:900;}
+    .fv-item-info{flex:1;min-width:0;}
+    .fv-item-name{font-size:.78rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .fv-item-name.done{text-decoration:line-through;opacity:.5;}
+    .fv-item-detail{font-size:.75rem;color:#90caf9;display:block;margin-top:2px;font-weight:700;}
+    .fv-item-right{display:flex;gap:4px;align-items:center;flex-shrink:0;}
+    .fv-item-qty{background:rgba(33,150,243,.2);border:1px solid rgba(33,150,243,.3);color:#90caf9;padding:2px 6px;border-radius:4px;font-weight:900;font-size:.75rem;}
+    .fv-item-price{font-weight:900;color:#90caf9;font-size:1.1rem;}
+    .fv-footer{flex-shrink:0;padding-top:8px;border-top:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+    .fv-total-lbl{font-size:.65rem;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+    .fv-total-val{font-size:1.2rem;font-weight:900;color:#90caf9;}
+    .fv-actions{display:flex;gap:6px;}
+    .fv-actions .btn{padding:6px 12px;font-size:.8rem;}
+
+    /* ══ PRINT OVERLAY — shown only during printing ══
+       Hidden on screen via a wrapper class toggled by JS.
+       The @media print block makes it fully visible & positioned. */
+    #printOverlay {
+      display: none;
+    }
+
+    @media print {
+      /* Hide everything on the page */
+      body > *:not(#printOverlay) {
+        display: none !important;
+      }
+      #printOverlay {
+        display: block !important;
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 72mm !important;
+        max-width: 80mm !important;
+        min-width: 56mm !important;
+        font-family: 'Montserrat', Arial, sans-serif !important;
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+        padding: 10px 8px 14px !important;
+        background: #fff !important;
+        color: #000 !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+      }
+      #printOverlay .pc{text-align:center;}
+      #printOverlay .ptbl{display:flex;align-items:center;justify-content:center;gap:8px;border:2px solid #000;padding:5px 8px;margin:6px 0;}
+      #printOverlay .ptbl-num{background:#000;color:#fff;font-size:20px;font-weight:900;padding:4px 10px;border-radius:5px;}
+      #printOverlay .pinfo{font-size:12px;margin-bottom:2px;}
+      #printOverlay .pbold{font-weight:900;}
+      #printOverlay .porder-note{font-size:14px;font-weight:800;text-transform:uppercase;margin:8px 0 2px;}
+      #printOverlay .psec-head{font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px;border-top:2px solid #000;padding-top:6px;}
+      #printOverlay .psec-head.pfirst{border-top:none;margin-top:4px;}
+      #printOverlay table{width:100%;border-collapse:collapse;margin-bottom:4px;}
+      #printOverlay table th,#printOverlay table td{border:1.5px solid #333;padding:7px 4px;text-align:left;vertical-align:middle;}
+      #printOverlay .pqty{font-size:26px;font-weight:900;text-align:center;vertical-align:middle;}
+      #printOverlay .piname{font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.5px;}
+      #printOverlay .pcombo{display:inline-block;margin-top:3px;font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;border:1.5px solid #000;padding:1px 5px;border-radius:4px;}
+      #printOverlay .piprice{font-size:11px;font-weight:600;margin-top:2px;display:block;}
+      #printOverlay .pinote{font-size:11px;font-style:italic;margin-top:2px;}
+      #printOverlay .ptotal{font-weight:900;font-size:20px;text-align:right;border-top:1.5px solid #000;padding-top:5px;margin-top:5px;}
+      #printOverlay .pfooter{text-align:center;font-size:11px;border-top:1px dashed #000;padding-top:4px;margin-top:16px;}
+      #printOverlay .psched{text-align:center;font-size:26px;font-weight:900;margin-top:8px;}
+      #printOverlay .pempty{font-size:11px;color:#666;font-style:italic;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="title">BDM SOFTWARE</div>
+  <div class="controls">
+    <span id="todayLbl" class="small-muted"></span>
+    <button id="refreshBtn" class="btn" style="background:linear-gradient(135deg,#0d1626,#1a2744);border:1px solid rgba(33,150,243,.3);color:#90caf9;"><i class="fas fa-sync-alt"></i> Refresh</button>
+    <span class="small-muted">Pending: <b id="pendingCnt">0</b></span>
+    <span class="small-muted">Done: <b id="doneCnt">0</b></span>
+  </div>
+</div>
+
+<div class="grid-wrap">
+  <div id="ordersGrid" class="orders-grid"></div>
+  <div id="emptyMsg" style="display:none;text-align:center;margin-top:30px;color:var(--muted);font-size:.95rem;">
+    No pending orders for today.
+  </div>
+</div>
+
+<!-- PRINT OVERLAY: lives in normal DOM flow, shown only via @media print -->
+<div id="printOverlay"></div>
+
+<!-- FULL SCREEN OVERLAY -->
+<div id="fullViewOverlay">
+  <div class="fv-header-bar">
+    <button class="fv-close-btn" onclick="closeFullView()"><i class="fas fa-times"></i> Back</button>
+    <span class="fv-title" id="fvTitle">Order Details</span>
+    <button class="fv-print-btn" id="fvPrintBtn"><i class="fas fa-print"></i></button>
+  </div>
+  <div class="fv-body" id="fvBody"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+/* ══ FIREBASE ══════════════════════════════════════════════════════ */
+firebase.initializeApp({
+  apiKey:"AIzaSyBZCm8Fmp-zNlb2D20gqLCyifky-hGtZvI",
+  authDomain:"newpos-dacb5.firebaseapp.com",
+  databaseURL:"https://newpos-dacb5-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"newpos-dacb5",
+  storageBucket:"newpos-dacb5.appspot.com",
+  messagingSenderId:"667100253940",
+  appId:"1:667100253940:web:cfd8f0b9b51b6e697818a1"
+});
+const db = firebase.database();
+
+/* ══ SECTION LABELS ══════════════════════════════════════════════ */
+const SEC = {1:"Starters",2:"Main Course",3:"Desserts",4:"Drinks"};
+
+let normalMap   = {};
+let comboMap    = {};
+let menuReady   = false;
+let ordersReady = false;
+
+function buildMenuMaps(rawVal){
+  normalMap = {};
+  comboMap  = {};
+  if(!rawVal){ menuReady=true; return; }
+  let cats = [];
+  if(Array.isArray(rawVal)){
+    cats = rawVal;
+  } else {
+    const keys = Object.keys(rawVal);
+    if(keys.length && keys.every(k=>/^\d+$/.test(k))){
+      cats = keys.sort((a,b)=>+a-+b).map(k=>rawVal[k]);
+    } else if(rawVal.menu && Array.isArray(rawVal.menu)){
+      cats = rawVal.menu;
+    } else {
+      cats = Object.values(rawVal);
+    }
+  }
+  for(const cat of cats){
+    if(!cat) continue;
+    const sec = Number(cat.sectionOrder) || 1;
+    if(sec === 5) continue;
+    const s = [1,2,3,4].includes(sec) ? sec : 2;
+    const items = Array.isArray(cat.items) ? cat.items : [];
+    for(const it of items){
+      if(!it || !it.name) continue;
+      const nm = String(it.name).trim().toLowerCase();
+      if(nm && normalMap[nm] == null) normalMap[nm] = s;
+    }
+  }
+  for(const cat of cats){
+    if(!cat) continue;
+    const sec = Number(cat.sectionOrder) || 1;
+    if(sec !== 5) continue;
+    const items = Array.isArray(cat.items) ? cat.items : [];
+    for(const it of items){
+      if(!it || !it.name) continue;
+      const nm = String(it.name).trim().toLowerCase();
+      if(!nm) continue;
+      if(normalMap[nm] != null) continue;
+      const cp = [1,2,3].includes(Number(it.comboPart)) ? Number(it.comboPart) : 2;
+      if(comboMap[nm] == null) comboMap[nm] = cp;
+    }
+  }
+  menuReady = true;
+}
+
+function resolveItem(it){
+  const nm = String(it.name || '').trim().toLowerCase();
+  if(normalMap[nm] != null) return { displaySec: normalMap[nm], isCombo: false };
+  if(comboMap[nm] != null)  return { displaySec: comboMap[nm],  isCombo: true  };
+  return { displaySec: 2, isCombo: false };
+}
+
+function groupItems(order){
+  const groups = {1:[],2:[],3:[],4:[]};
+  const items  = Array.isArray(order.items) ? order.items : [];
+  items.forEach((it,idx)=>{
+    const r = resolveItem(it);
+    const s = [1,2,3,4].includes(r.displaySec) ? r.displaySec : 2;
+    groups[s].push({ it, idx, isCombo: r.isCombo });
+  });
+  return groups;
+}
+
+/* ══ STATE ════════════════════════════════════════════════════════ */
+let ordersCache={}, timers={};
+let activeId=null, knownIds=new Set(), firstOrders=false;
+
+/* ══ DOM ══════════════════════════════════════════════════════════ */
+const ordersGrid  = document.getElementById('ordersGrid');
+const emptyMsg    = document.getElementById('emptyMsg');
+const pendingCnt  = document.getElementById('pendingCnt');
+const doneCnt     = document.getElementById('doneCnt');
+const todayLbl    = document.getElementById('todayLbl');
+const printOverlay = document.getElementById('printOverlay');
+const refreshBtn  = document.getElementById('refreshBtn');
+
+/* ══ UTILS ════════════════════════════════════════════════════════ */
+const todayStr = () => new Date().toISOString().slice(0,10);
+const nowMs    = () => Date.now();
+const pad      = n  => String(n).padStart(2,'0');
+function hms(sec){
+  sec = Math.max(0,Math.floor(sec));
+  return [Math.floor(sec/3600),Math.floor((sec%3600)/60),sec%60].map(pad).join(':');
+}
+const isCompleted = s => s && String(s).toLowerCase()==='completed';
+
+function parseScheduled(order){
+  const st = order.scheduledTime;
+  if(!st) return null;
+  if(typeof st==='number') return st;
+  try{
+    const s=String(st).trim();
+    if(/\d{4}-\d{2}-\d{2}T/.test(s)){const d=new Date(s);if(!isNaN(d))return+d;}
+    if(/^\d{1,2}:\d{2}/.test(s)){
+      const dp=order.scheduledDate||order.date||todayStr();
+      const tp=s.length<=5?s+':00':s;
+      const d=new Date(dp+'T'+tp);if(!isNaN(d))return+d;
+    }
+    const dp=Date.parse(s);if(!isNaN(dp))return dp;
+  }catch(e){}
+  return null;
+}
+function fmtAMPM(ms){
+  try{
+    const d=new Date(ms);if(isNaN(d))return'';
+    let h=d.getHours(),m=d.getMinutes();
+    const ap=h>=12?'PM':'AM';h=h%12||12;
+    return h+':'+pad(m)+' '+ap;
+  }catch(e){return'';}
+}
+function progress(order){
+  const items=Array.isArray(order.items)?order.items:[];
+  if(!items.length)return{done:0,total:0,pct:0};
+  const done=items.filter(x=>!!x.done).length;
+  return{done,total:items.length,pct:Math.round(done/items.length*100)};
+}
+function playAlert(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.type='sine';o.frequency.value=880;g.gain.value=.0001;
+    o.connect(g);g.connect(ctx.destination);
+    const t=ctx.currentTime;
+    g.gain.linearRampToValueAtTime(.15,t+.01);o.start(t);
+    g.gain.linearRampToValueAtTime(.0001,t+.35);o.stop(t+.36);
+  }catch(e){}
+}
+
+/* ══ TIMERS ══════════════════════════════════════════════════════ */
+function startTimer(id,order,el){
+  if(!el)return;
+  stopTimer(id);
+  function upd(){
+    const now=nowMs();
+    const sm=parseScheduled(order);
+    const created=order.createdAt||(order.date
+      ?new Date(order.date+'T'+(order.time||'00:00:00')).getTime():now);
+    if(sm&&sm>now){
+      const rem=Math.ceil((sm-now)/1000);
+      el.textContent=hms(rem)+' left';
+      el.style.color=rem<=(30*60)?'var(--danger)':'var(--white)';
+    }else if(isCompleted(order.status)){
+      const ca=order.completedAt||order.updatedAt||now;
+      el.textContent=hms(Math.floor((ca-created)/1000))+' (done)';
+      el.style.color='var(--muted)';
+    }else{
+      el.textContent=hms(Math.floor((now-created)/1000));
+      el.style.color='var(--white)';
+    }
+  }
+  upd();
+  timers[id]=setInterval(upd,1000);
+}
+function stopTimer(id){
+  if(timers[id]){clearInterval(timers[id]);delete timers[id];}
+}
+
+/* ══ DB HELPERS ══════════════════════════════════════════════════ */
+function dbToggleItem(orderId,idx,val){
+  const u={};
+  u[`orders/${orderId}/items/${idx}/done`]=!!val;
+  u[`orders/${orderId}/updatedAt`]=nowMs();
+  db.ref().update(u).catch(e=>console.error(e));
+}
+function dbReadyState(orderId,state){
+  db.ref(`orders/${orderId}`).update({readyState:state,updatedAt:nowMs()}).catch(e=>console.error(e));
+}
+function dbMarkAll(orderId){
+  db.ref(`orders/${orderId}`).once('value').then(snap=>{
+    const d=snap.val();if(!d)return;
+    const items=(Array.isArray(d.items)?d.items:[]).map(x=>({...x,done:true,doneAt:nowMs()}));
+    return db.ref(`orders/${orderId}`).update({items,updatedAt:nowMs()});
+  }).catch(e=>{console.error(e);alert('Error: '+(e&&e.message));});
+}
+function dbMarkDone(orderId){
+  const now=nowMs();
+  db.ref(`orders/${orderId}`).update({status:'completed',completedAt:now,updatedAt:now})
+    .then(()=>{
+      stopTimer(orderId);
+      if(ordersCache[orderId])ordersCache[orderId].status='completed';
+      if(activeId===orderId)activeId=null;
+      renderGrid();
+    }).catch(e=>console.error(e));
+}
+
+/* ══ COMBO TAG ELEMENT ════════════════════════════════════════════ */
+function makeComboTag(){
+  const tag = document.createElement('span');
+  tag.style.cssText = [
+    'display:inline-flex',
+    'align-items:center',
+    'gap:4px',
+    'background:#3d2914',
+    'border:1.5px solid #f5c842',
+    'color:#ffe082',
+    'font-size:0.72rem',
+    'font-weight:900',
+    'padding:3px 9px 3px 6px',
+    'border-radius:20px',
+    'letter-spacing:0.5px',
+    'white-space:nowrap',
+    'line-height:1.3',
+    'margin-top:3px',
+    'font-family:Poppins,sans-serif',
+    'visibility:visible',
+    'opacity:1'
+  ].join(';');
+  const star = document.createElement('span');
+  star.style.cssText = 'color:#f5c842;font-size:0.85rem;line-height:1;';
+  star.textContent   = '★';
+  const txt = document.createElement('span');
+  txt.textContent = 'COMBO';
+  tag.appendChild(star);
+  tag.appendChild(txt);
+  return tag;
+}
+
+/* ══ SINGLE ITEM ROW ══════════════════════════════════════════════ */
+function makeItemRow(order, it, idx, isCombo, section, withCb){
+  const row  = document.createElement('div'); row.className  = 'item-row';
+  const left = document.createElement('div'); left.className = 'item-row-left';
+  if(withCb){
+    const cb = document.createElement('input');
+    cb.type='checkbox'; cb.className='item-cb'; cb.checked=!!it.done;
+    cb.addEventListener('click',e=>{e.stopPropagation();dbToggleItem(order.id,idx,cb.checked);});
+    left.appendChild(cb);
+  }
+  const info = document.createElement('div'); info.className='item-info';
+  const nameEl = document.createElement('div');
+  nameEl.className = 'item-name' + (it.done?' done':'');
+  nameEl.textContent = it.name || '';
+  if(withCb)
+    nameEl.addEventListener('click',e=>{e.stopPropagation();dbToggleItem(order.id,idx,!it.done);});
+  info.appendChild(nameEl);
+  if(isCombo && section!==4){
+    info.appendChild(makeComboTag());
+  } else if(section===5){
+    info.appendChild(makeComboTag());
+  } else {
+    const priceLine = document.createElement('div');
+    priceLine.className = 'item-price-line';
+    priceLine.textContent = '€' + Number(it.price||0).toFixed(2) + ' each';
+    info.appendChild(priceLine);
+  }
+  if(it.note && String(it.note).trim()){
+    const n = document.createElement('div'); n.className='item-note-txt';
+    n.textContent = it.note; info.appendChild(n);
+  }
+  const qtyDiv = document.createElement('div'); qtyDiv.className='qty-box';
+  qtyDiv.textContent = (it.qty||1); left.appendChild(qtyDiv);
+  left.appendChild(info);
+  const right = document.createElement('div'); right.className='item-row-right';
+  const pr = document.createElement('div'); pr.className='item-price-txt';
+  pr.textContent = '€'+((Number(it.price||0)*Number(it.qty||1)).toFixed(2));
+  right.appendChild(pr);
+  row.appendChild(left); row.appendChild(right);
+  return row;
+}
+
+/* ══ SECTION BLOCKS ══════════════════════════════════════════════ */
+function makeSectionBlocks(order, withCb){
+  const groups = groupItems(order);
+  const frag   = document.createDocumentFragment();
+  let any = false;
+  for(const s of [1,2,3,4]){
+    const list = groups[s];
+    if(!list.length) continue;
+    any = true;
+    const block = document.createElement('div'); block.className='sec-block';
+    const head  = document.createElement('div'); head.className='sec-block-head';
+    const title = document.createElement('div'); title.className='sec-block-title';
+    title.textContent = SEC[s];
+    const cnt = document.createElement('span'); cnt.className='sec-count-badge';
+    cnt.textContent = String(list.length);
+    head.appendChild(title); head.appendChild(cnt); block.appendChild(head);
+    const ul = document.createElement('div'); ul.className='item-list';
+    for(const {it,idx,isCombo} of list)
+      ul.appendChild(makeItemRow(order,it,idx,isCombo,s,withCb));
+    block.appendChild(ul); frag.appendChild(block);
+  }
+  if(!any){
+    const nd = document.createElement('div');
+    nd.style.cssText='font-size:.8rem;color:var(--muted);text-align:center;padding:6px 0;';
+    nd.textContent='No items'; frag.appendChild(nd);
+  }
+  return frag;
+}
+
+/* ══ COMPACT CARD ════════════════════════════════════════════════ */
+function buildCompactCard(order){
+  const card = document.createElement('div');
+  card.className='order-card'; card.dataset.id=order.id;
+  const tbl = document.createElement('div'); tbl.className='tbl-badge';
+  tbl.innerHTML=`<span class="tbl-name">${String(order.table||order.id||'').toUpperCase()}</span>`;
+  tbl.addEventListener('click',e=>{e.stopPropagation();setActive(order.id);});
+  card.appendChild(tbl);
+  const meta = document.createElement('div'); meta.className='order-meta-row';
+  const oid  = document.createElement('span'); oid.className='order-id-txt';
+  oid.textContent = 'Order #'+(order.id||'');
+  const pay  = document.createElement('span'); pay.className='payment-pill';
+  const sl   = (order.status||'').toLowerCase();
+  pay.textContent = sl==='paid'?'Paid':sl==='completed'?'Completed':'Pending Payment';
+  meta.appendChild(oid); meta.appendChild(pay); card.appendChild(meta);
+  const ttRow   = document.createElement('div'); ttRow.className='timer-total-row';
+  const timerEl = document.createElement('div'); timerEl.className='timer-txt'; timerEl.textContent='00:00:00';
+  const totEl   = document.createElement('div'); totEl.className='total-txt';
+  totEl.textContent = '€'+Number(order.total||0).toFixed(2);
+  ttRow.appendChild(timerEl); ttRow.appendChild(totEl); card.appendChild(ttRow);
+  const pr    = progress(order);
+  const pRow  = document.createElement('div'); pRow.className='prog-row';
+  const pBar  = document.createElement('div'); pBar.className='prog-bar';
+  const pFill = document.createElement('div'); pFill.className='prog-fill';
+  pFill.style.width = pr.pct+'%'; pBar.appendChild(pFill);
+  const pLbl  = document.createElement('div'); pLbl.className='prog-lbl';
+  pLbl.textContent = `${pr.done}/${pr.total}`;
+  pRow.appendChild(pBar); pRow.appendChild(pLbl); card.appendChild(pRow);
+  const acts = document.createElement('div'); acts.className='card-actions';
+  const pBtn = document.createElement('button');
+  pBtn.className='btn sm'; pBtn.title='Print receipt';
+  pBtn.style.background='linear-gradient(135deg,#0d1626,#1a2744)';
+  pBtn.style.border='1px solid rgba(33,150,243,.3)';
+  pBtn.style.color='#90caf9';
+  pBtn.innerHTML='<i class="fas fa-print"></i> Print';
+  pBtn.addEventListener('click',e=>{e.stopPropagation();printReceipt(order,true);});
+  acts.appendChild(pBtn);
+  const right = document.createElement('div'); right.className='right';
+  if(!isCompleted(order.status)){
+    const doneBtn = document.createElement('button'); doneBtn.className='btn success sm'; doneBtn.textContent='Done';
+    doneBtn.addEventListener('click',e=>{e.stopPropagation();if(confirm('Mark order #'+order.id+' as DONE?'))dbMarkDone(order.id);});
+    right.appendChild(doneBtn);
+  }else{
+    const dl=document.createElement('span'); dl.className='small-muted'; dl.textContent='Completed';
+    right.appendChild(dl);
+  }
+  const expBtn = document.createElement('button'); expBtn.className='expand-btn';
+  expBtn.innerHTML='<i class="fas fa-chevron-down"></i>';
+  expBtn.addEventListener('click',e=>{e.stopPropagation();setActive(order.id);});
+  right.appendChild(expBtn);
+  const fsBtn = document.createElement('button'); fsBtn.className='btn sm ghost'; fsBtn.title='View Full Screen';
+  fsBtn.innerHTML='<i class="fas fa-expand"></i>';
+  fsBtn.addEventListener('click',e=>{e.stopPropagation();openFullView(order.id);});
+  right.appendChild(fsBtn);
+  acts.appendChild(right); card.appendChild(acts);
+  startTimer(String(order.id),order,timerEl);
+  return card;
+}
+
+/* ══ EXPANDED CARD ════════════════════════════════════════════════ */
+function buildExpandedCard(order){
+  const card = document.createElement('div');
+  card.className='order-card'; card.dataset.id=order.id;
+  const colBtn = document.createElement('button'); colBtn.className='collapse-btn';
+  colBtn.innerHTML='<i class="fas fa-chevron-up"></i>';
+  colBtn.addEventListener('click',e=>{e.stopPropagation();setActive(null);});
+  card.appendChild(colBtn);
+  const tbl = document.createElement('div'); tbl.className='tbl-badge'; tbl.style.paddingRight='44px';
+  tbl.innerHTML=`<span class="tbl-name">${String(order.table||order.id||'').toUpperCase()}</span>`;
+  tbl.addEventListener('click',e=>{e.stopPropagation();setActive(null);});
+  card.appendChild(tbl);
+  const meta = document.createElement('div'); meta.className='order-meta-row';
+  const oid  = document.createElement('span'); oid.className='order-id-txt';
+  oid.textContent = 'Order #'+(order.id||'')+' • '+(order.date||'')+' '+(order.time||'');
+  const pay  = document.createElement('span'); pay.className='payment-pill';
+  const sl   = (order.status||'').toLowerCase();
+  pay.textContent = sl==='paid'?'Paid':sl==='completed'?'Completed':'Pending Payment';
+  meta.appendChild(oid); meta.appendChild(pay); card.appendChild(meta);
+  const ttRow  = document.createElement('div'); ttRow.className='timer-total-row';
+  const leftTT = document.createElement('div');
+  leftTT.style.cssText='display:flex;align-items:center;gap:7px;flex-wrap:wrap;';
+  const dot = document.createElement('div'); dot.className='status-dot';
+  const ir  = order.readyState||'off';
+  if(ir==='ready')   dot.classList.add('ready');
+  if(ir==='delayed') dot.classList.add('delayed');
+  dot.addEventListener('click',e=>{
+    e.stopPropagation();
+    const cur=order.readyState||'off';
+    dbReadyState(order.id,cur==='off'?'ready':cur==='ready'?'delayed':'off');
+  });
+  const timerEl = document.createElement('div'); timerEl.className='timer-txt'; timerEl.textContent='00:00:00';
+  leftTT.appendChild(dot); leftTT.appendChild(timerEl);
+  if(order.scheduledTime&&String(order.scheduledTime).trim()){
+    const st=document.createElement('div'); st.className='schedule-txt';
+    st.textContent='Sched: '+order.scheduledTime; leftTT.appendChild(st);
+  }
+  const totEl = document.createElement('div'); totEl.className='total-txt';
+  totEl.textContent='€'+Number(order.total||0).toFixed(2);
+  ttRow.appendChild(leftTT); ttRow.appendChild(totEl); card.appendChild(ttRow);
+  const pr    = progress(order);
+  const pRow  = document.createElement('div'); pRow.className='prog-row';
+  const pBar  = document.createElement('div'); pBar.className='prog-bar';
+  const pFill = document.createElement('div'); pFill.className='prog-fill';
+  pFill.style.width=pr.pct+'%'; pBar.appendChild(pFill);
+  const pLbl  = document.createElement('div'); pLbl.className='prog-lbl';
+  pLbl.textContent=`${pr.done}/${pr.total}`;
+  pRow.appendChild(pBar); pRow.appendChild(pLbl); card.appendChild(pRow);
+  if(order.note&&String(order.note).trim()){
+    const on=document.createElement('div'); on.className='item-note-txt';
+    on.textContent='Note: '+order.note; card.appendChild(on);
+  }
+  const details = document.createElement('div'); details.className='details';
+  details.appendChild(makeSectionBlocks(order,true));
+  card.appendChild(details);
+  const foot    = document.createElement('div'); foot.className='expanded-footer';
+  const ftotal  = document.createElement('div'); ftotal.className='ftotal';
+  ftotal.textContent='Total: €'+Number(order.total||0).toFixed(2);
+  foot.appendChild(ftotal);
+  const factions = document.createElement('div'); factions.className='factions';
+  const pBtn = document.createElement('button'); pBtn.className='btn sm';
+  pBtn.style.cssText='background:#fff;color:#222;border:1px solid #ccc;';
+  pBtn.innerHTML='<i class="fas fa-print"></i>';
+  pBtn.addEventListener('click',e=>{e.stopPropagation();printReceipt(order,false);});
+  factions.appendChild(pBtn);
+  if(!isCompleted(order.status)){
+    const maBtn = document.createElement('button'); maBtn.className='btn sm ghost'; maBtn.textContent='Mark all';
+    maBtn.addEventListener('click',e=>{e.stopPropagation();if(confirm('Mark all items done?'))dbMarkAll(order.id);});
+    factions.appendChild(maBtn);
+    const dBtn = document.createElement('button'); dBtn.className='btn success sm'; dBtn.textContent='Done';
+    dBtn.addEventListener('click',e=>{e.stopPropagation();if(confirm('Mark order #'+order.id+' as DONE?'))dbMarkDone(order.id);});
+    factions.appendChild(dBtn);
+  }else{
+    const dl=document.createElement('span'); dl.className='small-muted'; dl.textContent='Completed';
+    factions.appendChild(dl);
+  }
+  const oBtn=document.createElement('button'); oBtn.className='btn sm ghost'; oBtn.textContent='Open';
+  oBtn.addEventListener('click',e=>{e.stopPropagation();location.href='order.html?order='+encodeURIComponent(order.id);});
+  factions.appendChild(oBtn);
+  foot.appendChild(factions); card.appendChild(foot);
+  startTimer(String(order.id),order,timerEl);
+  return card;
+}
+
+/* ══ FULL SCREEN VIEW ════════════════════════════════════════════ */
+let fvOrderId = null;
+function openFullView(orderId){
+  const order = ordersCache[orderId];
+  if(!order) return;
+  fvOrderId = orderId;
+  document.getElementById('fvTitle').textContent = 'Table ' + String(order.table||order.id||'').toUpperCase() + ' — Order #' + orderId;
+  document.getElementById('fvPrintBtn').onclick = () => printReceipt(order, false);
+  renderFullView(order);
+  document.getElementById('fullViewOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeFullView(){
+  document.getElementById('fullViewOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  fvOrderId = null;
+}
+function renderFullView(order){
+  const body = document.getElementById('fvBody');
+  body.innerHTML = '';
+  const pr = progress(order);
+  
+  const card = document.createElement('div'); card.className = 'fv-card';
+  
+  const header = document.createElement('div'); header.className = 'fv-card-header';
+  const tblBadge = document.createElement('div'); tblBadge.className = 'fv-tbl-badge';
+  tblBadge.textContent = String(order.table||order.id||'').toUpperCase();
+  header.appendChild(tblBadge);
+  const meta = document.createElement('div'); meta.className = 'fv-meta';
+  const oid = document.createElement('div'); oid.className = 'fv-oid';
+  oid.textContent = 'Order #' + (order.id||'');
+  const time = document.createElement('div'); time.className = 'fv-time';
+  time.textContent = (order.date||'') + ' ' + (order.time||'');
+  meta.appendChild(oid); meta.appendChild(time); header.appendChild(meta);
+  const stats = document.createElement('div'); stats.className = 'fv-stats';
+  const s1 = document.createElement('div'); s1.className = 'fv-stat';
+  const s1l = document.createElement('div'); s1l.className = 'fv-stat-l'; s1l.textContent = 'Items Done';
+  const s1v = document.createElement('div'); s1v.className = 'fv-stat-v'; s1v.textContent = pr.done+'/'+pr.total;
+  s1.appendChild(s1l); s1.appendChild(s1v); stats.appendChild(s1);
+  const s2 = document.createElement('div'); s2.className = 'fv-stat';
+  const s2l = document.createElement('div'); s2l.className = 'fv-stat-l'; s2l.textContent = 'Status';
+  const sl = (order.status||'').toLowerCase();
+  const s2v = document.createElement('div'); s2v.className = 'fv-stat-v';
+  s2v.textContent = sl==='paid'?'Paid':sl==='completed'?'Completed':'Pending';
+  s2.appendChild(s2l); s2.appendChild(s2v); stats.appendChild(s2);
+  header.appendChild(stats); card.appendChild(header);
+  
+  const itemsDiv = document.createElement('div'); itemsDiv.className = 'fv-items';
+  const leftCol = document.createElement('div'); leftCol.className = 'fv-col';
+  const rightCol = document.createElement('div'); rightCol.className = 'fv-col';
+  const groups = groupItems(order);
+  
+  for(const s of [1,2]){
+    const list = groups[s];
+    if(!list.length) continue;
+    const secTitle = document.createElement('div'); secTitle.className = 'fv-sec-title';
+    secTitle.textContent = SEC[s] + ' (' + list.length + ')';
+    leftCol.appendChild(secTitle);
+    for(const {it,idx,isCombo} of list){
+      const itemRow = document.createElement('div'); itemRow.className = 'fv-item';
+      itemRow.style.position='relative';
+      itemRow.style.cursor='pointer';
+      itemRow.addEventListener('click', e=>{
+        if(e.target.closest('.fv-item-cb')) return;
+        const cb = itemRow.querySelector('.fv-item-cb');
+        if(cb) cb.click();
+      });
+      const qty = document.createElement('div'); qty.className = 'fv-item-qty';
+      qty.textContent = (it.qty||1);
+      itemRow.appendChild(qty);
+      const info = document.createElement('div'); info.className = 'fv-item-info';
+      const name = document.createElement('div'); name.className = 'fv-item-name' + (it.done?' done':'');
+      name.textContent = it.name || '';
+      info.appendChild(name);
+      const priceInfo = document.createElement('div'); priceInfo.className = 'fv-item-detail';
+      priceInfo.style.color='#90caf9';
+      priceInfo.style.fontSize='.85rem';
+      priceInfo.textContent = '€' + Number(it.price||0).toFixed(2) + ' each | Total: €' + (Number(it.price||0) * Number(it.qty||1)).toFixed(2);
+      info.appendChild(priceInfo);
+      if(it.note && String(it.note).trim()){
+        const noteDiv = document.createElement('div'); noteDiv.className = 'fv-item-detail';
+        noteDiv.textContent = 'Note: ' + it.note;
+        info.appendChild(noteDiv);
+      }
+      itemRow.appendChild(info);
+      const cb = document.createElement('div'); cb.className = 'fv-item-cb' + (it.done?' checked':'');
+      cb.addEventListener('click', e=>{
+        e.stopPropagation();
+        const nv = !cb.classList.contains('checked');
+        dbToggleItem(order.id, idx, nv);
+        cb.classList.toggle('checked', nv);
+        const nameEl = itemRow.querySelector('.fv-item-name');
+        if(nameEl) nameEl.classList.toggle('done', nv);
+      });
+      itemRow.appendChild(cb);
+      leftCol.appendChild(itemRow);
+    }
+  }
+  
+  for(const s of [3,4]){
+    const list = groups[s];
+    if(!list.length) continue;
+    const secTitle = document.createElement('div'); secTitle.className = 'fv-sec-title';
+    secTitle.textContent = SEC[s] + ' (' + list.length + ')';
+    rightCol.appendChild(secTitle);
+    for(const {it,idx,isCombo} of list){
+      const itemRow = document.createElement('div'); itemRow.className = 'fv-item';
+      itemRow.style.position='relative';
+      itemRow.style.cursor='pointer';
+      itemRow.addEventListener('click', e=>{
+        if(e.target.closest('.fv-item-cb')) return;
+        const cb = itemRow.querySelector('.fv-item-cb');
+        if(cb) cb.click();
+      });
+      const qty = document.createElement('div'); qty.className = 'fv-item-qty';
+      qty.textContent = (it.qty||1);
+      itemRow.appendChild(qty);
+      const info = document.createElement('div'); info.className = 'fv-item-info';
+      const name = document.createElement('div'); name.className = 'fv-item-name' + (it.done?' done':'');
+      name.textContent = it.name || '';
+      info.appendChild(name);
+      const priceInfo = document.createElement('div'); priceInfo.className = 'fv-item-detail';
+      priceInfo.style.color='#90caf9';
+      priceInfo.style.fontSize='.85rem';
+      priceInfo.textContent = '€' + Number(it.price||0).toFixed(2) + ' each | Total: €' + (Number(it.price||0) * Number(it.qty||1)).toFixed(2);
+      info.appendChild(priceInfo);
+      if(it.note && String(it.note).trim()){
+        const noteDiv = document.createElement('div'); noteDiv.className = 'fv-item-detail';
+        noteDiv.textContent = 'Note: ' + it.note;
+        info.appendChild(noteDiv);
+      }
+      itemRow.appendChild(info);
+      const cb = document.createElement('div'); cb.className = 'fv-item-cb' + (it.done?' checked':'');
+      cb.addEventListener('click', e=>{
+        e.stopPropagation();
+        const nv = !cb.classList.contains('checked');
+        dbToggleItem(order.id, idx, nv);
+        cb.classList.toggle('checked', nv);
+        const nameEl = itemRow.querySelector('.fv-item-name');
+        if(nameEl) nameEl.classList.toggle('done', nv);
+      });
+      itemRow.appendChild(cb);
+      rightCol.appendChild(itemRow);
+    }
+  }
+  
+  itemsDiv.appendChild(leftCol);
+  itemsDiv.appendChild(rightCol);
+  card.appendChild(itemsDiv);
+  
+  const footer = document.createElement('div'); footer.className = 'fv-footer';
+  const totLbl = document.createElement('div'); totLbl.className = 'fv-total-lbl';
+  totLbl.textContent = 'Order Total';
+  const totVal = document.createElement('div'); totVal.className = 'fv-total-val';
+  totVal.textContent = '€' + Number(order.total||0).toFixed(2);
+  footer.appendChild(totLbl); footer.appendChild(totVal);
+  const actions = document.createElement('div'); actions.className = 'fv-actions';
+  if(!isCompleted(order.status)){
+    const markAllBtn = document.createElement('button'); markAllBtn.className = 'btn ghost';
+    markAllBtn.innerHTML = '<i class="fas fa-tasks"></i> Mark All';
+    markAllBtn.addEventListener('click', ()=>{
+      if(confirm('Mark all items done?')){
+        dbMarkAll(order.id);
+        setTimeout(()=>{if(ordersCache[order.id]) renderFullView(ordersCache[order.id]);}, 700);
+      }
+    });
+    actions.appendChild(markAllBtn);
+    const doneBtn = document.createElement('button'); doneBtn.className = 'btn success';
+    doneBtn.innerHTML = '<i class="fas fa-check"></i> Done';
+    doneBtn.addEventListener('click', ()=>{
+      if(confirm('Mark order #'+order.id+' as DONE?')) dbMarkDone(order.id);
+    });
+    actions.appendChild(doneBtn);
+  } else {
+    const doneDiv = document.createElement('span');
+    doneDiv.className = 'small-muted'; doneDiv.textContent = '✓ Completed';
+    actions.appendChild(doneDiv);
+  }
+  footer.appendChild(actions); card.appendChild(footer);
+  body.appendChild(card);
+}
+
+/* ══ ACTIVE / RENDER ══════════════════════════════════════════════ */
+function setActive(id){
+  const s=id==null?null:String(id);
+  activeId=(activeId===s)?null:s;
+  renderGrid();
+}
+
+function renderGrid(){
+  if(!menuReady || !ordersReady) return;
+  const today   = todayStr();
+  const all     = Object.values(ordersCache);
+  const todays  = all.filter(o=>(o.date||'')===today);
+  const pending = todays.filter(o=>!isCompleted(o.status));
+  const done    = todays.filter(o=>isCompleted(o.status));
+  pendingCnt.textContent = pending.length;
+  doneCnt.textContent    = done.length;
+  todayLbl.textContent   = today;
+  ordersGrid.innerHTML   = '';
+  emptyMsg.style.display = pending.length?'none':'block';
+  pending.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  const liveIds=new Set();
+  for(const o of pending){
+    liveIds.add(String(o.id));
+    ordersGrid.appendChild(
+      (activeId&&activeId===String(o.id))?buildExpandedCard(o):buildCompactCard(o)
+    );
+  }
+  Object.keys(timers).forEach(id=>{if(!liveIds.has(id))stopTimer(id);});
+}
+
+/* ══ PRINT ════════════════════════════════════════════════════════
+   FIX: Use #printOverlay (in normal DOM flow, display:none on screen,
+   shown via @media print). No off-screen positioning. No visibility
+   toggling. Use requestAnimationFrame + setTimeout for reliable repaint
+   before window.print() fires.
+══════════════���═══════════════════════════════════════════════════ */
+function printReceipt(order, aggregate){
+  const raw    = Array.isArray(order.items) ? order.items : [];
+  const groups = {1:[],2:[],3:[],4:[]};
+  const maps   = {1:{},2:{},3:{},4:{}};
+  const src    = aggregate ? raw : raw.filter(it=>!it.done);
+
+  for(const it of src){
+    const r  = resolveItem(it);
+    const s  = [1,2,3,4].includes(r.displaySec) ? r.displaySec : 2;
+    const nm = (it.name||'').trim(); if(!nm) continue;
+    if(aggregate){
+      const key=(r.isCombo?'C:':'N:')+nm.toLowerCase()+'|'+Number(it.price||0).toFixed(2);
+      if(!maps[s][key])
+        maps[s][key]={name:nm,qty:0,price:Number(it.price||0),notes:[],isCombo:r.isCombo};
+      maps[s][key].qty+=Number(it.qty||1);
+      if(it.note&&String(it.note).trim()) maps[s][key].notes.push(it.note.trim());
+    }else{
+      groups[s].push({name:nm,qty:it.qty||1,price:Number(it.price||0),note:it.note||'',isCombo:r.isCombo});
+    }
+  }
+  if(aggregate){
+    for(const s of [1,2,3,4])
+      groups[s]=Object.values(maps[s]).map(x=>({
+        name:x.name,qty:x.qty,price:x.price,
+        note:Array.from(new Set(x.notes)).join(' / '),
+        isCombo:x.isCombo
+      }));
+  }
+
+  const tRows = list => {
+    if(!list||!list.length)
+      return`<tr><td colspan="3" class="pempty">— none —</td></tr>`;
+    return list.map(it=>{
+      const tot=(Number(it.price||0)*Number(it.qty||1)).toFixed(2);
+      const comboLine=it.isCombo?`<div class="pcombo">&#9733; COMBO</div>`:'';
+      return`<tr>
+        <td class="pqty">${it.qty||1}</td>
+        <td>
+          <div class="piname">${String(it.name||'').toUpperCase()}</div>
+          ${comboLine}
+          <span class="piprice">€${Number(it.price||0).toFixed(2)}</span>
+          ${it.note?`<div class="pinote">${String(it.note).toUpperCase()}</div>`:''}
+        </td>
+        <td style="text-align:right;font-weight:900;">€${tot}</td>
+      </tr>`;
+    }).join('');
+  };
+
+  let html='';
+  html+=`<div class="pc"><img src="https://raw.githubusercontent.com/Davidbantu/david/refs/heads/main/logo_header.png" alt="logo" style="max-width:150px;display:inline-block;margin-bottom:6px;"></div>`;
+  html+=`<div class="ptbl"><span class="ptbl-num">${String(order.table||'').toUpperCase()}</span></div>`;
+  html+=`<div class="pinfo"><span class="pbold">Order #:</span> ${order.id||''}</div>`;
+  html+=`<div class="pinfo"><span class="pbold">Date:</span> ${order.date||''} ${order.time||''}</div>`;
+  if(order.note&&String(order.note).trim())
+    html+=`<div class="porder-note">${String(order.note).toUpperCase()}</div>`;
+
+  let first=true;
+  for(const s of [1,2,3,4]){
+    if(!groups[s].length) continue;
+    html+=`<div class="psec-head${first?' pfirst':''}">${SEC[s]}</div>`;
+    first=false;
+    html+=`<table><thead><tr>
+      <th style="width:15%;text-align:center;">QTY</th>
+      <th style="width:65%;">ITEM</th>
+      <th style="width:20%;text-align:right;">TOTAL</th>
+    </tr></thead><tbody>${tRows(groups[s])}</tbody></table>`;
+  }
+
+  html+=`<div class="ptotal">Total: €${Number(order.total||0).toFixed(2)}</div>`;
+  const sm=parseScheduled(order);
+  if(sm){const f=fmtAMPM(sm);if(f)html+=`<div class="psched">${f}</div>`;}
+  html+=`<div class="pfooter">— END OF ORDER —</div>`;
+
+  /* ── Inject HTML, wait for repaint, then print ── */
+  printOverlay.innerHTML = html;
+
+  /* Use requestAnimationFrame inside setTimeout for maximum browser compat */
+  setTimeout(function(){
+    requestAnimationFrame(function(){
+      window.print();
+      /* Clean up after dialog closes */
+      setTimeout(function(){
+        printOverlay.innerHTML = '';
+      }, 1000);
+    });
+  }, 150);
+}
+
+/* ══ FIREBASE LISTENERS ═══════════════════════════════════════════ */
+db.ref('menu').on('value', snap=>{
+  buildMenuMaps(snap.val());
+  renderGrid();
+}, e=>console.error('menu error',e));
+
+db.ref('orders').on('value', snap=>{
+  const val  = snap.val()||{};
+  const keys = Object.keys(val);
+
+  if(!firstOrders){
+    knownIds = new Set(keys);
+    ordersCache = {};
+    keys.forEach(k=>{
+      ordersCache[k]=val[k]; ordersCache[k].id=k;
+      const o=ordersCache[k];
+      if(!o.createdAt){
+        try{o.createdAt=(o.date&&o.time)?new Date(o.date+'T'+o.time).getTime():nowMs();}
+        catch(e){o.createdAt=nowMs();}
+      }
+    });
+    ordersReady = true;
+    firstOrders = true;
+    renderGrid();
+    return;
+  }
+
+  const newIds=keys.filter(k=>!knownIds.has(k));
+  knownIds=new Set(keys);
+  ordersCache={};
+  keys.forEach(k=>{
+    ordersCache[k]=val[k]; ordersCache[k].id=k;
+    const o=ordersCache[k];
+    if(!o.createdAt){
+      try{o.createdAt=(o.date&&o.time)?new Date(o.date+'T'+o.time).getTime():nowMs();}
+      catch(e){o.createdAt=nowMs();}
+    }
+  });
+
+  if(newIds.length) playAlert();
+  if(activeId&&!keys.includes(activeId)){stopTimer(activeId);activeId=null;}
+  Object.keys(timers).forEach(id=>{if(!keys.includes(id))stopTimer(id);});
+  renderGrid();
+}, e=>console.error('orders error',e));
+
+refreshBtn.addEventListener('click',()=>{
+  db.ref('orders').once('value').then(snap=>{
+    const val=snap.val()||{};
+    ordersCache={};
+    Object.keys(val).forEach(k=>{ordersCache[k]=val[k];ordersCache[k].id=k;});
+    renderGrid();
+  }).catch(e=>console.error(e));
+});
+
+window.addEventListener('beforeunload',()=>{
+  Object.keys(timers).forEach(id=>clearInterval(timers[id]));
+});
+</script>
+</body>
+</html>
